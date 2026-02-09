@@ -31,7 +31,8 @@ const state = {
   maintenance: false,
   maintenanceUntil: null,
   alarms: [],
-  adminBypassMaintenance: false
+  adminBypassMaintenance: false,
+  refreshPaused: false
 };
 
 const typeContainer = document.getElementById("type-filters");
@@ -77,6 +78,9 @@ const themeAccent = document.getElementById("theme-accent");
 const themeBg = document.getElementById("theme-bg");
 const themePanel = document.getElementById("theme-panel");
 const themeApply = document.getElementById("theme-apply");
+const panelToggle = document.getElementById("panel-toggle");
+const panelBackdrop = document.getElementById("panel-backdrop");
+const toggleRefresh = document.getElementById("toggle-refresh");
 const toolTabs = toolPanel ? toolPanel.querySelectorAll("button[data-tab]") : [];
 
 const typeLabels = {
@@ -480,6 +484,7 @@ function stopMaintenanceCountdown() {
 
 async function refresh() {
   try {
+    if (state.refreshPaused) return;
     const events = await loadEvents();
     state.events = events;
     updateFilterSets(events);
@@ -762,6 +767,40 @@ if (themeApply) {
   });
 }
 
+function openPanel() {
+  const panel = document.querySelector(".panel");
+  if (!panel) return;
+  panel.classList.add("open");
+  panelBackdrop.classList.add("active");
+}
+
+function closePanel() {
+  const panel = document.querySelector(".panel");
+  if (!panel) return;
+  panel.classList.remove("open");
+  panelBackdrop.classList.remove("active");
+}
+
+if (panelToggle && panelBackdrop) {
+  panelToggle.addEventListener("click", () => {
+    const panel = document.querySelector(".panel");
+    if (!panel) return;
+    if (panel.classList.contains("open")) {
+      closePanel();
+    } else {
+      openPanel();
+    }
+  });
+  panelBackdrop.addEventListener("click", closePanel);
+}
+
+if (toggleRefresh) {
+  toggleRefresh.addEventListener("change", (event) => {
+    state.refreshPaused = event.target.checked;
+    localStorage.setItem("sw_refresh_paused", state.refreshPaused ? "1" : "0");
+  });
+}
+
 map.on("zoomend", updateMarkerScale);
 updateMarkerScale();
 state.adminBypassMaintenance = localStorage.getItem("sw_admin_bypass") === "1";
@@ -769,7 +808,7 @@ state.adminBypassMaintenance = localStorage.getItem("sw_admin_bypass") === "1";
 const savedTheme = localStorage.getItem("sw_theme") || "dark";
 const savedCustom = localStorage.getItem("sw_theme_custom");
 applyTheme(savedTheme);
-const savedOption = document.querySelector(`input[name=\"theme\"][value=\"${savedTheme}\"]`);
+const savedOption = document.querySelector(`input[name="theme"][value="${savedTheme}"]`);
 if (savedOption) savedOption.checked = true;
 if (savedTheme === "custom") {
   themeCustom.classList.remove("hidden");
@@ -784,6 +823,12 @@ if (savedTheme === "custom") {
       themeCustom.classList.remove("hidden");
     }
   }
+}
+
+const paused = localStorage.getItem("sw_refresh_paused") === "1";
+state.refreshPaused = paused;
+if (toggleRefresh) {
+  toggleRefresh.checked = paused;
 }
 
 refresh();

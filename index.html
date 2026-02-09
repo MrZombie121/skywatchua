@@ -14,6 +14,7 @@
   </head>
   <body>
     <header class="topbar">
+      <button class="mobile-menu" id="panel-toggle">☰</button>
       <div class="brand">
         <div class="brand-mark">SW</div>
         <div class="brand-text">
@@ -29,6 +30,7 @@
     </header>
 
     <main class="layout">
+      <div class="panel-backdrop" id="panel-backdrop"></div>
       <aside class="panel">
         <section class="panel-section">
           <h2>Фільтри</h2>
@@ -90,6 +92,12 @@
           <div class="tool-header">
             <div class="tool-title">Інструменти</div>
             <button class="tool-close" id="tool-close">✕</button>
+          </div>
+          <div class="tool-controls">
+            <label class="toggle">
+              <input type="checkbox" id="toggle-refresh" />
+              <span>Пауза оновлень</span>
+            </label>
           </div>
           <div class="tool-tabs">
             <button class="active" data-tab="radar">Радар загроз</button>
