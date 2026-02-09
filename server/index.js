@@ -125,9 +125,13 @@ app.get("/api/events", async (_req, res) => {
 
     const nowTs = Date.now();
     const ttlMs = Math.max(1, EVENT_TTL_MIN) * 60 * 1000;
+    const alarms = new Set(tgPayload.alarms || []);
     const combined = [...tgPayload.events, ...rssEvents, ...testEvents].filter((event) => {
       const time = Date.parse(event.timestamp);
       if (!Number.isFinite(time)) return false;
+      if (event.type === "shahed" && event.region_id && !alarms.has(event.region_id)) {
+        return false;
+      }
       return nowTs - time <= ttlMs;
     });
     state.cache = combined;

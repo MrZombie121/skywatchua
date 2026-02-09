@@ -55,7 +55,20 @@ const locationHints = [
   { name: "Суми", keys: ["sumy", "суми"], lat: 50.91, lng: 34.8 },
   { name: "Полтава", keys: ["poltava", "полтава"], lat: 49.59, lng: 34.55 },
   { name: "Оржицький район", keys: ["оржицький район", "оржицкий район", "orzhytskyi"], lat: 49.74, lng: 32.92 },
-  { name: "Веселе", keys: ["веселе", "веселое", "vesele"], lat: 47.27, lng: 35.55 },
+  {
+    name: "Веселе (Харківська)",
+    keys: ["веселе", "веселое", "vesele"],
+    context: ["харків", "харківська", "kharkiv"],
+    lat: 49.62,
+    lng: 36.03
+  },
+  {
+    name: "Веселе (Запорізька)",
+    keys: ["веселе", "веселое", "vesele"],
+    context: ["запор", "запорізька", "zaporizh"],
+    lat: 47.27,
+    lng: 35.55
+  },
   { name: "Рівне", keys: ["rivne", "рівне", "ровно"], lat: 50.62, lng: 26.25 },
   { name: "Луцьк", keys: ["lutsk", "луцьк", "луцк"], lat: 50.75, lng: 25.34 },
   { name: "Тернопіль", keys: ["ternopil", "тернопіль", "тернополь"], lat: 49.55, lng: 25.59 },
@@ -93,6 +106,20 @@ const alarmRegions = [
   { id: "donetska", keys: ["донецька", "донецкая"] },
   { id: "luhanska", keys: ["луганська", "луганская"] }
 ];
+
+const regionCenters = {
+  kyivska: { lat: 50.45, lng: 30.52, name: "Київська" },
+  kharkivska: { lat: 49.98, lng: 36.25, name: "Харківська" },
+  odeska: { lat: 46.48, lng: 30.72, name: "Одеська" },
+  lvivska: { lat: 49.84, lng: 24.03, name: "Львівська" },
+  dniprovska: { lat: 48.46, lng: 35.05, name: "Дніпропетровська" },
+  zaporizka: { lat: 47.84, lng: 35.14, name: "Запорізька" },
+  mykolaivska: { lat: 46.97, lng: 31.99, name: "Миколаївська" },
+  khersonska: { lat: 46.63, lng: 32.62, name: "Херсонська" },
+  chernihivska: { lat: 51.5, lng: 31.3, name: "Чернігівська" },
+  sumyska: { lat: 50.91, lng: 34.8, name: "Сумська" },
+  poltavska: { lat: 49.59, lng: 34.55, name: "Полтавська" }
+};
 
 const seaHints = [
   {
@@ -155,7 +182,14 @@ function isDowned(text) {
 
 function pickLocation(text) {
   const lower = text.toLowerCase();
+  const contextual = locationHints.filter((hint) => Array.isArray(hint.context) && hint.context.length > 0);
+  for (const hint of contextual) {
+    if (hint.keys.some((key) => lower.includes(key)) && hint.context.some((ctx) => lower.includes(ctx))) {
+      return { lat: hint.lat, lng: hint.lng, label: hint.name };
+    }
+  }
   for (const hint of locationHints) {
+    if (Array.isArray(hint.context) && hint.context.length > 0) continue;
     if (hint.keys.some((key) => lower.includes(key))) {
       return { lat: hint.lat, lng: hint.lng, label: hint.name };
     }
@@ -212,6 +246,22 @@ function parseDirection(text) {
   return Math.floor(Math.random() * 360);
 }
 
+function resolveRegionId(text, label) {
+  const lower = text.toLowerCase();
+  for (const region of alarmRegions) {
+    if (region.keys.some((key) => lower.includes(key))) {
+      return region.id;
+    }
+  }
+  const labelLower = String(label || "").toLowerCase();
+  for (const region of alarmRegions) {
+    if (region.keys.some((key) => labelLower.includes(key))) {
+      return region.id;
+    }
+  }
+  return null;
+}
+
 export function parseMessageToEvent(text, meta = {}) {
   if (isDowned(text)) return null;
   const location = pickLocation(text);
@@ -224,7 +274,8 @@ export function parseMessageToEvent(text, meta = {}) {
     : text.toLowerCase().includes("тест") || text.toLowerCase().includes("test");
 
   const forceSea = type === "airplane" || forceSeaForAviation(text);
-  if (!location && !sea && !forceSea) return null;
+  const isTlk = String(meta.source || "").toLowerCase().includes("tlknewsua");
+  if (!location && !sea && !forceSea && !(isTlk && type === "shahed")) return null;
 
   const seaAnchor = sea ? sea.anchor : seaHints[0].anchor;
   let lat = location ? location.lat : seaAnchor.lat;
@@ -243,8 +294,16 @@ export function parseMessageToEvent(text, meta = {}) {
     lng = seaAnchor.lng;
   }
 
+  if (isTlk && type === "shahed" && !location) {
+    const center = regionCenters.kharkivska;
+    lat = center.lat;
+    lng = center.lng;
+    label = `${center.name} (загально)`;
+  }
+
   const idSeed = `${meta.source || "tg"}-${meta.timestamp || ""}-${type}-${label}`;
   const seed = hashSeed(idSeed);
+  const regionId = resolveRegionId(text, label);
 
   return {
     id: idSeed,
@@ -256,6 +315,7 @@ export function parseMessageToEvent(text, meta = {}) {
     timestamp: meta.timestamp ? new Date(meta.timestamp).toISOString() : new Date().toISOString(),
     comment: `Джерело: ${meta.source || "tg"}. Локація узагальнена: ${label}.`,
     is_test: isTest,
+    region_id: regionId,
     raw_text: meta.raw_text || text
   };
 }
