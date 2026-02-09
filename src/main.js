@@ -16,6 +16,8 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const markerLayer = L.layerGroup().addTo(map);
 const alarmLayer = L.layerGroup().addTo(map);
+let oblastGeoLayer = null;
+let oblastGeoReady = false;
 const markerById = new Map();
 const driftById = new Map();
 let driftTimer = null;
@@ -90,6 +92,35 @@ const typeLabels = {
   airplane: "Air"
 };
 const iconRotationOffset = 0;
+const ADM1_GEOJSON_URL =
+  "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/UKR/ADM1/geoBoundaries-UKR-ADM1_simplified.geojson";
+const oblastAliases = {
+  kyivska: ["kyivska", "kievska", "київська", "киевская"],
+  kyiv: ["kyiv city", "kyiv", "kiev", "київ", "киев"],
+  kharkivska: ["kharkivska", "kharkovska", "харківська", "харьковская"],
+  odeska: ["odeska", "odessa", "одеська", "одесская"],
+  lvivska: ["lvivska", "lvovska", "львівська", "львовская"],
+  dniprovska: ["dnipropetrovska", "dnepropetrovska", "дніпропетровська", "днепропетровская"],
+  zaporizka: ["zaporizka", "zaporozka", "запорізька", "запорожская"],
+  mykolaivska: ["mykolaivska", "nikolaevska", "миколаївська", "николаевская"],
+  khersonska: ["khersonska", "херсонська", "херсонская"],
+  chernihivska: ["chernihivska", "chernigovska", "чернігівська", "черниговская"],
+  sumyska: ["sumyska", "sumy", "сумська", "сумская"],
+  poltavska: ["poltavska", "полтавська", "полтавская"],
+  rivnenska: ["rivnenska", "rivne", "рівненська", "ровенская"],
+  volynska: ["volynska", "volyn", "волинська", "волынская"],
+  ternopilska: ["ternopilska", "ternopil", "тернопільська", "тернопольская"],
+  "ivano-frankivska": ["ivano-frankivska", "ivano-frankivsk", "івано-франківська", "ивано-франковская"],
+  chernivetska: ["chernivetska", "chernivtsi", "чернівецька", "черновицкая"],
+  zakarpatska: ["zakarpatska", "zakarpattia", "закарпатська", "закарпатская"],
+  khmelnytska: ["khmelnytska", "khmelnytskyi", "хмельницька", "хмельницкая"],
+  vinnytska: ["vinnytska", "vinnytsia", "вінницька", "винницкая"],
+  zhytomyrska: ["zhytomyrska", "zhytomyr", "житомирська", "житомирская"],
+  cherkaska: ["cherkaska", "cherkasy", "черкаська", "черкасская"],
+  kirovohradska: ["kirovohradska", "kirovohrad", "kirovograd", "кіровоградська", "кировоградская"],
+  donetska: ["donetska", "donetsk", "донецька", "донецкая"],
+  luhanska: ["luhanska", "luhansk", "луганська", "луганская"]
+};
 
 function normalizeType(type) {
   if (!type) return "other";
@@ -244,6 +275,50 @@ function formatTime(value) {
     timeZone: "Europe/Kyiv",
     hour12: false
   });
+}
+
+function normalizeRegionName(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/(oblast|region|область|обл\.?)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function matchRegionId(name) {
+  const normalized = normalizeRegionName(name);
+  for (const [id, aliases] of Object.entries(oblastAliases)) {
+    if (aliases.some((alias) => normalized.includes(normalizeRegionName(alias)))) {
+      return id;
+    }
+  }
+  return null;
+}
+
+async function ensureOblastLayer() {
+  if (oblastGeoReady) return;
+  try {
+    const response = await fetch(ADM1_GEOJSON_URL, { cache: "force-cache" });
+    if (!response.ok) throw new Error("geojson fetch failed");
+    const geojson = await response.json();
+    oblastGeoLayer = L.geoJSON(geojson, {
+      style: { color: "#ff3b30", weight: 1, fillColor: "#ff3b30", fillOpacity: 0 },
+      onEachFeature: (feature, layer) => {
+        const props = feature.properties || {};
+        const name =
+          props.shapeName || props.NAME_1 || props.name || props.shapeName || props.shapeNameEnglish;
+        const id = matchRegionId(name);
+        if (id) {
+          feature.properties._regionId = id;
+        }
+        layer.addTo(alarmLayer);
+      }
+    });
+    oblastGeoReady = true;
+  } catch (error) {
+    console.warn("Failed to load oblast geojson", error);
+    oblastGeoReady = false;
+  }
 }
 
 function makeMarkerIcon(event) {
@@ -434,16 +509,38 @@ function renderAlarmList() {
     });
 }
 
-function renderAlarmMap() {
-  alarmLayer.clearLayers();
+async function renderAlarmMap() {
   const active = new Set(state.alarms || []);
+  if (!oblastGeoReady) {
+    await ensureOblastLayer();
+  }
+
+  if (oblastGeoReady && oblastGeoLayer) {
+    oblastGeoLayer.eachLayer((layer) => {
+      const feature = layer.feature || {};
+      const id = feature.properties?._regionId;
+      const isActive = id && active.has(id);
+      layer.setStyle({
+        color: "#ff3b30",
+        weight: isActive ? 1.5 : 0.8,
+        fillColor: "#ff3b30",
+        fillOpacity: isActive ? 0.12 : 0
+      });
+      if (isActive) {
+        layer.bringToFront();
+      }
+    });
+    return;
+  }
+
+  alarmLayer.clearLayers();
   oblasts.forEach((region) => {
     if (!active.has(region.id)) return;
     const rect = L.rectangle(region.bbox, {
       color: "#ff3b30",
-      weight: 2,
+      weight: 1,
       fillColor: "#ff3b30",
-      fillOpacity: 0
+      fillOpacity: 0.12
     });
     rect.addTo(alarmLayer);
   });
@@ -492,7 +589,7 @@ async function refresh() {
     renderMarkers();
     renderRadarList();
     renderAlarmList();
-    renderAlarmMap();
+    await renderAlarmMap();
     if (state.maintenance && state.maintenanceUntil) {
       startMaintenanceCountdown();
       updateMaintenanceCountdown();
