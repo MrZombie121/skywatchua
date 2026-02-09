@@ -34,7 +34,8 @@ const state = {
   maintenanceUntil: null,
   alarms: [],
   adminBypassMaintenance: false,
-  refreshPaused: false
+  refreshPaused: false,
+  autoFollow: false
 };
 
 const typeContainer = document.getElementById("type-filters");
@@ -83,13 +84,15 @@ const themeApply = document.getElementById("theme-apply");
 const panelToggle = document.getElementById("panel-toggle");
 const panelBackdrop = document.getElementById("panel-backdrop");
 const toggleRefresh = document.getElementById("toggle-refresh");
+const toggleFollow = document.getElementById("toggle-follow");
 const toolTabs = toolPanel ? toolPanel.querySelectorAll("button[data-tab]") : [];
 
 const typeLabels = {
   shahed: "Shahed",
   missile: "Missile",
   kab: "KAB",
-  airplane: "Air"
+  airplane: "Air",
+  recon: "Recon"
 };
 const iconRotationOffset = 0;
 const ADM1_GEOJSON_URL = "/data/ukr-adm1.geojson";
@@ -127,6 +130,7 @@ function normalizeType(type) {
   if (key.includes("shahed")) return "shahed";
   if (key.includes("missile")) return "missile";
   if (key.includes("kab")) return "kab";
+  if (key.includes("recon")) return "recon";
   if (key.includes("air")) return "airplane";
   return "shahed";
 }
@@ -327,6 +331,7 @@ function makeMarkerIcon(event) {
     missile: "/ico/missle.png",
     kab: "/ico/kab.png",
     airplane: "/ico/airplane.png",
+    recon: "/ico/bplaviewer.png",
     other: "/ico/shahed.png"
   };
   const iconUrl = iconMap[typeClass] || iconMap.other;
@@ -389,6 +394,15 @@ function startDrift() {
   driftTimer = requestAnimationFrame(animate);
 }
 
+function getVisibleEvents() {
+  return state.events.filter((event) => {
+    if (!state.showTests && event.is_test) return false;
+    if (!state.selectedTypes.has(event.type)) return false;
+    if (!state.selectedSources.has(event.source)) return false;
+    return true;
+  });
+}
+
 function renderMarkers() {
   resetDrift();
 
@@ -414,12 +428,7 @@ function renderMarkers() {
     return;
   }
 
-  const filtered = state.events.filter((event) => {
-    if (!state.showTests && event.is_test) return false;
-    if (!state.selectedTypes.has(event.type)) return false;
-    if (!state.selectedSources.has(event.source)) return false;
-    return true;
-  });
+  const filtered = getVisibleEvents();
 
   const nextIds = new Set(filtered.map((event) => event.id));
 
@@ -597,6 +606,9 @@ async function refresh() {
     renderRadarList();
     renderAlarmList();
     await renderAlarmMap();
+    if (!state.maintenance && state.autoFollow) {
+      followLatestTarget();
+    }
     if (state.maintenance && state.maintenanceUntil) {
       startMaintenanceCountdown();
       updateMaintenanceCountdown();
@@ -905,6 +917,19 @@ if (toggleRefresh) {
   });
 }
 
+let lastFollowedId = null;
+function followLatestTarget() {
+  const visible = getVisibleEvents();
+  if (visible.length === 0) return;
+  const latest = visible.reduce((acc, current) => {
+    if (!acc) return current;
+    return new Date(current.timestamp) > new Date(acc.timestamp) ? current : acc;
+  }, null);
+  if (!latest || latest.id === lastFollowedId) return;
+  lastFollowedId = latest.id;
+  map.panTo([latest.lat, latest.lng], { animate: true, duration: 1 });
+}
+
 map.on("zoomend", updateMarkerScale);
 updateMarkerScale();
 state.adminBypassMaintenance = localStorage.getItem("sw_admin_bypass") === "1";
@@ -933,6 +958,19 @@ const paused = localStorage.getItem("sw_refresh_paused") === "1";
 state.refreshPaused = paused;
 if (toggleRefresh) {
   toggleRefresh.checked = paused;
+}
+
+const savedFollow = localStorage.getItem("sw_auto_follow") === "1";
+state.autoFollow = savedFollow;
+if (toggleFollow) {
+  toggleFollow.checked = savedFollow;
+  toggleFollow.addEventListener("change", (event) => {
+    state.autoFollow = event.target.checked;
+    localStorage.setItem("sw_auto_follow", state.autoFollow ? "1" : "0");
+    if (state.autoFollow) {
+      followLatestTarget();
+    }
+  });
 }
 
 refresh();

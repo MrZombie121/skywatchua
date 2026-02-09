@@ -12,6 +12,8 @@
   --shahed: #f59e0b;
   --missile: #ef4444;
   --kab: #10b981;
+  --airplane: #60a5fa;
+  --recon: #14b8a6;
   --other: #8b5cf6;
   --border: #24314a;
   --shadow: rgba(2, 6, 23, 0.6);
@@ -258,6 +260,14 @@ body.theme-skymap {
 
 .legend-shape.kab {
   background: var(--kab);
+}
+
+.legend-shape.airplane {
+  background: var(--airplane);
+}
+
+.legend-shape.recon {
+  background: var(--recon);
 }
 
 .legend-shape.other {

@@ -15,6 +15,10 @@
       "молния"
     ]
   },
+  {
+    type: "recon",
+    patterns: ["розвіддрон", "разведдрон", "розвідка бпла", "разведка бпла"]
+  },
   { type: "missile", patterns: ["missile", "ракета", "крилат", "баліст", "ballistic"] },
   { type: "kab", patterns: ["kab", "каб"] },
   {
