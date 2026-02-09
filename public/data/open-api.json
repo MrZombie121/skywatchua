@@ -1,0 +1,26 @@
+﻿{
+  "events": [
+    {
+      "id": "api-101",
+      "type": "kab",
+      "lat": 47.9,
+      "lng": 35.1,
+      "direction": 80,
+      "source": "api",
+      "timestamp": "2026-02-08T15:33:30Z",
+      "comment": "Демонстраційне повідомлення з API",
+      "is_test": false
+    },
+    {
+      "id": "api-102",
+      "type": "other",
+      "lat": 49.2,
+      "lng": 24.8,
+      "direction": 310,
+      "source": "api",
+      "timestamp": "2026-02-08T15:35:10Z",
+      "comment": "Невизначена ціль (демо)",
+      "is_test": true
+    }
+  ]
+}

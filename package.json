@@ -1,0 +1,26 @@
+{
+  "name": "skywatch-ua",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "node server/index.js",
+    "dev:client": "vite",
+    "tg:session": "node server/create-session.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server/index.js"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "lowdb": "^6.0.1",
+    "rss-parser": "^3.13.0",
+    "telegram": "^2.26.11"
+  }
+}
+

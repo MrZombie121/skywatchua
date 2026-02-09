@@ -1,0 +1,15 @@
+﻿{
+  "events": [
+    {
+      "id": "rss-201",
+      "type": "shahed",
+      "lat": 46.7,
+      "lng": 31.1,
+      "direction": 45,
+      "source": "rss",
+      "timestamp": "2026-02-08T15:36:20Z",
+      "comment": "Дані з RSS фіду (демо)",
+      "is_test": false
+    }
+  ]
+}

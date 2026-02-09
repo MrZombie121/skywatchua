@@ -1,0 +1,258 @@
+﻿<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skywatch UA — Моніторинг</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">SW</div>
+        <div class="brand-text">
+          <div class="brand-title">Skywatch UA</div>
+          <div class="brand-subtitle">Моніторинг повітряних цілей з відкритих джерел</div>
+        </div>
+      </div>
+      <div class="status">
+        <div class="status-item">Затримка даних: 2–5 хв</div>
+        <div class="status-item" id="last-updated">Оновлення: —</div>
+        <button class="admin-btn" id="admin-open">Для адмінів</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel">
+        <section class="panel-section">
+          <h2>Фільтри</h2>
+          <div class="filter-group">
+            <div class="filter-title">Типи цілей</div>
+            <div id="type-filters" class="filter-list"></div>
+          </div>
+          <div class="filter-group">
+            <div class="filter-title">Джерела</div>
+            <div id="source-filters" class="filter-list"></div>
+          </div>
+          <div class="filter-group">
+            <label class="toggle">
+              <input type="checkbox" id="toggle-tests" checked />
+              <span>Показувати тестові сигнали</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h2>Легенда</h2>
+          <div class="legend">
+            <div class="legend-item">
+              <span class="legend-dot real"></span>
+              Реальні події
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot test"></span>
+              Тестові події
+            </div>
+            <div class="legend-item">
+              <span class="legend-shape shahed"></span>
+              Shahed
+            </div>
+            <div class="legend-item">
+              <span class="legend-shape missile"></span>
+              Missile
+            </div>
+            <div class="legend-item">
+              <span class="legend-shape kab"></span>
+              KAB
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-section disclaimer">
+          Дисклеймер: Дані з відкритих джерел можуть бути неточними. Не використовувати
+          точні координати чи прогнози ударів.
+        </section>
+      </aside>
+
+      <section class="map-wrap">
+        <div class="maintenance-banner" id="maintenance-banner">
+          Технічні роботи. Частина функцій тимчасово недоступна.
+        </div>
+        <button class="tool-open" id="tool-open">Інструменти</button>
+        <button class="tool-settings" id="tool-settings">Тема</button>
+        <div class="tool-panel hidden" id="tool-panel">
+          <div class="tool-header">
+            <div class="tool-title">Інструменти</div>
+            <button class="tool-close" id="tool-close">✕</button>
+          </div>
+          <div class="tool-tabs">
+            <button class="active" data-tab="radar">Радар загроз</button>
+            <button data-tab="alarms">Список тривог</button>
+          </div>
+          <div class="tool-content">
+            <div id="radar-list" class="tool-list"></div>
+            <div id="alarm-list" class="tool-list hidden"></div>
+          </div>
+        </div>
+        <div id="map"></div>
+      </section>
+    </main>
+
+    <div class="settings-modal" id="settings-modal">
+      <div class="settings-card">
+        <div class="settings-header">
+          <div class="settings-title">Теми</div>
+          <button class="settings-close" id="settings-close">✕</button>
+        </div>
+        <div class="settings-body">
+          <label class="theme-option">
+            <input type="radio" name="theme" value="dark" checked />
+            Темна
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme" value="light" />
+            Світла
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme" value="skymap" />
+            SkyMap
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme" value="custom" />
+            Кастомна
+          </label>
+
+          <div class="theme-custom hidden" id="theme-custom">
+            <label>
+              Акцент
+              <input type="color" id="theme-accent" value="#3bb9ff" />
+            </label>
+            <label>
+              Фон
+              <input type="color" id="theme-bg" value="#0d1117" />
+            </label>
+            <label>
+              Панель
+              <input type="color" id="theme-panel" value="#101722" />
+            </label>
+            <button type="button" id="theme-apply">Застосувати</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-modal" id="admin-modal">
+      <div class="admin-card">
+        <div class="admin-header">
+          <div>
+            <div class="admin-title">Адмін доступ</div>
+            <div class="admin-subtitle">Керування режимом технічних робіт</div>
+          </div>
+          <button class="admin-close" id="admin-close">✕</button>
+        </div>
+
+        <div class="admin-body" id="admin-body">
+          <form id="admin-login-form" class="admin-form">
+            <label>
+              Логін
+              <input type="text" name="username" required />
+            </label>
+            <label>
+              Пароль
+              <input type="password" name="password" required />
+            </label>
+            <button type="submit">Увійти</button>
+          </form>
+
+          <div class="admin-panel hidden" id="admin-panel">
+            <div class="admin-row">
+              <span>Статус:</span>
+              <strong id="admin-status">—</strong>
+            </div>
+            <div class="admin-row">
+              <span>Технічні роботи до:</span>
+              <strong id="maintenance-until">—</strong>
+            </div>
+            <div class="admin-row">
+              <span>Технічні роботи</span>
+              <label class="toggle">
+                <input type="checkbox" id="maintenance-toggle" />
+                <span>Увімкнено</span>
+              </label>
+            </div>
+            <div class="admin-schedule">
+              <label>
+                Таймер (хвилин)
+                <input type="number" min="5" step="5" id="maintenance-minutes" placeholder="30" />
+              </label>
+              <label>
+                Або до часу
+                <input type="datetime-local" id="maintenance-until-input" />
+              </label>
+              <button type="button" id="maintenance-apply">Поставити таймер</button>
+              <button type="button" class="ghost" id="maintenance-clear">Скасувати таймер</button>
+            </div>
+            <button type="button" class="ghost" id="maintenance-show">Показати тех роботи</button>
+            <div class="admin-schedule">
+              <div class="admin-row">
+                <span>Тестова мітка</span>
+                <span class="muted">(узагальнено)</span>
+              </div>
+              <label>
+                Тип
+                <select id="test-type">
+                  <option value="shahed">Shahed</option>
+                  <option value="missile">Missile</option>
+                  <option value="kab">KAB</option>
+                  <option value="other">Інші</option>
+                </select>
+              </label>
+              <label>
+                Місто/регіон
+                <input type="text" id="test-city" placeholder="Київ" />
+              </label>
+              <label class="toggle">
+                <input type="checkbox" id="test-sea" />
+                <span>Позначити в морі в напрямку міста</span>
+              </label>
+              <label>
+                Напрям (0-360)
+                <input type="number" min="0" max="359" id="test-direction" placeholder="180" />
+              </label>
+              <label>
+                Коментар
+                <input type="text" id="test-note" placeholder="Демо сигнал" />
+              </label>
+              <button type="button" id="test-add">Додати тестову мітку</button>
+              <button type="button" class="ghost" id="test-clear">Очистити тестові мітки</button>
+            </div>
+            <button class="admin-logout" id="admin-logout">Вийти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="maintenance-screen" id="maintenance-screen">
+      <div class="maintenance-card">
+        <div class="maintenance-title">Технічні роботи</div>
+        <div class="maintenance-text" id="maintenance-screen-text">
+          Сервіс тимчасово недоступний. Спробуйте пізніше.
+        </div>
+        <button class="admin-btn" id="maintenance-admin-open">Для адмінів</button>
+      </div>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

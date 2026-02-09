@@ -1,0 +1,25 @@
+{
+  "settings": {
+    "maintenance": "false",
+    "maintenance_until": ""
+  },
+  "admins": [
+    {
+      "username": "admin26",
+      "password_hash": "bdfdfea5f14065058ef53a78f7c07c5b:12910ba7b8bf398344f11df69ea6e14511e260223873673f637e572da469e5052fc9d3082e65346c3a72b622b33c86d0cacb4ae3211755e7e165ef611ad0c573"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "94b7ce760e8972d8717146aa5bf63649bb0ac096795471d6",
+      "username": "admin26",
+      "expires_at": 1771177912795
+    },
+    {
+      "token": "cdd028f4c5d3dc1d2a0560fab6f60b6e85b6d7692258301b",
+      "username": "admin26",
+      "expires_at": 1771182092142
+    }
+  ],
+  "test_events": []
+}
