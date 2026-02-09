@@ -1,15 +1,48 @@
-﻿import { Low } from "lowdb";
-import { JSONFile } from "lowdb/node";
+﻿import { createClient } from "@libsql/client";
 import crypto from "node:crypto";
 
-const dbPath = process.env.DB_PATH || "./server/db/skywatch.json";
-const adapter = new JSONFile(dbPath);
-const db = new Low(adapter, { settings: {}, admins: [], sessions: [], test_events: [] });
+const dbUrl = process.env.TURSO_DATABASE_URL || "";
+const authToken = process.env.TURSO_AUTH_TOKEN || "";
+
+if (!dbUrl) {
+  throw new Error("TURSO_DATABASE_URL is not set.");
+}
+
+const db = createClient({
+  url: dbUrl,
+  authToken
+});
 
 async function init() {
-  await db.read();
-  db.data ||= { settings: {}, admins: [], sessions: [], test_events: [] };
-  await db.write();
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS admins (
+      username TEXT PRIMARY KEY,
+      password_hash TEXT NOT NULL
+    );
+  `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      expires_at INTEGER NOT NULL
+    );
+  `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS test_events (
+      id TEXT PRIMARY KEY,
+      message TEXT NOT NULL,
+      type TEXT,
+      direction INTEGER,
+      source TEXT,
+      created_at INTEGER NOT NULL
+    );
+  `);
 }
 
 function hashPassword(password, salt) {
@@ -22,83 +55,112 @@ async function ensureAdmin() {
   const username = process.env.ADMIN_USER || "admin26";
   const password = process.env.ADMIN_PASS || "admin26-ChangeMe!";
 
-  await db.read();
-  const exists = db.data.admins.find((admin) => admin.username === username);
-  if (exists) return;
+  const existing = await db.execute({
+    sql: "SELECT username FROM admins WHERE username = ?",
+    args: [username]
+  });
+  if (existing.rows.length > 0) return;
 
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = hashPassword(password, salt);
-  db.data.admins.push({ username, password_hash: `${salt}:${hash}` });
-  await db.write();
+  const stored = `${salt}:${hash}`;
+  await db.execute({
+    sql: "INSERT INTO admins (username, password_hash) VALUES (?, ?)",
+    args: [username, stored]
+  });
 }
 
 async function verifyAdmin(username, password) {
-  await db.read();
-  const row = db.data.admins.find((admin) => admin.username === username);
-  if (!row) return false;
-
-  const [salt, hash] = row.password_hash.split(":");
+  const row = await db.execute({
+    sql: "SELECT password_hash FROM admins WHERE username = ?",
+    args: [username]
+  });
+  if (row.rows.length === 0) return false;
+  const stored = String(row.rows[0].password_hash || "");
+  const [salt, hash] = stored.split(":");
+  if (!salt || !hash) return false;
   const candidate = hashPassword(password, salt);
   return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(candidate));
 }
 
 async function createSession(username, days = 7) {
-  await db.read();
   const token = crypto.randomBytes(24).toString("hex");
   const expiresAt = Date.now() + days * 24 * 60 * 60 * 1000;
-  db.data.sessions.push({ token, username, expires_at: expiresAt });
-  await db.write();
+  await db.execute({
+    sql: "INSERT INTO sessions (token, username, expires_at) VALUES (?, ?, ?)",
+    args: [token, username, expiresAt]
+  });
   return { token, expiresAt };
 }
 
 async function getSession(token) {
   if (!token) return null;
-  await db.read();
-  const now = Date.now();
-  db.data.sessions = db.data.sessions.filter((session) => session.expires_at >= now);
-  const row = db.data.sessions.find((session) => session.token === token);
-  if (!row) {
-    await db.write();
-    return null;
-  }
-  await db.write();
-  return row;
+  await db.execute({
+    sql: "DELETE FROM sessions WHERE expires_at < ?",
+    args: [Date.now()]
+  });
+  const row = await db.execute({
+    sql: "SELECT token, username, expires_at FROM sessions WHERE token = ?",
+    args: [token]
+  });
+  if (row.rows.length === 0) return null;
+  return row.rows[0];
 }
 
 async function clearSession(token) {
   if (!token) return;
-  await db.read();
-  db.data.sessions = db.data.sessions.filter((session) => session.token !== token);
-  await db.write();
+  await db.execute({
+    sql: "DELETE FROM sessions WHERE token = ?",
+    args: [token]
+  });
 }
 
 async function getSetting(key, fallback = null) {
-  await db.read();
-  return db.data.settings[key] ?? fallback;
+  const row = await db.execute({
+    sql: "SELECT value FROM settings WHERE key = ?",
+    args: [key]
+  });
+  if (row.rows.length === 0) return fallback;
+  return row.rows[0].value;
 }
 
 async function setSetting(key, value) {
-  await db.read();
-  db.data.settings[key] = value;
-  await db.write();
+  await db.execute({
+    sql: "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    args: [key, value]
+  });
 }
 
 async function listTestEvents() {
-  await db.read();
-  return db.data.test_events || [];
+  const rows = await db.execute({
+    sql: "SELECT id, message, type, direction, source, created_at FROM test_events ORDER BY created_at DESC"
+  });
+  return rows.rows.map((row) => ({
+    id: row.id,
+    message: row.message,
+    type: row.type,
+    direction: row.direction,
+    source: row.source,
+    createdAt: row.created_at
+  }));
 }
 
 async function addTestEvent(event) {
-  await db.read();
-  db.data.test_events = db.data.test_events || [];
-  db.data.test_events.push(event);
-  await db.write();
+  await db.execute({
+    sql: "INSERT INTO test_events (id, message, type, direction, source, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+    args: [
+      event.id,
+      event.message,
+      event.type,
+      event.direction,
+      event.source,
+      event.createdAt
+    ]
+  });
 }
 
 async function clearTestEvents() {
-  await db.read();
-  db.data.test_events = [];
-  await db.write();
+  await db.execute("DELETE FROM test_events");
 }
 
 await init();
