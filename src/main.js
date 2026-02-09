@@ -92,8 +92,7 @@ const typeLabels = {
   airplane: "Air"
 };
 const iconRotationOffset = 0;
-const ADM1_GEOJSON_URL =
-  "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/UKR/ADM1/geoBoundaries-UKR-ADM1_simplified.geojson";
+const ADM1_GEOJSON_URL = "/data/ukr-adm1.geojson";
 const oblastAliases = {
   kyivska: ["kyivska", "kievska", "київська", "киевская"],
   kyiv: ["kyiv city", "kyiv", "kiev", "київ", "киев"],
