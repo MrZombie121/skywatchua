@@ -301,7 +301,7 @@ async function ensureOblastLayer() {
     if (!response.ok) throw new Error("geojson fetch failed");
     const geojson = await response.json();
     oblastGeoLayer = L.geoJSON(geojson, {
-      style: { color: "#ff3b30", weight: 1, fillColor: "#ff3b30", fillOpacity: 0 },
+      style: { color: "transparent", weight: 0, fillOpacity: 0 },
       onEachFeature: (feature, layer) => {
         const props = feature.properties || {};
         const name =
@@ -519,12 +519,20 @@ async function renderAlarmMap() {
       const feature = layer.feature || {};
       const id = feature.properties?._regionId;
       const isActive = id && active.has(id);
-      layer.setStyle({
-        color: "#ff3b30",
-        weight: isActive ? 1.5 : 0.8,
-        fillColor: "#ff3b30",
-        fillOpacity: isActive ? 0.12 : 0
-      });
+      layer.setStyle(
+        isActive
+          ? {
+              color: "#ff3b30",
+              weight: 1.5,
+              fillColor: "#ff3b30",
+              fillOpacity: 0.12
+            }
+          : {
+              color: "transparent",
+              weight: 0,
+              fillOpacity: 0
+            }
+      );
       if (isActive) {
         layer.bringToFront();
       }
