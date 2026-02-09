@@ -144,7 +144,7 @@ function pickType(text) {
       return rule.type;
     }
   }
-  return "shahed";
+  return null;
 }
 
 function extractAlarmRegions(text) {
@@ -268,6 +268,7 @@ export function parseMessageToEvent(text, meta = {}) {
   const sea = pickSea(text);
 
   const type = meta.type || pickType(text);
+  if (!type) return null;
   const direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(text);
   const isTest = typeof meta.is_test === "boolean"
     ? meta.is_test
