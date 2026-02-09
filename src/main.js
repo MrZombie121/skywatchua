@@ -441,9 +441,9 @@ function renderAlarmMap() {
     if (!active.has(region.id)) return;
     const rect = L.rectangle(region.bbox, {
       color: "#ff3b30",
-      weight: 1,
+      weight: 2,
       fillColor: "#ff3b30",
-      fillOpacity: 0.15
+      fillOpacity: 0
     });
     rect.addTo(alarmLayer);
   });
