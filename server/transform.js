@@ -157,6 +157,21 @@ function extractAlarmRegions(text) {
   alarmRegions.forEach((region) => {
     if (region.keys.some((key) => lower.includes(key))) {
       matches.push(region.id);
+      return;
+    }
+    const hasStem = region.keys.some((key) => {
+      if (key.endsWith("ська")) {
+        const stem = key.slice(0, -1);
+        return stem.length >= 4 && lower.includes(stem);
+      }
+      if (key.endsWith("ская")) {
+        const stem = key.slice(0, -2);
+        return stem.length >= 4 && lower.includes(stem);
+      }
+      return false;
+    });
+    if (hasStem) {
+      matches.push(region.id);
     }
   });
   return matches;

@@ -36,11 +36,12 @@ async function getClient() {
 export async function loadTelegramEvents() {
   const tgClient = await getClient();
   if (!tgClient || channels.length === 0) {
-    return { events: [], alarms: [] };
+    return { events: [], alarms: [], alarms_updated: false };
   }
 
   const events = [];
   const alarmSet = new Set();
+  let alarmsUpdated = false;
   for (const channel of channels) {
     try {
       const messages = await tgClient.getMessages(channel, { limit });
@@ -49,6 +50,7 @@ export async function loadTelegramEvents() {
         if (!msg.message) continue;
         const signal = extractAlarmSignals(msg.message);
         if (signal) {
+          alarmsUpdated = true;
           signal.regions.forEach((region) => {
             if (signal.status === "off") {
               alarmSet.delete(region);
@@ -69,5 +71,5 @@ export async function loadTelegramEvents() {
     }
   }
 
-  return { events, alarms: Array.from(alarmSet) };
+  return { events, alarms: Array.from(alarmSet), alarms_updated: alarmsUpdated };
 }

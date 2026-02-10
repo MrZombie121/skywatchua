@@ -88,10 +88,25 @@ app.get("/api/events", async (_req, res) => {
   try {
     const tgPayload = await loadTelegramEvents();
     const maintenance = await getMaintenanceState();
+    let alarmState = tgPayload.alarms || [];
+    if (tgPayload.alarms_updated) {
+      await setSetting("alarms_state", JSON.stringify(alarmState));
+      await setSetting("alarms_updated_at", String(Date.now()));
+    } else {
+      const stored = await getSetting("alarms_state", "[]");
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length >= 0) {
+          alarmState = parsed;
+        }
+      } catch {
+        alarmState = alarmState || [];
+      }
+    }
     if (maintenance.enabled) {
       return res.json({
         events: [],
-        alarms: tgPayload.alarms || [],
+        alarms: alarmState,
         maintenance: true,
         maintenance_until: maintenance.until,
         cached: true
@@ -102,7 +117,7 @@ app.get("/api/events", async (_req, res) => {
     if (now - state.lastFetch < REFRESH_MS && state.cache.length) {
       return res.json({
         events: state.cache,
-        alarms: tgPayload.alarms || [],
+        alarms: alarmState,
         cached: true,
         maintenance: false
       });
@@ -129,9 +144,6 @@ app.get("/api/events", async (_req, res) => {
     const combined = [...tgPayload.events, ...rssEvents, ...testEvents].filter((event) => {
       const time = Date.parse(event.timestamp);
       if (!Number.isFinite(time)) return false;
-      if (event.type === "shahed" && event.region_id && !alarms.has(event.region_id)) {
-        return false;
-      }
       return nowTs - time <= ttlMs;
     });
     state.cache = combined;
@@ -139,7 +151,7 @@ app.get("/api/events", async (_req, res) => {
 
     res.json({
       events: combined,
-      alarms: tgPayload.alarms || [],
+      alarms: alarmState,
       cached: false,
       maintenance: false,
       maintenance_until: null
