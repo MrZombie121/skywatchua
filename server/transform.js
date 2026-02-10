@@ -367,6 +367,32 @@ function extractLocationHits(text) {
   return Array.from(unique.values());
 }
 
+function hasTrackContext(text) {
+  const lower = normalizeText(text);
+  return [
+    "бпла",
+    "бпл",
+    "дрон",
+    "шахед",
+    "uav",
+    "курс",
+    "йде на",
+    "летить",
+    "літає",
+    "над",
+    "повз",
+    "поблизу",
+    "біля",
+    "в районі",
+    "в р-ні",
+    "в р-не",
+    "у напрямку",
+    "в направлении",
+    "загроза",
+    "небезпека"
+  ].some((key) => lower.includes(key));
+}
+
 export function parseMessageToEvents(text, meta = {}) {
   if (isDowned(text)) return [];
   const coords = extractCoords(text);
@@ -374,7 +400,8 @@ export function parseMessageToEvents(text, meta = {}) {
   const sea = pickSea(text);
 
   let type = meta.type || pickType(text);
-  if (!type && locationHits.length > 0) {
+  const hasCount = locationHits.some((hit) => Number.isFinite(hit.count) && hit.count > 0);
+  if (!type && locationHits.length > 0 && (hasTrackContext(text) || hasCount)) {
     type = "shahed";
   }
   if (!type) return [];
