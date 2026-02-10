@@ -124,7 +124,9 @@ const regionCenters = {
   khersonska: { lat: 46.63, lng: 32.62, name: "Херсонська" },
   chernihivska: { lat: 51.5, lng: 31.3, name: "Чернігівська" },
   sumyska: { lat: 50.91, lng: 34.8, name: "Сумська" },
-  poltavska: { lat: 49.59, lng: 34.55, name: "Полтавська" }
+  poltavska: { lat: 49.59, lng: 34.55, name: "Полтавська" },
+  crimea: { lat: 45.3, lng: 34.2, name: "АР Крим" },
+  sevastopol: { lat: 44.6, lng: 33.5, name: "Севастополь" }
 };
 
 const seaHints = [
@@ -141,7 +143,7 @@ const seaHints = [
 ];
 
 function pickType(text) {
-  const lower = text.toLowerCase();
+  const lower = normalizeText(text);
   if (lower.includes("йде на") && (lower.includes("район") || lower.includes("р-н"))) {
     return "shahed";
   }
@@ -154,7 +156,7 @@ function pickType(text) {
 }
 
 function extractAlarmRegions(text) {
-  const lower = text.toLowerCase();
+  const lower = normalizeText(text);
   const matches = [];
   alarmRegions.forEach((region) => {
     if (region.keys.some((key) => lower.includes(key))) {
@@ -180,7 +182,7 @@ function extractAlarmRegions(text) {
 }
 
 function extractAlarmSignals(text) {
-  const lower = text.toLowerCase();
+  const lower = normalizeText(text);
   const hasAlarm = lower.includes("тривога");
   const hasClear = lower.includes("відбій") || lower.includes("отбой");
   if (!hasAlarm && !hasClear) return null;
@@ -195,21 +197,21 @@ function extractAlarmSignals(text) {
 }
 
 function isDowned(text) {
-  const lower = text.toLowerCase();
+  const lower = normalizeText(text);
   return ["збит", "сбит", "знищ", "уничтож", "downed"].some((keyword) =>
     lower.includes(keyword)
   );
 }
 
 function pickLocation(text) {
-  const lower = text.toLowerCase();
-  const contextual = locationHints.filter((hint) => Array.isArray(hint.context) && hint.context.length > 0);
+  const lower = normalizeText(text);
+  const contextual = allLocationHints.filter((hint) => Array.isArray(hint.context) && hint.context.length > 0);
   for (const hint of contextual) {
     if (hint.keys.some((key) => lower.includes(key)) && hint.context.some((ctx) => lower.includes(ctx))) {
       return { lat: hint.lat, lng: hint.lng, label: hint.name };
     }
   }
-  for (const hint of locationHints) {
+  for (const hint of allLocationHints) {
     if (Array.isArray(hint.context) && hint.context.length > 0) continue;
     if (hint.keys.some((key) => lower.includes(key))) {
       return { lat: hint.lat, lng: hint.lng, label: hint.name };
@@ -219,7 +221,7 @@ function pickLocation(text) {
 }
 
 function pickSea(text) {
-  const lower = text.toLowerCase();
+  const lower = normalizeText(text);
   for (const sea of seaHints) {
     if (sea.keys.some((key) => lower.includes(key))) {
       return sea;
@@ -232,7 +234,7 @@ function pickSea(text) {
 }
 
 function forceSeaForAviation(text) {
-  const lower = text.toLowerCase();
+  const lower = normalizeText(text);
   return (
     lower.includes("тактичної авіації") ||
     lower.includes("тактической авиации") ||
@@ -258,8 +260,40 @@ function addJitter(value, seed) {
   return Number((value + offset).toFixed(4));
 }
 
+function normalizeText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[’`]/g, "'")
+    .replace(/[.,;:()\\[\\]{}<>]/g, " ")
+    .replace(/\\s+/g, " ")
+    .trim();
+}
+
+function loadOverrideLocations() {
+  const raw = process.env.TG_LOCATION_OVERRIDES || "";
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item) => item && item.lat && item.lng && Array.isArray(item.keys))
+      .map((item) => ({
+        name: item.name || item.keys[0],
+        keys: item.keys.map((key) => String(key).toLowerCase()),
+        lat: Number(item.lat),
+        lng: Number(item.lng),
+        context: Array.isArray(item.context) ? item.context.map((c) => String(c).toLowerCase()) : null
+      }));
+  } catch {
+    return [];
+  }
+}
+
+const overrideLocations = loadOverrideLocations();
+const allLocationHints = [...locationHints, ...overrideLocations];
+
 function parseDirection(text) {
-  const lower = text.toLowerCase();
+  const lower = normalizeText(text);
   if (lower.includes("північ")) return 0;
   if (lower.includes("схід")) return 90;
   if (lower.includes("південь")) return 180;
@@ -268,13 +302,13 @@ function parseDirection(text) {
 }
 
 function resolveRegionId(text, label) {
-  const lower = text.toLowerCase();
+  const lower = normalizeText(text);
   for (const region of alarmRegions) {
     if (region.keys.some((key) => lower.includes(key))) {
       return region.id;
     }
   }
-  const labelLower = String(label || "").toLowerCase();
+  const labelLower = normalizeText(label);
   for (const region of alarmRegions) {
     if (region.keys.some((key) => labelLower.includes(key))) {
       return region.id;
@@ -284,62 +318,134 @@ function resolveRegionId(text, label) {
 }
 
 export function parseMessageToEvent(text, meta = {}) {
-  if (isDowned(text)) return null;
-  const location = pickLocation(text);
+  return parseMessageToEvents(text, meta)[0] || null;
+}
+
+function extractCoords(text) {
+  const match = String(text || "")
+    .replace(/,/g, ".")
+    .match(/(-?\\d{1,2}\\.\\d+)\\s*[, ]\\s*(-?\\d{1,3}\\.\\d+)/);
+  if (!match) return null;
+  const lat = Number(match[1]);
+  const lng = Number(match[2]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < 43 || lat > 53 || lng < 21 || lng > 41) return null;
+  return { lat, lng, label: `${lat.toFixed(4)}, ${lng.toFixed(4)}`, exact: true };
+}
+
+function extractLocationHits(text) {
+  const lower = normalizeText(text);
+  const hits = [];
+  allLocationHints.forEach((hint) => {
+    hint.keys.forEach((key) => {
+      const idx = lower.indexOf(key);
+      if (idx === -1) return;
+      const before = lower.slice(Math.max(0, idx - 30), idx);
+      const countMatch = before.match(
+        /(\\+?\\d{1,2})\\s*(?:x|шт\\.?|од\\.?|штук)?\\s*(?:повз|біля|поблизу|над|у напрямку|в направлении|в районі|в р-ні|в р-не|курс на|в сторону|по|через)?\\s*$/
+      );
+      const count = countMatch ? Number(String(countMatch[1]).replace("+", "")) : null;
+      hits.push({
+        label: hint.name,
+        lat: hint.lat,
+        lng: hint.lng,
+        exact: true,
+        count: Number.isFinite(count) ? count : null,
+        index: idx
+      });
+    });
+  });
+  hits.sort((a, b) => a.index - b.index);
+  const unique = new Map();
+  hits.forEach((hit) => {
+    if (!unique.has(hit.label)) {
+      unique.set(hit.label, hit);
+    } else if (unique.get(hit.label).count == null && hit.count != null) {
+      unique.set(hit.label, hit);
+    }
+  });
+  return Array.from(unique.values());
+}
+
+export function parseMessageToEvents(text, meta = {}) {
+  if (isDowned(text)) return [];
+  const coords = extractCoords(text);
+  const locationHits = coords ? [coords] : extractLocationHits(text);
   const sea = pickSea(text);
 
-  const type = meta.type || pickType(text);
-  if (!type) return null;
+  let type = meta.type || pickType(text);
+  if (!type && locationHits.length > 0) {
+    type = "shahed";
+  }
+  if (!type) return [];
+
   const direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(text);
   const isTest = typeof meta.is_test === "boolean"
     ? meta.is_test
-    : text.toLowerCase().includes("тест") || text.toLowerCase().includes("test");
+    : normalizeText(text).includes("тест") || normalizeText(text).includes("test");
 
   const forceSea = type === "airplane" || forceSeaForAviation(text);
   const isTlk = String(meta.source || "").toLowerCase().includes("tlknewsua");
-  if (!location && !sea && !forceSea && !(isTlk && type === "shahed")) return null;
+  const regionId = resolveRegionId(text, "");
+  const regionCenter = regionId ? regionCenters[regionId] : null;
+
+  if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !(isTlk && type === "shahed")) {
+    return [];
+  }
 
   const seaAnchor = sea ? sea.anchor : seaHints[0].anchor;
-  let lat = location ? location.lat : seaAnchor.lat;
-  let lng = location ? location.lng : seaAnchor.lng;
-  let label = location ? location.label : sea ? sea.name : "Чорне море";
 
-  if ((sea || forceSea) && location) {
-    const vectorLat = location.lat - seaAnchor.lat;
-    const vectorLng = location.lng - seaAnchor.lng;
-    const scale = 0.35;
-    lat = seaAnchor.lat + vectorLat * scale;
-    lng = seaAnchor.lng + vectorLng * scale;
-    label = `${sea ? sea.name : "Чорне море"} → ${location.label}`;
-  } else if (sea || forceSea) {
-    lat = seaAnchor.lat;
-    lng = seaAnchor.lng;
-  }
+  const targets = locationHits.length > 0
+    ? locationHits
+    : regionCenter
+      ? [{ lat: regionCenter.lat, lng: regionCenter.lng, label: regionCenter.name, exact: false }]
+      : [{ lat: seaAnchor.lat, lng: seaAnchor.lng, label: sea ? sea.name : "Чорне море", exact: false }];
 
-  if (isTlk && type === "shahed" && !location) {
-    const center = regionCenters.kharkivska;
-    lat = center.lat;
-    lng = center.lng;
-    label = `${center.name} (загально)`;
-  }
+  return targets.map((target, index) => {
+    let lat = target.lat;
+    let lng = target.lng;
+    let label = target.label;
 
-  const idSeed = `${meta.source || "tg"}-${meta.timestamp || ""}-${type}-${label}`;
-  const seed = hashSeed(idSeed);
-  const regionId = resolveRegionId(text, label);
+    if ((sea || forceSea) && locationHits.length > 0) {
+      const vectorLat = target.lat - seaAnchor.lat;
+      const vectorLng = target.lng - seaAnchor.lng;
+      const scale = 0.35;
+      lat = seaAnchor.lat + vectorLat * scale;
+      lng = seaAnchor.lng + vectorLng * scale;
+      label = `${sea ? sea.name : "Чорне море"} → ${target.label}`;
+    } else if (sea || forceSea) {
+      lat = seaAnchor.lat;
+      lng = seaAnchor.lng;
+    }
 
-  return {
-    id: idSeed,
-    type,
-    lat: addJitter(lat, seed),
-    lng: addJitter(lng, seed + 7),
-    direction,
-    source: meta.source || "tg",
-    timestamp: meta.timestamp ? new Date(meta.timestamp).toISOString() : new Date().toISOString(),
-    comment: `Джерело: ${meta.source || "tg"}. Локація узагальнена: ${label}.`,
-    is_test: isTest,
-    region_id: regionId,
-    raw_text: meta.raw_text || text
-  };
+    if (isTlk && type === "shahed" && locationHits.length === 0 && !regionCenter) {
+      const center = regionCenters.kharkivska;
+      lat = center.lat;
+      lng = center.lng;
+      label = `${center.name} (загально)`;
+    }
+
+    const idSeed = `${meta.source || "tg"}-${meta.timestamp || ""}-${type}-${label}-${index}`;
+    const seed = hashSeed(idSeed);
+    const resolvedRegionId = resolveRegionId(text, label) || regionId;
+    const countText = target.count && target.count > 1 ? ` К-сть: ${target.count}.` : "";
+    const jitteredLat = target.exact ? lat : addJitter(lat, seed);
+    const jitteredLng = target.exact ? lng : addJitter(lng, seed + 7);
+
+    return {
+      id: idSeed,
+      type,
+      lat: jitteredLat,
+      lng: jitteredLng,
+      direction,
+      source: meta.source || "tg",
+      timestamp: meta.timestamp ? new Date(meta.timestamp).toISOString() : new Date().toISOString(),
+      comment: `Джерело: ${meta.source || "tg"}. Локація: ${label}.${countText}`,
+      is_test: isTest,
+      region_id: resolvedRegionId,
+      raw_text: meta.raw_text || text
+    };
+  });
 }
 
 export { extractAlarmRegions, extractAlarmSignals };

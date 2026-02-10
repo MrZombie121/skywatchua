@@ -1,6 +1,6 @@
 ﻿import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
-import { parseMessageToEvent, extractAlarmSignals } from "./transform.js";
+import { parseMessageToEvents, extractAlarmSignals } from "./transform.js";
 
 const apiId = process.env.TG_API_ID ? Number(process.env.TG_API_ID) : null;
 const apiHash = process.env.TG_API_HASH || null;
@@ -59,12 +59,12 @@ export async function loadTelegramEvents() {
             }
           });
         }
-        const event = parseMessageToEvent(msg.message, {
+        const eventsFromMsg = parseMessageToEvents(msg.message, {
           source: channel,
           timestamp: msg.date * 1000,
           raw_text: msg.message
         });
-        if (event) events.push(event);
+        if (eventsFromMsg.length) events.push(...eventsFromMsg);
       }
     } catch (error) {
       console.warn("Failed to read channel", channel, error?.message || error);

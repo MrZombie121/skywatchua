@@ -1,5 +1,5 @@
 ﻿import Parser from "rss-parser";
-import { parseMessageToEvent } from "./transform.js";
+import { parseMessageToEvents } from "./transform.js";
 
 const parser = new Parser();
 const urls = (process.env.RSS_URLS || "")
@@ -19,11 +19,11 @@ export async function loadRssEvents() {
         const text = [item.title, item.contentSnippet, item.content]
           .filter(Boolean)
           .join(" ");
-        const event = parseMessageToEvent(text, {
+        const eventsFromMsg = parseMessageToEvents(text, {
           source: sourceId,
           timestamp: item.isoDate ? Date.parse(item.isoDate) : Date.now()
         });
-        if (event) events.push(event);
+        if (eventsFromMsg.length) events.push(...eventsFromMsg);
       }
     } catch (error) {
       console.warn("Failed to parse RSS", url, error?.message || error);

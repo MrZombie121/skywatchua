@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { loadTelegramEvents } from "./telegram.js";
 import { loadRssEvents } from "./rss.js";
 import { loadOpenEvents } from "./open.js";
-import { parseMessageToEvent } from "./transform.js";
+import { parseMessageToEvents } from "./transform.js";
 import {
   verifyAdmin,
   createSession,
@@ -128,8 +128,8 @@ app.get("/api/events", async (_req, res) => {
 
     const storedTests = await listTestEvents();
     const testEvents = storedTests
-      .map((item) =>
-        parseMessageToEvent(item.message, {
+      .flatMap((item) =>
+        parseMessageToEvents(item.message, {
           source: item.source || "admin",
           timestamp: item.createdAt,
           type: item.type,

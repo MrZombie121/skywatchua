@@ -1,4 +1,4 @@
-import { parseMessageToEvent } from "./transform.js";
+import { parseMessageToEvents } from "./transform.js";
 
 const urls = (process.env.OPEN_JSON_FEEDS || "")
   .split(",")
@@ -10,7 +10,7 @@ function normalizeEvent(item, sourceFallback) {
   const lng = Number(item.lng ?? item.longitude ?? item.location?.lng);
   const timestamp = item.timestamp || item.time || item.date || Date.now();
   if (Number.isFinite(lat) && Number.isFinite(lng)) {
-    return {
+    return [{
       id:
         item.id ||
         `${sourceFallback}-${timestamp}-${Math.random().toString(36).slice(2, 7)}`,
@@ -23,12 +23,12 @@ function normalizeEvent(item, sourceFallback) {
       comment: item.comment || item.note || "",
       is_test: Boolean(item.is_test ?? item.isTest ?? false),
       raw_text: item.raw_text || item.text || ""
-    };
+    }];
   }
 
   const text = item.text || item.title || item.message || "";
-  if (!text) return null;
-  return parseMessageToEvent(text, {
+  if (!text) return [];
+  return parseMessageToEvents(text, {
     source: item.source || sourceFallback,
     timestamp,
     raw_text: text
@@ -48,8 +48,8 @@ export async function loadOpenEvents() {
         ? payload
         : payload.events || payload.items || payload.data || [];
       for (const item of items) {
-        const event = normalizeEvent(item, url);
-        if (event) events.push(event);
+        const eventsFromItem = normalizeEvent(item, url);
+        if (eventsFromItem.length) events.push(...eventsFromItem);
       }
     } catch (error) {
       console.warn("Failed to load open feed", url, error?.message || error);

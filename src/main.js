@@ -472,6 +472,11 @@ function startDrift() {
           if (item.track.length > 80) item.track.shift();
           if (activeTrackId === item.id && activeTrackLine) {
             activeTrackLine.setLatLngs(item.track);
+            const event = eventById.get(item.id);
+            if (event) {
+              const distanceKm = trackDistanceKm(item.track);
+              item.marker.setPopupContent(buildPopup(event, distanceKm));
+            }
           }
           if (item.trailLine) {
             item.trailLine.setLatLngs(item.track);
