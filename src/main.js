@@ -9,7 +9,7 @@ const map = L.map("map", {
   attributionControl: true
 }).setView([49.0, 31.0], 6);
 
-const alarmsEnabled = false;
+const alarmsEnabled = true;
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 18,
@@ -727,18 +727,6 @@ async function renderAlarmMap() {
     });
     return;
   }
-
-  alarmLayer.clearLayers();
-  oblasts.forEach((region) => {
-    if (!active.has(region.id)) return;
-    const rect = L.rectangle(region.bbox, {
-      color: "#ff3b30",
-      weight: 1,
-      fillColor: "#ff3b30",
-      fillOpacity: 0.12
-    });
-    rect.addTo(alarmLayer);
-  });
 }
 
 function formatCountdown(ms) {
