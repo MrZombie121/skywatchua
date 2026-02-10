@@ -128,7 +128,9 @@ const isoToRegionId = {
   "UA-68": "khmelnytska",
   "UA-71": "cherkaska",
   "UA-74": "chernihivska",
-  "UA-77": "chernivetska"
+  "UA-77": "chernivetska",
+  "UA-40": "sevastopol",
+  "UA-43": "crimea"
 };
 const oblastAliases = {
   kyivska: ["kyivska", "kievska", "київська", "киевская"],
@@ -155,7 +157,9 @@ const oblastAliases = {
   cherkaska: ["cherkaska", "cherkasy", "черкаська", "черкасская"],
   kirovohradska: ["kirovohradska", "kirovohrad", "kirovograd", "кіровоградська", "кировоградская"],
   donetska: ["donetska", "donetsk", "донецька", "донецкая"],
-  luhanska: ["luhanska", "luhansk", "луганська", "луганская"]
+  luhanska: ["luhanska", "luhansk", "луганська", "луганская"],
+  crimea: ["crimea", "крим", "крым", "автономна республіка крим", "автономная республика крым", "арк"],
+  sevastopol: ["sevastopol", "севастополь", "м. севастополь", "місто севастополь"]
 };
 
 function normalizeType(type) {
