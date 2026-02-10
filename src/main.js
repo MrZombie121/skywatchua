@@ -9,6 +9,8 @@ const map = L.map("map", {
   attributionControl: true
 }).setView([49.0, 31.0], 6);
 
+const alarmsEnabled = false;
+
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 18,
   attribution: "&copy; OpenStreetMap contributors"
@@ -17,6 +19,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 const markerLayer = L.layerGroup().addTo(map);
 const alarmLayer = L.layerGroup().addTo(map);
 const trackLayer = L.layerGroup().addTo(map);
+const shahedTrailLayer = L.layerGroup().addTo(map);
 let oblastGeoLayer = null;
 let oblastGeoReady = false;
 const markerById = new Map();
@@ -413,8 +416,9 @@ function startDrift() {
   if (driftTimer || driftById.size === 0) return;
   const speedMps = 1.4;
   const maxDistanceKm = 5;
-  const turnIntervalMs = 9000;
+  const turnIntervalMs = 12000;
   const turnRate = 35;
+  const turnHoldMs = 900;
   let lastFrame = performance.now();
   const animate = (now) => {
     const dt = Math.min(0.05, (now - lastFrame) / 1000);
@@ -430,6 +434,7 @@ function startDrift() {
       if (now - item.lastTurnAt > turnIntervalMs) {
         item.targetDirection = pickNextDirection(item.direction);
         item.lastTurnAt = now;
+        item.turnUntil = now + turnHoldMs;
       }
       const delta = ((item.targetDirection - item.direction + 540) % 360) - 180;
       const maxStep = turnRate * dt;
@@ -438,8 +443,10 @@ function startDrift() {
       } else {
         item.direction = normalizeAngle(item.direction + Math.sign(delta) * maxStep);
       }
-      const stepKm = (speedMps * dt * zoomFactor) / 1000;
-      item.distanceKm = Math.min(maxDistanceKm, item.distanceKm + stepKm);
+      if (!item.turnUntil || now >= item.turnUntil) {
+        const stepKm = (speedMps * dt * zoomFactor) / 1000;
+        item.distanceKm = Math.min(maxDistanceKm, item.distanceKm + stepKm);
+      }
       const distanceKm = item.distanceKm * zoomFactor;
       const distanceDegLat = distanceKm / 111;
       const rad = (item.direction * Math.PI) / 180;
@@ -461,6 +468,9 @@ function startDrift() {
           if (item.track.length > 80) item.track.shift();
           if (activeTrackId === item.id && activeTrackLine) {
             activeTrackLine.setLatLngs(item.track);
+          }
+          if (item.trailLine) {
+            item.trailLine.setLatLngs(item.track);
           }
         }
       }
@@ -512,6 +522,10 @@ function renderMarkers() {
     if (!nextIds.has(id)) {
       markerLayer.removeLayer(marker);
       markerById.delete(id);
+      const drift = driftById.get(id);
+      if (drift?.trailLine) {
+        shahedTrailLayer.removeLayer(drift.trailLine);
+      }
       driftById.delete(id);
     }
   });
@@ -533,8 +547,17 @@ function renderMarkers() {
           direction: event.direction || 0,
           targetDirection: event.direction || 0,
           distanceKm: 0,
-          track: []
+          track: [],
+          trailLine: null
         });
+      }
+      const drift = driftById.get(event.id);
+      if (drift && event.type === "shahed" && !drift.trailLine) {
+        drift.trailLine = L.polyline(drift.track, {
+          color: "#f59e0b",
+          weight: 2,
+          opacity: 0.7
+        }).addTo(shahedTrailLayer);
       }
       return;
     }
@@ -543,9 +566,10 @@ function renderMarkers() {
     marker.bindPopup(popup, { closeButton: true });
     marker.addTo(markerLayer);
     marker.on("click", () => toggleTrackFor(event.id, marker));
+    marker.on("popupopen", () => toggleTrackFor(event.id, marker));
     markerById.set(event.id, marker);
     eventById.set(event.id, event);
-    driftById.set(event.id, {
+    const drift = {
       id: event.id,
       marker,
       baseLat: event.lat,
@@ -553,8 +577,17 @@ function renderMarkers() {
       direction: event.direction || 0,
       targetDirection: event.direction || 0,
       distanceKm: 0,
-      track: [[event.lat, event.lng]]
-    });
+      track: [[event.lat, event.lng]],
+      trailLine: null
+    };
+    if (event.type === "shahed") {
+      drift.trailLine = L.polyline(drift.track, {
+        color: "#f59e0b",
+        weight: 2,
+        opacity: 0.7
+      }).addTo(shahedTrailLayer);
+    }
+    driftById.set(event.id, drift);
   });
   startDrift();
 }
@@ -615,6 +648,7 @@ function toggleTrackFor(eventId, marker) {
     opacity: 0.7,
     dashArray: "6 8"
   }).addTo(trackLayer);
+  activeTrackLine.bringToFront();
 
   const event = eventById.get(eventId);
   if (event && marker) {
@@ -659,6 +693,10 @@ function renderAlarmList() {
 }
 
 async function renderAlarmMap() {
+  if (!alarmsEnabled) {
+    alarmLayer.clearLayers();
+    return;
+  }
   const active = new Set(state.alarms || []);
   if (!oblastGeoReady) {
     await ensureOblastLayer();
