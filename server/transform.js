@@ -183,8 +183,26 @@ function extractAlarmRegions(text) {
 
 function extractAlarmSignals(text) {
   const lower = normalizeText(text);
-  const hasAlarm = lower.includes("тривога");
-  const hasClear = lower.includes("відбій") || lower.includes("отбой");
+  const hasAlarm =
+    lower.includes("тривога") ||
+    lower.includes("повітряна") ||
+    lower.includes("воздушная") ||
+    lower.includes("сирена") ||
+    lower.includes("оголошено") ||
+    lower.includes("оголошена") ||
+    lower.includes("увімкнено") ||
+    lower.includes("включена") ||
+    lower.includes("загроза") ||
+    lower.includes("небезпека") ||
+    lower.includes("🚨");
+  const hasClear =
+    lower.includes("відбій") ||
+    lower.includes("отбой") ||
+    lower.includes("скасовано") ||
+    lower.includes("відміна") ||
+    lower.includes("отмена") ||
+    lower.includes("сирени відбій") ||
+    lower.includes("сирена відбій");
   if (!hasAlarm && !hasClear) return null;
 
   const regions = extractAlarmRegions(text);
