@@ -568,6 +568,11 @@ body.theme-skymap {
   font-size: 13px;
 }
 
+.popup-meta {
+  color: #334155;
+  font-size: 11px;
+}
+
 
 .admin-modal {
   position: fixed;

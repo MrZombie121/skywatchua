@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadTelegramEvents } from "./telegram.js";
 import { loadRssEvents } from "./rss.js";
+import { loadOpenEvents } from "./open.js";
 import { parseMessageToEvent } from "./transform.js";
 import {
   verifyAdmin,
@@ -123,7 +124,7 @@ app.get("/api/events", async (_req, res) => {
       });
     }
 
-    const rssEvents = await loadRssEvents();
+    const [rssEvents, openEvents] = await Promise.all([loadRssEvents(), loadOpenEvents()]);
 
     const storedTests = await listTestEvents();
     const testEvents = storedTests
@@ -141,7 +142,7 @@ app.get("/api/events", async (_req, res) => {
     const nowTs = Date.now();
     const ttlMs = Math.max(1, EVENT_TTL_MIN) * 60 * 1000;
     const alarms = new Set(tgPayload.alarms || []);
-    const combined = [...tgPayload.events, ...rssEvents, ...testEvents].filter((event) => {
+    const combined = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents].filter((event) => {
       const time = Date.parse(event.timestamp);
       if (!Number.isFinite(time)) return false;
       return nowTs - time <= ttlMs;

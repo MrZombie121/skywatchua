@@ -16,12 +16,16 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const markerLayer = L.layerGroup().addTo(map);
 const alarmLayer = L.layerGroup().addTo(map);
+const trackLayer = L.layerGroup().addTo(map);
 let oblastGeoLayer = null;
 let oblastGeoReady = false;
 const markerById = new Map();
+const eventById = new Map();
 const driftById = new Map();
 let driftTimer = null;
 let maintenanceTimer = null;
+let activeTrackId = null;
+let activeTrackLine = null;
 
 const state = {
   events: [],
@@ -96,6 +100,33 @@ const typeLabels = {
 };
 const iconRotationOffset = 0;
 const ADM1_GEOJSON_URL = "/data/ukr-adm1.geojson";
+const isoToRegionId = {
+  "UA-05": "vinnytska",
+  "UA-07": "volynska",
+  "UA-09": "luhanska",
+  "UA-12": "dniprovska",
+  "UA-14": "donetska",
+  "UA-18": "zhytomyrska",
+  "UA-21": "zakarpatska",
+  "UA-23": "zaporizka",
+  "UA-26": "ivano-frankivska",
+  "UA-30": "kyiv",
+  "UA-32": "kyivska",
+  "UA-35": "kirovohradska",
+  "UA-46": "lvivska",
+  "UA-48": "mykolaivska",
+  "UA-51": "odeska",
+  "UA-53": "poltavska",
+  "UA-56": "rivnenska",
+  "UA-59": "sumyska",
+  "UA-61": "ternopilska",
+  "UA-63": "kharkivska",
+  "UA-65": "khersonska",
+  "UA-68": "khmelnytska",
+  "UA-71": "cherkaska",
+  "UA-74": "chernihivska",
+  "UA-77": "chernivetska"
+};
 const oblastAliases = {
   kyivska: ["kyivska", "kievska", "київська", "киевская"],
   kyiv: ["kyiv city", "kyiv", "kiev", "київ", "киев"],
@@ -310,7 +341,8 @@ async function ensureOblastLayer() {
         const props = feature.properties || {};
         const name =
           props.shapeName || props.NAME_1 || props.name || props.shapeName || props.shapeNameEnglish;
-        const id = matchRegionId(name);
+        const iso = props.shapeISO || props.ISO_3166_2 || props.iso;
+        const id = isoToRegionId[iso] || matchRegionId(name);
         if (id) {
           feature.properties._regionId = id;
         }
@@ -360,6 +392,16 @@ function updateMarkerScale() {
   document.documentElement.style.setProperty("--marker-scale", scale.toFixed(2));
 }
 
+function normalizeAngle(angle) {
+  const mod = angle % 360;
+  return mod < 0 ? mod + 360 : mod;
+}
+
+function pickNextDirection(current) {
+  const delta = (Math.random() * 90) - 45;
+  return normalizeAngle(current + delta);
+}
+
 function resetDrift() {
   if (driftTimer) {
     cancelAnimationFrame(driftTimer);
@@ -371,6 +413,8 @@ function startDrift() {
   if (driftTimer || driftById.size === 0) return;
   const speedMps = 1.4;
   const maxDistanceKm = 5;
+  const turnIntervalMs = 9000;
+  const turnRate = 35;
   let lastFrame = performance.now();
   const animate = (now) => {
     const dt = Math.min(0.05, (now - lastFrame) / 1000);
@@ -379,6 +423,21 @@ function startDrift() {
     const zoomFactor = zoom <= 7 ? 0.25 : zoom <= 9 ? 0.5 : 1;
     driftById.forEach((item) => {
       if (item.distanceKm >= maxDistanceKm) return;
+      if (!item.lastTurnAt) item.lastTurnAt = now;
+      if (!Number.isFinite(item.targetDirection)) {
+        item.targetDirection = normalizeAngle(item.direction);
+      }
+      if (now - item.lastTurnAt > turnIntervalMs) {
+        item.targetDirection = pickNextDirection(item.direction);
+        item.lastTurnAt = now;
+      }
+      const delta = ((item.targetDirection - item.direction + 540) % 360) - 180;
+      const maxStep = turnRate * dt;
+      if (Math.abs(delta) <= maxStep) {
+        item.direction = item.targetDirection;
+      } else {
+        item.direction = normalizeAngle(item.direction + Math.sign(delta) * maxStep);
+      }
       const stepKm = (speedMps * dt * zoomFactor) / 1000;
       item.distanceKm = Math.min(maxDistanceKm, item.distanceKm + stepKm);
       const distanceKm = item.distanceKm * zoomFactor;
@@ -388,6 +447,23 @@ function startDrift() {
       const lng =
         item.baseLng + (distanceDegLat * Math.sin(rad)) / Math.cos((item.baseLat * Math.PI) / 180);
       item.marker.setLatLng([lat, lng], { animate: true });
+      const el = item.marker.getElement();
+      if (el) {
+        const img = el.querySelector(".marker-icon-img");
+        if (img) {
+          img.style.transform = `rotate(${item.direction + iconRotationOffset}deg)`;
+        }
+      }
+      if (item.track) {
+        const last = item.track[item.track.length - 1];
+        if (!last || Math.abs(last[0] - lat) > 0.0008 || Math.abs(last[1] - lng) > 0.0008) {
+          item.track.push([lat, lng]);
+          if (item.track.length > 80) item.track.shift();
+          if (activeTrackId === item.id && activeTrackLine) {
+            activeTrackLine.setLatLngs(item.track);
+          }
+        }
+      }
     });
     driftTimer = requestAnimationFrame(animate);
   };
@@ -441,27 +517,23 @@ function renderMarkers() {
   });
 
   filtered.forEach((event) => {
-    const popup = `
-      <div class="popup">
-        <strong>${event.type.toUpperCase()}</strong><br />
-        Джерело: ${event.source}<br />
-        Час (Kyiv): ${formatTime(event.timestamp)}<br />
-        Тестовий: ${event.is_test ? "так" : "ні"}<br />
-        ${event.comment ? `Коментар: ${event.comment}` : ""}
-      </div>
-    `;
+    const popup = buildPopup(event);
 
     if (markerById.has(event.id)) {
       const existing = markerById.get(event.id);
       existing.setIcon(makeMarkerIcon(event));
       existing.setPopupContent(popup);
+      eventById.set(event.id, event);
       if (!driftById.has(event.id)) {
         driftById.set(event.id, {
+          id: event.id,
           marker: existing,
           baseLat: event.lat,
           baseLng: event.lng,
           direction: event.direction || 0,
-          distanceKm: 0
+          targetDirection: event.direction || 0,
+          distanceKm: 0,
+          track: []
         });
       }
       return;
@@ -470,16 +542,85 @@ function renderMarkers() {
     const marker = L.marker([event.lat, event.lng], { icon: makeMarkerIcon(event) });
     marker.bindPopup(popup, { closeButton: true });
     marker.addTo(markerLayer);
+    marker.on("click", () => toggleTrackFor(event.id, marker));
     markerById.set(event.id, marker);
+    eventById.set(event.id, event);
     driftById.set(event.id, {
+      id: event.id,
       marker,
       baseLat: event.lat,
       baseLng: event.lng,
       direction: event.direction || 0,
-      distanceKm: 0
+      targetDirection: event.direction || 0,
+      distanceKm: 0,
+      track: [[event.lat, event.lng]]
     });
   });
   startDrift();
+}
+
+function buildPopup(event, distanceKm) {
+  const distanceLine = Number.isFinite(distanceKm)
+    ? `<br /><span class="popup-meta">Пройдена відстань: ${distanceKm.toFixed(1)} км</span>`
+    : "";
+  return `
+      <div class="popup">
+        <strong>${event.type.toUpperCase()}</strong><br />
+        Джерело: ${event.source}<br />
+        Час (Kyiv): ${formatTime(event.timestamp)}<br />
+        Тестовий: ${event.is_test ? "так" : "ні"}<br />
+        ${event.comment ? `Коментар: ${event.comment}` : ""}
+        ${distanceLine}
+      </div>
+    `;
+}
+
+function haversineKm(a, b) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(b[0] - a[0]);
+  const dLng = toRad(b[1] - a[1]);
+  const lat1 = toRad(a[0]);
+  const lat2 = toRad(b[0]);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function trackDistanceKm(track) {
+  if (!track || track.length < 2) return 0;
+  let sum = 0;
+  for (let i = 1; i < track.length; i += 1) {
+    sum += haversineKm(track[i - 1], track[i]);
+  }
+  return sum;
+}
+
+function toggleTrackFor(eventId, marker) {
+  if (activeTrackId === eventId) {
+    trackLayer.clearLayers();
+    activeTrackId = null;
+    activeTrackLine = null;
+    return;
+  }
+  trackLayer.clearLayers();
+  activeTrackId = eventId;
+  const drift = driftById.get(eventId);
+  if (!drift) return;
+  const path = drift.track && drift.track.length ? drift.track : [[drift.baseLat, drift.baseLng]];
+  activeTrackLine = L.polyline(path, {
+    color: "#3bb9ff",
+    weight: 2,
+    opacity: 0.7,
+    dashArray: "6 8"
+  }).addTo(trackLayer);
+
+  const event = eventById.get(eventId);
+  if (event && marker) {
+    const distanceKm = trackDistanceKm(drift.track);
+    marker.setPopupContent(buildPopup(event, distanceKm));
+  }
 }
 
 function renderRadarList() {
