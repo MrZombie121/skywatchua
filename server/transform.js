@@ -52,6 +52,12 @@ const locationHints = [
   { name: "Київ", keys: ["kyiv", "київ", "kiev"], lat: 50.45, lng: 30.52 },
   { name: "Харків", keys: ["kharkiv", "харків"], lat: 49.98, lng: 36.25 },
   { name: "Одеса", keys: ["odesa", "odessa", "одеса", "одессе"], lat: 46.48, lng: 30.72 },
+  {
+    name: "Затока",
+    keys: ["затока", "zatoka", "затоке", "в затоке", "у затоці"],
+    lat: 46.07,
+    lng: 30.47
+  },
   { name: "Львів", keys: ["lviv", "львів"], lat: 49.84, lng: 24.03 },
   { name: "Вінниця", keys: ["vinnytsia", "vinnytsya", "вінниця", "винница"], lat: 49.23, lng: 28.47 },
   { name: "Житомир", keys: ["zhytomyr", "житомир"], lat: 50.25, lng: 28.66 },
@@ -540,6 +546,10 @@ export function parseMessageToEvents(text, meta = {}) {
   let type = meta.type || pickType(mergedText);
   const hasCount = locationHits.some((hit) => Number.isFinite(hit.count) && hit.count > 0);
   if (!type && locationHits.length > 0 && (hasTrackContext(mergedText) || hasCount)) {
+    type = "shahed";
+  }
+  if (!type && meta.is_test === true && locationHits.length > 0) {
+    // For dedicated test channels allow location-only short messages.
     type = "shahed";
   }
   if (!type) return [];

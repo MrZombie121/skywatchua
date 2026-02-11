@@ -1,6 +1,7 @@
-п»їimport { TelegramClient } from "telegram";
+import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 import { parseMessageToEvents, extractAlarmSignals } from "./transform.js";
+import { resolvePointFromMessage } from "./geocode.js";
 
 const apiId = process.env.TG_API_ID ? Number(process.env.TG_API_ID) : null;
 const apiHash = process.env.TG_API_HASH || null;
@@ -25,7 +26,7 @@ let clientReady = false;
 function normalizeText(text) {
   return String(text || "")
     .toLowerCase()
-    .replace(/[вЂ™`]/g, "'")
+    .replace(/[’`]/g, "'")
     .replace(/[.,;:()\[\]{}<>]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -34,14 +35,31 @@ function normalizeText(text) {
 function isTurnMessage(text) {
   const lower = normalizeText(text);
   return [
-    "СЃРІРµСЂРЅСѓРІ",
-    "СЃРІРµСЂРЅСѓР»",
-    "РїРѕРІРµСЂРЅСѓРІ",
-    "РїРѕРІРµСЂРЅСѓР»",
-    "Р·РјС–РЅРёРІ РєСѓСЂСЃ",
-    "РёР·РјРµРЅРёР» РєСѓСЂСЃ",
-    "РєСѓСЂСЃ РЅР°",
-    "РІ СЃС‚РѕСЂРѕРЅСѓ"
+    "свернув",
+    "свернул",
+    "повернув",
+    "повернул",
+    "змінив курс",
+    "изменил курс",
+    "курс на",
+    "в сторону"
+  ].some((key) => lower.includes(key));
+}
+
+function looksLikeTargetMessage(text) {
+  const lower = normalizeText(text);
+  return [
+    "шахед",
+    "бпла",
+    "дрон",
+    "uav",
+    "ракет",
+    "missile",
+    "каб",
+    "авіац",
+    "авиац",
+    "курс",
+    "лет"
   ].some((key) => lower.includes(key));
 }
 
@@ -247,17 +265,32 @@ export async function loadTelegramEvents() {
     }
 
     const contextTexts = [parentText, ...nearbySignals].filter(Boolean);
-    const eventsFromMsg = parseMessageToEvents(msg.message, {
+    const isTestChannel = testChannels.has(String(channel || "").toLowerCase().replace(/^@/, ""));
+    const parseMeta = {
       source: channel,
       timestamp: msg.date * 1000,
       raw_text: msg.message,
-      is_test: testChannels.has(String(channel || "").toLowerCase().replace(/^@/, "")),
+      is_test: isTestChannel,
       context_texts: contextTexts,
       base_lat: baseEvent?.lat,
       base_lng: baseEvent?.lng,
       allow_bearing_from_base: turnSignal,
       track_key: rootKey
-    });
+    };
+
+    let eventsFromMsg = parseMessageToEvents(msg.message, parseMeta);
+
+    if (eventsFromMsg.length === 0 && (isTestChannel || looksLikeTargetMessage(msg.message))) {
+      const geoPoint = await resolvePointFromMessage(msg.message);
+      if (geoPoint) {
+        const syntheticMessage = `${msg.message}\n${geoPoint.lat.toFixed(4)}, ${geoPoint.lng.toFixed(4)}`;
+        eventsFromMsg = parseMessageToEvents(syntheticMessage, parseMeta).map((eventItem) => ({
+          ...eventItem,
+          comment: `${eventItem.comment} Гео: ${geoPoint.label}.`
+        }));
+      }
+    }
+
     if (eventsFromMsg.length) {
       events.push(...eventsFromMsg);
       lastTrackKey = rootKey;
@@ -278,3 +311,7 @@ export async function loadTelegramEvents() {
     alarms_updated: alarmsUpdated
   };
 }
+
+
+
+
