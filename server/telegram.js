@@ -1,4 +1,4 @@
-import { TelegramClient } from "telegram";
+ï»¿import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 import { parseMessageToEvents, extractAlarmSignals } from "./transform.js";
 import { resolvePointFromMessage } from "./geocode.js";
@@ -19,6 +19,7 @@ const testChannels = new Set(
 const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
+const locationResolutionMode = String(process.env.LOCATION_RESOLUTION_MODE || "map_first").toLowerCase();
 
 let client;
 let clientReady = false;
@@ -26,7 +27,7 @@ let clientReady = false;
 function normalizeText(text) {
   return String(text || "")
     .toLowerCase()
-    .replace(/[’`]/g, "'")
+    .replace(/[â€™`]/g, "'")
     .replace(/[.,;:()\[\]{}<>]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -35,31 +36,31 @@ function normalizeText(text) {
 function isTurnMessage(text) {
   const lower = normalizeText(text);
   return [
-    "ñâåðíóâ",
-    "ñâåðíóë",
-    "ïîâåðíóâ",
-    "ïîâåðíóë",
-    "çì³íèâ êóðñ",
-    "èçìåíèë êóðñ",
-    "êóðñ íà",
-    "â ñòîðîíó"
+    "ÑÐ²ÐµÑ€Ð½ÑƒÐ²",
+    "ÑÐ²ÐµÑ€Ð½ÑƒÐ»",
+    "Ð¿Ð¾Ð²ÐµÑ€Ð½ÑƒÐ²",
+    "Ð¿Ð¾Ð²ÐµÑ€Ð½ÑƒÐ»",
+    "Ð·Ð¼Ñ–Ð½Ð¸Ð² ÐºÑƒÑ€Ñ",
+    "Ð¸Ð·Ð¼ÐµÐ½Ð¸Ð» ÐºÑƒÑ€Ñ",
+    "ÐºÑƒÑ€Ñ Ð½Ð°",
+    "Ð² ÑÑ‚Ð¾Ñ€Ð¾Ð½Ñƒ"
   ].some((key) => lower.includes(key));
 }
 
 function looksLikeTargetMessage(text) {
   const lower = normalizeText(text);
   return [
-    "øàõåä",
-    "áïëà",
-    "äðîí",
+    "ÑˆÐ°Ñ…ÐµÐ´",
+    "Ð±Ð¿Ð»Ð°",
+    "Ð´Ñ€Ð¾Ð½",
     "uav",
-    "ðàêåò",
+    "Ñ€Ð°ÐºÐµÑ‚",
     "missile",
-    "êàá",
-    "àâ³àö",
-    "àâèàö",
-    "êóðñ",
-    "ëåò"
+    "ÐºÐ°Ð±",
+    "Ð°Ð²Ñ–Ð°Ñ†",
+    "Ð°Ð²Ð¸Ð°Ñ†",
+    "ÐºÑƒÑ€Ñ",
+    "Ð»ÐµÑ‚"
   ].some((key) => lower.includes(key));
 }
 
@@ -278,17 +279,28 @@ export async function loadTelegramEvents() {
       track_key: rootKey
     };
 
-    let eventsFromMsg = parseMessageToEvents(msg.message, parseMeta);
-
-    if (eventsFromMsg.length === 0 && (isTestChannel || looksLikeTargetMessage(msg.message))) {
+    const shouldTryMap = isTestChannel || looksLikeTargetMessage(msg.message);
+    const parseWithMapHint = async () => {
       const geoPoint = await resolvePointFromMessage(msg.message);
-      if (geoPoint) {
-        const syntheticMessage = `${msg.message}\n${geoPoint.lat.toFixed(4)}, ${geoPoint.lng.toFixed(4)}`;
-        eventsFromMsg = parseMessageToEvents(syntheticMessage, parseMeta).map((eventItem) => ({
-          ...eventItem,
-          comment: `${eventItem.comment} Ãåî: ${geoPoint.label}.`
-        }));
-      }
+      if (!geoPoint) return [];
+      const syntheticMessage = `${msg.message}\n${geoPoint.lat.toFixed(4)}, ${geoPoint.lng.toFixed(4)}`;
+      return parseMessageToEvents(syntheticMessage, parseMeta).map((eventItem) => ({
+        ...eventItem,
+        comment: `${eventItem.comment} Ð“ÐµÐ¾: ${geoPoint.label}.`
+      }));
+    };
+
+    let eventsFromMsg = [];
+    if (shouldTryMap && locationResolutionMode !== "db_first") {
+      eventsFromMsg = await parseWithMapHint();
+    }
+
+    if (eventsFromMsg.length === 0 && locationResolutionMode !== "map_only") {
+      eventsFromMsg = parseMessageToEvents(msg.message, parseMeta);
+    }
+
+    if (eventsFromMsg.length === 0 && shouldTryMap && locationResolutionMode === "db_first") {
+      eventsFromMsg = await parseWithMapHint();
     }
 
     if (eventsFromMsg.length) {
@@ -311,6 +323,7 @@ export async function loadTelegramEvents() {
     alarms_updated: alarmsUpdated
   };
 }
+
 
 
 
