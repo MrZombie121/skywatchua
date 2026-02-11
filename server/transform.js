@@ -523,10 +523,14 @@ function bearingDeg(fromLat, fromLng, toLat, toLng) {
 }
 
 export function parseMessageToEvents(text, meta = {}) {
+  const sourceLower = String(meta.source || "").toLowerCase();
+  const isTlk = sourceLower.includes("tlknewsua") || sourceLower.includes("tlknews");
   const contextTexts = Array.isArray(meta.context_texts)
     ? meta.context_texts.filter(Boolean)
     : [];
-  const mergedText = [text, ...contextTexts].filter(Boolean).join(" ");
+  const mergedText = isTlk
+    ? String(text || "")
+    : [text, ...contextTexts].filter(Boolean).join(" ");
 
   if (isDowned(mergedText)) return [];
   const coords = extractCoords(mergedText);
@@ -560,11 +564,12 @@ export function parseMessageToEvents(text, meta = {}) {
     : normalizeText(mergedText).includes("тест") || normalizeText(mergedText).includes("test");
 
   const forceSea = type === "airplane" || forceSeaForAviation(mergedText);
-  const sourceLower = String(meta.source || "").toLowerCase();
-  const isTlk = sourceLower.includes("tlknewsua");
   let regionId = resolveRegionId(text, "");
   if (!regionId && (sourceLower.includes("xydessa_live") || sourceLower.includes("pivdenmedia"))) {
     regionId = "odeska";
+  }
+  if (isTlk) {
+    regionId = "kharkivska";
   }
   const regionCenter = regionId ? regionCenters[regionId] : null;
 
@@ -574,34 +579,51 @@ export function parseMessageToEvents(text, meta = {}) {
 
   const seaAnchor = sea ? sea.anchor : seaHints[0].anchor;
 
-  const targets = locationHits.length > 0
+  let targets = locationHits.length > 0
     ? locationHits
     : regionCenter
       ? [{ lat: regionCenter.lat, lng: regionCenter.lng, label: regionCenter.name, exact: false }]
       : [{ lat: seaAnchor.lat, lng: seaAnchor.lng, label: sea ? sea.name : "Чорне море", exact: false }];
+
+  if (isTlk) {
+    const kharkivCenter = regionCenters.kharkivska;
+    const filteredTargets = targets.filter((target) => {
+      const targetRegion =
+        resolveRegionId(target.label, target.label) ||
+        resolveRegionId(text, target.label);
+      return targetRegion === "kharkivska" || targetRegion === "kharkiv";
+    });
+    targets = filteredTargets.length > 0
+      ? filteredTargets
+      : [{ lat: kharkivCenter.lat, lng: kharkivCenter.lng, label: `${kharkivCenter.name} (загально)`, exact: false }];
+  }
 
   return targets.map((target, index) => {
     let lat = target.lat;
     let lng = target.lng;
     let label = target.label;
 
-    if ((sea || forceSea) && locationHits.length > 0) {
+    if (isTlk) {
+      const center = regionCenters.kharkivska;
+      lat = center.lat;
+      lng = center.lng;
+      label = center.name;
+    }
+
+    if (!isTlk && (sea || forceSea) && locationHits.length > 0) {
       const vectorLat = target.lat - seaAnchor.lat;
       const vectorLng = target.lng - seaAnchor.lng;
       const scale = 0.35;
       lat = seaAnchor.lat + vectorLat * scale;
       lng = seaAnchor.lng + vectorLng * scale;
       label = `${sea ? sea.name : "Чорне море"} → ${target.label}`;
-    } else if (sea || forceSea) {
+    } else if (!isTlk && (sea || forceSea)) {
       lat = seaAnchor.lat;
       lng = seaAnchor.lng;
     }
 
     if (isTlk && type === "shahed" && locationHits.length === 0 && !regionCenter) {
-      const center = regionCenters.kharkivska;
-      lat = center.lat;
-      lng = center.lng;
-      label = `${center.name} (загально)`;
+      label = `${regionCenters.kharkivska.name} (загально)`;
     }
 
     const trackKey = meta.track_key ? String(meta.track_key) : null;
@@ -609,11 +631,14 @@ export function parseMessageToEvents(text, meta = {}) {
       ? `${trackKey}-${type}-${index}`
       : `${meta.source || "tg"}-${meta.timestamp || ""}-${type}-${label}-${index}`;
     const seed = hashSeed(idSeed);
-    const resolvedRegionId =
-      resolveRegionId(label, label) ||
-      resolveRegionId(text, label) ||
-      resolveRegionId(mergedText, label) ||
-      regionId;
+    const resolvedRegionId = isTlk
+      ? "kharkivska"
+      : (
+        resolveRegionId(label, label) ||
+        resolveRegionId(text, label) ||
+        resolveRegionId(mergedText, label) ||
+        regionId
+      );
     const countText = target.count && target.count > 1 ? ` К-сть: ${target.count}.` : "";
     const jitteredLat = target.exact ? lat : addJitter(lat, seed);
     const jitteredLng = target.exact ? lng : addJitter(lng, seed + 7);
