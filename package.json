@@ -16,10 +16,9 @@
     "vite": "^5.4.0"
   },
   "dependencies": {
-    "@libsql/client": "^0.15.14",
-    "@libsql/win32-x64-msvc": "^0.5.22",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "lowdb": "^7.0.1",
     "rss-parser": "^3.13.0",
     "telegram": "^2.26.11"
   }

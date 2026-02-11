@@ -16,6 +16,38 @@ const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
 let client;
 let clientReady = false;
 
+function normalizeText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[’`]/g, "'")
+    .replace(/[.,;:()\[\]{}<>]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isTurnMessage(text) {
+  const lower = normalizeText(text);
+  return [
+    "свернув",
+    "свернул",
+    "повернув",
+    "повернул",
+    "змінив курс",
+    "изменил курс",
+    "курс на",
+    "в сторону"
+  ].some((key) => lower.includes(key));
+}
+
+function preferredRegionIdForChannel(channel) {
+  const lower = String(channel || "").toLowerCase().replace(/^@/, "");
+  if (lower.includes("xydessa_live") || lower.includes("pivdenmedia")) return "odeska";
+  if (lower.includes("kyivoperat")) return "kyiv";
+  if (lower.includes("dneproperatyv")) return "dniprovska";
+  if (lower.includes("chernigivoperative")) return "chernihivska";
+  return null;
+}
+
 function haversineKm(a, b) {
   const toRad = (value) => (value * Math.PI) / 180;
   const R = 6371;
@@ -137,7 +169,14 @@ export async function loadTelegramEvents() {
   function findReplyContext(channel, msg) {
     const replyTo = msg.replyTo || {};
     const replyId = replyTo.replyToMsgId;
-    if (!replyId) return { rootKey: `${channel}:${msg.id}`, parentText: null, baseEvent: null };
+    if (!replyId) {
+      return {
+        hasReply: false,
+        rootKey: `${channel}:${msg.id}`,
+        parentText: null,
+        baseEvent: null
+      };
+    }
 
     const sameChannel = channelMessages.get(channel) || [];
     const parent = sameChannel.find((item) => item.id === replyId);
@@ -154,18 +193,45 @@ export async function loadTelegramEvents() {
       }
     }
     return {
+      hasReply: true,
       rootKey: `${channel}:${root}`,
       parentText: parent?.message || null,
       baseEvent
     };
   }
 
+  let lastTrackKey = null;
+  let lastTrackEvent = null;
+  const lastTrackByRegion = new Map();
+  const lastTrackEventByRegion = new Map();
+
   for (const item of allMessages) {
     const { channel, msg } = item;
     if (!msg?.message) continue;
 
     const nowTs = Number(msg.date || 0) * 1000;
-    const { rootKey, parentText, baseEvent } = findReplyContext(channel, msg);
+    const replyContext = findReplyContext(channel, msg);
+    const regionPreference = preferredRegionIdForChannel(channel);
+    const regionTrackKey = regionPreference ? lastTrackByRegion.get(regionPreference) : null;
+    const regionTrackEvent = regionPreference ? lastTrackEventByRegion.get(regionPreference) : null;
+    const useRegionalTrack =
+      !replyContext.hasReply && isTurnMessage(msg.message) && typeof regionTrackKey === "string";
+    const useLastTrack =
+      !replyContext.hasReply &&
+      isTurnMessage(msg.message) &&
+      !useRegionalTrack &&
+      typeof lastTrackKey === "string";
+    const rootKey = useRegionalTrack
+      ? regionTrackKey
+      : useLastTrack
+        ? lastTrackKey
+        : replyContext.rootKey;
+    const parentText = useRegionalTrack || useLastTrack ? null : replyContext.parentText;
+    const baseEvent = useRegionalTrack
+      ? regionTrackEvent
+      : useLastTrack
+        ? lastTrackEvent
+        : replyContext.baseEvent;
     const nearbySignals = [];
     for (let i = allMessages.length - 1; i >= 0 && nearbySignals.length < contextMaxSignals; i -= 1) {
       const current = allMessages[i];
@@ -186,7 +252,17 @@ export async function loadTelegramEvents() {
       base_lng: baseEvent?.lng,
       track_key: rootKey
     });
-    if (eventsFromMsg.length) events.push(...eventsFromMsg);
+    if (eventsFromMsg.length) {
+      events.push(...eventsFromMsg);
+      lastTrackKey = rootKey;
+      lastTrackEvent = eventsFromMsg[0];
+      eventsFromMsg.forEach((eventItem) => {
+        if (eventItem?.region_id) {
+          lastTrackByRegion.set(eventItem.region_id, rootKey);
+          lastTrackEventByRegion.set(eventItem.region_id, eventItem);
+        }
+      });
+    }
   }
 
   return {

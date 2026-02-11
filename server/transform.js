@@ -593,7 +593,7 @@ export function parseMessageToEvents(text, meta = {}) {
 
     const trackKey = meta.track_key ? String(meta.track_key) : null;
     const idSeed = trackKey
-      ? `${trackKey}-${type}-${label}-${index}`
+      ? `${trackKey}-${type}-${index}`
       : `${meta.source || "tg"}-${meta.timestamp || ""}-${type}-${label}-${index}`;
     const seed = hashSeed(idSeed);
     const resolvedRegionId =
