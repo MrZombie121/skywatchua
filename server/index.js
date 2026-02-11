@@ -22,6 +22,7 @@ const app = express();
 const port = process.env.PORT || 8787;
 const sessionDays = Number(process.env.ADMIN_SESSION_DAYS || 7);
 const EVENT_TTL_MIN = Number(process.env.EVENT_TTL_MIN || 8);
+const EVENT_STALE_KEEP_MIN = Number(process.env.EVENT_STALE_KEEP_MIN || 90);
 const forcedAlarmIds = (process.env.ALARM_FORCE_ON || "luhanska,donetska,khersonska,chernihivska")
   .split(",")
   .map((item) => item.trim())
@@ -165,12 +166,26 @@ app.get("/api/events", async (_req, res) => {
 
     const nowTs = Date.now();
     const ttlMs = Math.max(1, EVENT_TTL_MIN) * 60 * 1000;
+    const staleKeepMs = Math.max(1, EVENT_STALE_KEEP_MIN) * 60 * 1000;
     const alarms = new Set(tgPayload.alarms || []);
     const combined = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents].filter((event) => {
       const time = Date.parse(event.timestamp);
       if (!Number.isFinite(time)) return false;
       return nowTs - time <= ttlMs;
     });
+
+    if (combined.length === 0 && state.cache.length && now - state.lastFetch <= staleKeepMs) {
+      return res.json({
+        events: state.cache,
+        alarms: alarmState,
+        district_alarms: districtAlarmState,
+        cached: true,
+        stale: true,
+        maintenance: false,
+        maintenance_until: null
+      });
+    }
+
     state.cache = combined;
     state.lastFetch = now;
 
