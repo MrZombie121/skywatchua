@@ -36,11 +36,12 @@ async function getClient() {
 export async function loadTelegramEvents() {
   const tgClient = await getClient();
   if (!tgClient || channels.length === 0) {
-    return { events: [], alarms: [], alarms_updated: false };
+    return { events: [], alarms: [], district_alarms: [], alarms_updated: false };
   }
 
   const events = [];
   const alarmSet = new Set();
+  const districtAlarmMap = new Map();
   let alarmsUpdated = false;
   for (const channel of channels) {
     try {
@@ -58,6 +59,13 @@ export async function loadTelegramEvents() {
               alarmSet.add(region);
             }
           });
+          (signal.districts || []).forEach((district) => {
+            if (signal.status === "off") {
+              districtAlarmMap.delete(district.id);
+            } else {
+              districtAlarmMap.set(district.id, district);
+            }
+          });
         }
         const eventsFromMsg = parseMessageToEvents(msg.message, {
           source: channel,
@@ -71,5 +79,10 @@ export async function loadTelegramEvents() {
     }
   }
 
-  return { events, alarms: Array.from(alarmSet), alarms_updated: alarmsUpdated };
+  return {
+    events,
+    alarms: Array.from(alarmSet),
+    district_alarms: Array.from(districtAlarmMap.values()),
+    alarms_updated: alarmsUpdated
+  };
 }

@@ -100,12 +100,15 @@ app.get("/api/events", async (_req, res) => {
     const tgPayload = await loadTelegramEvents();
     const maintenance = await getMaintenanceState();
     let alarmState = tgPayload.alarms || [];
+    let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
     alarmState = applyForcedAlarms(alarmState);
     if (tgPayload.alarms_updated) {
       await setSetting("alarms_state", JSON.stringify(alarmState));
+      await setSetting("district_alarms_state", JSON.stringify(districtAlarmState));
       await setSetting("alarms_updated_at", String(Date.now()));
     } else {
       const stored = await getSetting("alarms_state", "[]");
+      const storedDistricts = await getSetting("district_alarms_state", "[]");
       try {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length >= 0) {
@@ -114,11 +117,20 @@ app.get("/api/events", async (_req, res) => {
       } catch {
         alarmState = applyForcedAlarms(alarmState || []);
       }
+      try {
+        const parsedDistricts = JSON.parse(storedDistricts);
+        if (Array.isArray(parsedDistricts)) {
+          districtAlarmState = parsedDistricts;
+        }
+      } catch {
+        districtAlarmState = districtAlarmState || [];
+      }
     }
     if (maintenance.enabled) {
       return res.json({
         events: [],
         alarms: alarmState,
+        district_alarms: districtAlarmState,
         maintenance: true,
         maintenance_until: maintenance.until,
         cached: true
@@ -130,6 +142,7 @@ app.get("/api/events", async (_req, res) => {
       return res.json({
         events: state.cache,
         alarms: alarmState,
+        district_alarms: districtAlarmState,
         cached: true,
         maintenance: false
       });
@@ -164,6 +177,7 @@ app.get("/api/events", async (_req, res) => {
     res.json({
       events: combined,
       alarms: alarmState,
+      district_alarms: districtAlarmState,
       cached: false,
       maintenance: false,
       maintenance_until: null

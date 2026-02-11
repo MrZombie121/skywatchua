@@ -18,6 +18,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const markerLayer = L.layerGroup().addTo(map);
 const alarmLayer = L.layerGroup().addTo(map);
+const districtAlarmLayer = L.layerGroup().addTo(map);
 const trackLayer = L.layerGroup().addTo(map);
 const shahedTrailLayer = L.layerGroup().addTo(map);
 let oblastGeoLayer = null;
@@ -40,6 +41,7 @@ const state = {
   maintenance: false,
   maintenanceUntil: null,
   alarms: [],
+  districtAlarms: [],
   adminBypassMaintenance: false,
   refreshPaused: false,
   autoFollow: false
@@ -202,6 +204,11 @@ async function fetchSource(source) {
     state.alarms = payload.alarms;
   } else {
     state.alarms = [];
+  }
+  if (Array.isArray(payload.district_alarms)) {
+    state.districtAlarms = payload.district_alarms;
+  } else {
+    state.districtAlarms = [];
   }
   if (payload.maintenance_until) {
     state.maintenanceUntil = payload.maintenance_until;
@@ -687,7 +694,8 @@ function renderRadarList() {
 function renderAlarmList() {
   alarmList.innerHTML = "";
   const active = new Set(state.alarms || []);
-  if (active.size === 0) {
+  const districtItems = Array.isArray(state.districtAlarms) ? state.districtAlarms : [];
+  if (active.size === 0 && districtItems.length === 0) {
     alarmList.innerHTML = "<div class=\"tool-item\">Тривог немає.</div>";
     return;
   }
@@ -699,14 +707,34 @@ function renderAlarmList() {
       row.textContent = region.name;
       alarmList.appendChild(row);
     });
+  districtItems.forEach((district) => {
+    const row = document.createElement("div");
+    row.className = "tool-item";
+    row.textContent = `${district.name} (${district.region_id})`;
+    alarmList.appendChild(row);
+  });
 }
 
 async function renderAlarmMap() {
   if (!alarmsEnabled) {
     alarmLayer.clearLayers();
+    districtAlarmLayer.clearLayers();
     return;
   }
   const active = new Set(state.alarms || []);
+  districtAlarmLayer.clearLayers();
+  (state.districtAlarms || []).forEach((district) => {
+    if (!Number.isFinite(Number(district.lat)) || !Number.isFinite(Number(district.lng))) return;
+    const marker = L.circleMarker([Number(district.lat), Number(district.lng)], {
+      radius: 7,
+      color: "#ff3b30",
+      weight: 2,
+      fillColor: "#ff3b30",
+      fillOpacity: 0.4
+    });
+    marker.bindTooltip(district.name, { direction: "top", offset: [0, -2] });
+    marker.addTo(districtAlarmLayer);
+  });
   if (!oblastGeoReady) {
     await ensureOblastLayer();
   }

@@ -129,6 +129,31 @@ const regionCenters = {
   sevastopol: { lat: 44.6, lng: 33.5, name: "Севастополь" }
 };
 
+const alarmDistrictHints = [
+  { id: "chernihivska:novhorod-siverskyi", region_id: "chernihivska", name: "Новгород-Сіверський район", keys: ["новгород-сіверський район", "новгород северский район"], lat: 52.0, lng: 33.3 },
+  { id: "sumyska:konotopskyi", region_id: "sumyska", name: "Конотопський район", keys: ["конотопський район", "конотопский район"], lat: 51.24, lng: 33.2 },
+  { id: "sumyska:shostkynskyi", region_id: "sumyska", name: "Шосткинський район", keys: ["шосткинський район", "шосткинский район"], lat: 51.87, lng: 33.48 },
+  { id: "kharkivska:bohodukhivskyi", region_id: "kharkivska", name: "Богодухівський район", keys: ["богодухівський район", "богодуховский район"], lat: 50.16, lng: 35.53 },
+  { id: "kharkivska:kharkivskyi", region_id: "kharkivska", name: "Харківський район", keys: ["харківський район", "харьковский район"], lat: 49.95, lng: 36.3 },
+  { id: "kharkivska:chuhuivskyi", region_id: "kharkivska", name: "Чугуївський район", keys: ["чугуївський район", "чугуевский район"], lat: 49.83, lng: 36.68 },
+  { id: "kharkivska:kupianskyi", region_id: "kharkivska", name: "Куп'янський район", keys: ["куп'янський район", "купянский район"], lat: 49.72, lng: 37.62 },
+  { id: "kharkivska:izyumskyi", region_id: "kharkivska", name: "Ізюмський район", keys: ["ізюмський район", "изюмский район"], lat: 49.21, lng: 37.28 },
+  { id: "kharkivska:lozivskyi", region_id: "kharkivska", name: "Лозівський район", keys: ["лозівський район", "лозовский район"], lat: 48.89, lng: 36.32 },
+  { id: "dniprovska:synelnykivskyi", region_id: "dniprovska", name: "Синельниківський район", keys: ["синельниківський район", "синельниковский район"], lat: 48.32, lng: 35.52 },
+  { id: "zaporizka:vasylivskyi", region_id: "zaporizka", name: "Василівський район", keys: ["василівський район", "васильевский район"], lat: 47.45, lng: 35.28 },
+  { id: "zaporizka:melitopolskyi", region_id: "zaporizka", name: "Мелітопольський район", keys: ["мелітопольський район", "мелитопольский район"], lat: 46.85, lng: 35.37 },
+  { id: "zaporizka:berdianskyi", region_id: "zaporizka", name: "Бердянський район", keys: ["бердянський район", "бердянский район"], lat: 46.77, lng: 36.79 },
+  { id: "zaporizka:polohivskyi", region_id: "zaporizka", name: "Пологівський район", keys: ["пологівський район", "пологовский район"], lat: 47.49, lng: 36.25 },
+  { id: "donetska:kramatorskyi", region_id: "donetska", name: "Краматорський район", keys: ["краматорський район", "краматорский район"], lat: 48.72, lng: 37.56 },
+  { id: "donetska:volnovaskyi", region_id: "donetska", name: "Волноваський район", keys: ["волноваський район", "волновахский район"], lat: 47.6, lng: 37.5 },
+  { id: "donetska:pokrovskyi", region_id: "donetska", name: "Покровський район", keys: ["покровський район", "покровский район"], lat: 48.28, lng: 37.18 },
+  { id: "luhanska:alchevskyi", region_id: "luhanska", name: "Алчевський район", keys: ["алчевський район", "алчевский район"], lat: 48.47, lng: 38.8 },
+  { id: "luhanska:starobilskyi", region_id: "luhanska", name: "Старобільський район", keys: ["старобільський район", "старобельский район"], lat: 49.28, lng: 38.9 },
+  { id: "luhanska:sievierodonetskyi", region_id: "luhanska", name: "Сєвєродонецький район", keys: ["сєвєродонецький район", "северодонецкий район"], lat: 48.95, lng: 38.49 },
+  { id: "khersonska:skadovskyi", region_id: "khersonska", name: "Скадовський район", keys: ["скадовський район", "скадовский район"], lat: 46.12, lng: 32.92 },
+  { id: "khersonska:kakhovskyi", region_id: "khersonska", name: "Каховський район", keys: ["каховський район", "каховский район"], lat: 46.77, lng: 33.45 }
+];
+
 const seaHints = [
   {
     name: "Чорне море",
@@ -205,11 +230,14 @@ function extractAlarmSignals(text) {
     lower.includes("сирена відбій");
   if (!hasAlarm && !hasClear) return null;
 
-  const regions = extractAlarmRegions(text);
-  if (regions.length === 0) return null;
+  const regions = new Set(extractAlarmRegions(text));
+  const districts = extractAlarmDistricts(text);
+  districts.forEach((district) => regions.add(district.region_id));
+  if (regions.size === 0 && districts.length === 0) return null;
 
   return {
-    regions,
+    regions: Array.from(regions),
+    districts,
     status: hasClear ? "off" : "on"
   };
 }
@@ -309,6 +337,52 @@ function loadOverrideLocations() {
 
 const overrideLocations = loadOverrideLocations();
 const allLocationHints = [...locationHints, ...overrideLocations];
+
+function loadOverrideAlarmDistricts() {
+  const raw = process.env.ALARM_DISTRICT_OVERRIDES || "";
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item) => item && item.id && item.region_id && item.lat && item.lng && Array.isArray(item.keys))
+      .map((item) => ({
+        id: String(item.id),
+        region_id: String(item.region_id),
+        name: String(item.name || item.id),
+        keys: item.keys.map((key) => normalizeText(key)),
+        lat: Number(item.lat),
+        lng: Number(item.lng)
+      }));
+  } catch {
+    return [];
+  }
+}
+
+const overrideAlarmDistrictHints = loadOverrideAlarmDistricts();
+const allAlarmDistrictHints = [...alarmDistrictHints, ...overrideAlarmDistrictHints];
+
+function extractAlarmDistricts(text) {
+  const lower = normalizeText(text);
+  const out = [];
+  allAlarmDistrictHints.forEach((district) => {
+    if (district.keys.some((key) => lower.includes(key))) {
+      out.push({
+        id: district.id,
+        region_id: district.region_id,
+        name: district.name,
+        lat: district.lat,
+        lng: district.lng
+      });
+    }
+  });
+  const seen = new Set();
+  return out.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
 
 function parseDirection(text) {
   const lower = normalizeText(text);
