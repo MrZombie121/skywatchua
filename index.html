@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="sw-version" content="1.4.1" />
     <title>Skywatch UA — Моніторинг</title>
     <link
       rel="stylesheet"
@@ -95,7 +96,7 @@
           Технічні роботи. Частина функцій тимчасово недоступна.
         </div>
         <button class="tool-open" id="tool-open">Інструменти</button>
-        <button class="tool-settings" id="tool-settings">Тема</button>
+        <button class="tool-settings" id="tool-settings">Налаштування</button>
         <div class="tool-panel hidden" id="tool-panel">
           <div class="tool-header">
             <div class="tool-title">Інструменти</div>
@@ -110,6 +111,7 @@
               <input type="checkbox" id="toggle-follow" />
               <span>Автофокус на новій цілі</span>
             </label>
+            <button class="tool-action" id="fit-visible" type="button">Фокус на цілях</button>
           </div>
           <div class="tool-tabs">
             <button class="active" data-tab="radar">Радар загроз</button>
@@ -127,10 +129,26 @@
     <div class="settings-modal" id="settings-modal">
       <div class="settings-card">
         <div class="settings-header">
-          <div class="settings-title">Теми</div>
+          <div class="settings-title">Налаштування</div>
           <button class="settings-close" id="settings-close">✕</button>
         </div>
         <div class="settings-body">
+          <div class="settings-group">
+            <label class="settings-label" for="map-style-select">Стиль карти</label>
+            <select id="map-style-select" class="settings-select">
+              <option value="osm">Стандартна (OSM)</option>
+              <option value="carto-dark">Темна (CARTO)</option>
+              <option value="carto-light">Світла (CARTO)</option>
+              <option value="topo">Топографічна</option>
+              <option value="satellite">Супутникова</option>
+            </select>
+          </div>
+
+          <div class="settings-group settings-version">
+            <span>Версія сайту</span>
+            <strong id="site-version">—</strong>
+          </div>
+
           <label class="theme-option">
             <input type="radio" name="theme" value="dark" checked />
             Темна

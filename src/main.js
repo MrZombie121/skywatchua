@@ -10,11 +10,47 @@ const map = L.map("map", {
 }).setView([49.0, 31.0], 6);
 
 const alarmsEnabled = true;
-
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 18,
-  attribution: "&copy; OpenStreetMap contributors"
-}).addTo(map);
+const APP_VERSION = document.querySelector("meta[name=\"sw-version\"]")?.content || "1.4.1";
+const mapStyleCatalog = {
+  osm: {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    options: {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    }
+  },
+  "carto-dark": {
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    options: {
+      maxZoom: 20,
+      subdomains: "abcd",
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+    }
+  },
+  "carto-light": {
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    options: {
+      maxZoom: 20,
+      subdomains: "abcd",
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+    }
+  },
+  topo: {
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    options: {
+      maxZoom: 17,
+      attribution: "Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap"
+    }
+  },
+  satellite: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    options: {
+      maxZoom: 18,
+      attribution: "Tiles &copy; Esri"
+    }
+  }
+};
+let baseTileLayer = null;
 
 const markerLayer = L.layerGroup().addTo(map);
 const alarmLayer = L.layerGroup().addTo(map);
@@ -84,6 +120,8 @@ const toolClose = document.getElementById("tool-close");
 const toolSettings = document.getElementById("tool-settings");
 const settingsModal = document.getElementById("settings-modal");
 const settingsClose = document.getElementById("settings-close");
+const mapStyleSelect = document.getElementById("map-style-select");
+const siteVersion = document.getElementById("site-version");
 const themeOptions = document.querySelectorAll("input[name=\"theme\"]");
 const themeCustom = document.getElementById("theme-custom");
 const themeAccent = document.getElementById("theme-accent");
@@ -94,6 +132,7 @@ const panelToggle = document.getElementById("panel-toggle");
 const panelBackdrop = document.getElementById("panel-backdrop");
 const toggleRefresh = document.getElementById("toggle-refresh");
 const toggleFollow = document.getElementById("toggle-follow");
+const fitVisible = document.getElementById("fit-visible");
 const toolTabs = toolPanel ? toolPanel.querySelectorAll("button[data-tab]") : [];
 
 const typeLabels = {
@@ -1017,6 +1056,19 @@ if (toolOpen && toolPanel && toolClose) {
   });
 }
 
+function applyMapStyle(styleId) {
+  const nextStyleId = Object.prototype.hasOwnProperty.call(mapStyleCatalog, styleId) ? styleId : "osm";
+  const style = mapStyleCatalog[nextStyleId];
+  if (baseTileLayer) {
+    map.removeLayer(baseTileLayer);
+  }
+  baseTileLayer = L.tileLayer(style.url, style.options).addTo(map);
+  localStorage.setItem("sw_map_style", nextStyleId);
+  if (mapStyleSelect) {
+    mapStyleSelect.value = nextStyleId;
+  }
+}
+
 function applyTheme(name) {
   document.body.classList.remove("theme-light", "theme-skymap");
   if (name === "light") {
@@ -1069,6 +1121,12 @@ if (themeApply) {
   });
 }
 
+if (mapStyleSelect) {
+  mapStyleSelect.addEventListener("change", (event) => {
+    applyMapStyle(event.target.value);
+  });
+}
+
 function openPanel() {
   const panel = document.querySelector(".panel");
   if (!panel) return;
@@ -1115,6 +1173,46 @@ function followLatestTarget() {
   lastFollowedId = latest.id;
   map.panTo([latest.lat, latest.lng], { animate: true, duration: 1 });
 }
+
+function fitToVisibleTargets() {
+  if (state.maintenance) return;
+  const visible = getVisibleEvents();
+  const points = visible.map((event) => [event.lat, event.lng]);
+  (state.districtAlarms || []).forEach((district) => {
+    const lat = Number(district.lat);
+    const lng = Number(district.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      points.push([lat, lng]);
+    }
+  });
+  if (points.length === 0) return;
+  const bounds = L.latLngBounds(points);
+  if (!bounds.isValid()) return;
+  map.fitBounds(bounds.pad(0.25), {
+    animate: true,
+    duration: 0.9,
+    maxZoom: 9
+  });
+}
+
+if (fitVisible) {
+  fitVisible.addEventListener("click", fitToVisibleTargets);
+}
+
+document.addEventListener("keydown", (event) => {
+  const tag = event.target?.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+  if (event.key.toLowerCase() === "f") {
+    fitToVisibleTargets();
+  }
+});
+
+if (siteVersion) {
+  siteVersion.textContent = APP_VERSION;
+}
+
+const savedMapStyle = localStorage.getItem("sw_map_style") || "osm";
+applyMapStyle(savedMapStyle);
 
 map.on("zoomend", updateMarkerScale);
 updateMarkerScale();

@@ -344,6 +344,24 @@ body.theme-skymap {
 .tool-controls {
   padding: 10px 12px;
   border-bottom: 1px solid rgba(36, 49, 74, 0.6);
+  display: grid;
+  gap: 8px;
+}
+
+.tool-action {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(59, 185, 255, 0.6);
+  background: rgba(59, 185, 255, 0.16);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.tool-action:hover {
+  border-color: rgba(59, 185, 255, 0.95);
+  background: rgba(59, 185, 255, 0.24);
 }
 
 .tool-title {
@@ -407,6 +425,34 @@ body.theme-skymap {
   display: grid;
   gap: 10px;
   font-size: 13px;
+}
+
+.settings-group {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel-light);
+}
+
+.settings-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.settings-select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.settings-version {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .theme-option {
