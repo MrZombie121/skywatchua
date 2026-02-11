@@ -9,6 +9,12 @@ const channels = (process.env.TG_CHANNELS || "")
   .split(",")
   .map((item) => item.trim())
   .filter(Boolean);
+const testChannels = new Set(
+  (process.env.TG_TEST_CHANNELS || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase().replace(/^@/, ""))
+    .filter(Boolean)
+);
 const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
@@ -245,6 +251,7 @@ export async function loadTelegramEvents() {
       source: channel,
       timestamp: msg.date * 1000,
       raw_text: msg.message,
+      is_test: testChannels.has(String(channel || "").toLowerCase().replace(/^@/, "")),
       context_texts: contextTexts,
       base_lat: baseEvent?.lat,
       base_lng: baseEvent?.lng,
