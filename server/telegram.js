@@ -90,10 +90,7 @@ function refineEventsByConsensus(events) {
     const all = [current, ...peers];
     current.lat = Number((all.reduce((sum, item) => sum + Number(item.lat || 0), 0) / all.length).toFixed(4));
     current.lng = Number((all.reduce((sum, item) => sum + Number(item.lng || 0), 0) / all.length).toFixed(4));
-    const dirs = all.map((item) => item.direction).filter((dir) => Number.isFinite(dir));
-    if (dirs.length > 0) {
-      current.direction = dirs[dirs.length - 1];
-    }
+    // Do not infer heading from neighboring signals to avoid unsolicited course changes.
   }
   return refined;
 }
@@ -210,15 +207,16 @@ export async function loadTelegramEvents() {
     if (!msg?.message) continue;
 
     const nowTs = Number(msg.date || 0) * 1000;
+    const turnSignal = isTurnMessage(msg.message);
     const replyContext = findReplyContext(channel, msg);
     const regionPreference = preferredRegionIdForChannel(channel);
     const regionTrackKey = regionPreference ? lastTrackByRegion.get(regionPreference) : null;
     const regionTrackEvent = regionPreference ? lastTrackEventByRegion.get(regionPreference) : null;
     const useRegionalTrack =
-      !replyContext.hasReply && isTurnMessage(msg.message) && typeof regionTrackKey === "string";
+      !replyContext.hasReply && turnSignal && typeof regionTrackKey === "string";
     const useLastTrack =
       !replyContext.hasReply &&
-      isTurnMessage(msg.message) &&
+      turnSignal &&
       !useRegionalTrack &&
       typeof lastTrackKey === "string";
     const rootKey = useRegionalTrack
@@ -250,6 +248,7 @@ export async function loadTelegramEvents() {
       context_texts: contextTexts,
       base_lat: baseEvent?.lat,
       base_lng: baseEvent?.lng,
+      allow_bearing_from_base: turnSignal,
       track_key: rootKey
     });
     if (eventsFromMsg.length) {

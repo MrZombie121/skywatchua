@@ -1,5 +1,21 @@
 ﻿const typeRules = [
   {
+    type: "recon",
+    patterns: [
+      "розвіддрон",
+      "разведдрон",
+      "розвідка бпла",
+      "разведка бпла",
+      "розвідник",
+      "разведчик",
+      "розвідувальний бпла",
+      "разведывательный бпла",
+      "орлан",
+      "supercam",
+      "zala"
+    ]
+  },
+  {
     type: "shahed",
     patterns: [
       "shahed",
@@ -14,10 +30,6 @@
       "беспил",
       "молния"
     ]
-  },
-  {
-    type: "recon",
-    patterns: ["розвіддрон", "разведдрон", "розвідка бпла", "разведка бпла"]
   },
   { type: "missile", patterns: ["missile", "ракета", "крилат", "баліст", "ballistic"] },
   { type: "kab", patterns: ["kab", "каб"] },
@@ -531,6 +543,7 @@ export function parseMessageToEvents(text, meta = {}) {
   let direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(mergedText);
   if (
     !Number.isFinite(direction) &&
+    meta.allow_bearing_from_base === true &&
     Number.isFinite(meta.base_lat) &&
     Number.isFinite(meta.base_lng) &&
     locationHits.length > 0
