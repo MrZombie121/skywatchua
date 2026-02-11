@@ -256,7 +256,12 @@ function pickType(text) {
   if (lower.includes("йде на") && (lower.includes("район") || lower.includes("р-н"))) {
     return "shahed";
   }
+  // Match KAB as a standalone token to avoid accidental substring matches.
+  if (/(^|[^\p{L}\p{N}])(kab|каб)(и|ів|ы)?([^\p{L}\p{N}]|$)/u.test(lower)) {
+    return "kab";
+  }
   for (const rule of typeRules) {
+    if (rule.type === "kab") continue;
     if (rule.patterns.some((pattern) => lower.includes(pattern))) {
       return rule.type;
     }
@@ -595,19 +600,21 @@ function bearingDeg(fromLat, fromLng, toLat, toLng) {
 }
 
 export function parseMessageToEvents(text, meta = {}) {
+  const baseText = String(text || "");
   const sourceLower = String(meta.source || "").toLowerCase();
   const isTlk = sourceLower.includes("tlknewsua") || sourceLower.includes("tlknews");
   const contextTexts = Array.isArray(meta.context_texts)
     ? meta.context_texts.filter(Boolean)
     : [];
   const mergedText = isTlk
-    ? String(text || "")
-    : [text, ...contextTexts].filter(Boolean).join(" ");
+    ? baseText
+    : [baseText, ...contextTexts].filter(Boolean).join(" ");
 
   if (isDowned(mergedText)) return [];
-  const coords = extractCoords(mergedText);
-  const locationHits = coords ? [coords] : extractLocationHits(mergedText);
-  const sea = pickSea(mergedText);
+  // Parse locations only from the original message to avoid marker explosions from context.
+  const coords = extractCoords(baseText);
+  const locationHits = coords ? [coords] : extractLocationHits(baseText);
+  const sea = pickSea(baseText);
 
   let type = meta.type || pickType(mergedText);
   const hasCount = locationHits.some((hit) => Number.isFinite(hit.count) && hit.count > 0);
