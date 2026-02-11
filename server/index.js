@@ -22,6 +22,10 @@ const app = express();
 const port = process.env.PORT || 8787;
 const sessionDays = Number(process.env.ADMIN_SESSION_DAYS || 7);
 const EVENT_TTL_MIN = Number(process.env.EVENT_TTL_MIN || 8);
+const forcedAlarmIds = (process.env.ALARM_FORCE_ON || "luhanska,donetska,khersonska,chernihivska")
+  .split(",")
+  .map((item) => item.trim())
+  .filter(Boolean);
 
 const state = {
   lastFetch: 0,
@@ -40,6 +44,12 @@ function readSessionToken(req) {
   const cookie = req.headers.cookie || "";
   const match = cookie.match(/sw_admin=([^;]+)/);
   return match ? match[1] : null;
+}
+
+function applyForcedAlarms(alarms) {
+  const merged = new Set(Array.isArray(alarms) ? alarms : []);
+  forcedAlarmIds.forEach((id) => merged.add(id));
+  return Array.from(merged);
 }
 
 async function requireAdmin(req, res, next) {
@@ -90,6 +100,7 @@ app.get("/api/events", async (_req, res) => {
     const tgPayload = await loadTelegramEvents();
     const maintenance = await getMaintenanceState();
     let alarmState = tgPayload.alarms || [];
+    alarmState = applyForcedAlarms(alarmState);
     if (tgPayload.alarms_updated) {
       await setSetting("alarms_state", JSON.stringify(alarmState));
       await setSetting("alarms_updated_at", String(Date.now()));
@@ -98,10 +109,10 @@ app.get("/api/events", async (_req, res) => {
       try {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length >= 0) {
-          alarmState = parsed;
+          alarmState = applyForcedAlarms(parsed);
         }
       } catch {
-        alarmState = alarmState || [];
+        alarmState = applyForcedAlarms(alarmState || []);
       }
     }
     if (maintenance.enabled) {
