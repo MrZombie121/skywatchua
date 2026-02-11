@@ -176,13 +176,16 @@ function normalizeType(type) {
 }
 
 function normalizeEvent(raw, sourceId) {
+  const rawDirection = raw.direction ?? raw.heading;
+  const parsedDirection = Number(rawDirection);
+  const direction = Number.isFinite(parsedDirection) ? parsedDirection : null;
   const type = normalizeType(raw.type || raw.target_type || raw.category);
   return {
     id: raw.id || `${sourceId}-${raw.timestamp || raw.time || Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     type,
     lat: Number(raw.lat ?? raw.latitude ?? raw.location?.lat ?? 0),
     lng: Number(raw.lng ?? raw.longitude ?? raw.location?.lng ?? 0),
-    direction: Number(raw.direction ?? raw.heading ?? 0),
+    direction,
     source: raw.source || sourceId,
     timestamp: raw.timestamp || raw.time || new Date().toISOString(),
     comment: raw.comment || raw.note || "",
@@ -411,9 +414,8 @@ function normalizeAngle(angle) {
   return mod < 0 ? mod + 360 : mod;
 }
 
-function pickNextDirection(current) {
-  const delta = (Math.random() * 90) - 45;
-  return normalizeAngle(current + delta);
+function directionOrDefault(value, fallback = 0) {
+  return Number.isFinite(value) ? normalizeAngle(value) : fallback;
 }
 
 function resetDrift() {
@@ -427,38 +429,17 @@ function startDrift() {
   if (driftTimer || driftById.size === 0) return;
   const speedMps = 1.4;
   const maxDistanceKm = 5;
-  const turnIntervalMs = 12000;
-  const turnRate = 35;
-  const turnHoldMs = 900;
   let lastFrame = performance.now();
   const animate = (now) => {
     const dt = Math.min(0.05, (now - lastFrame) / 1000);
     lastFrame = now;
     const zoom = map.getZoom();
-    const zoomFactor = zoom <= 7 ? 0.25 : zoom <= 9 ? 0.5 : 1;
+    const zoomFactor = zoom <= 7 ? 0.45 : zoom <= 9 ? 0.7 : 1;
     driftById.forEach((item) => {
       if (item.distanceKm >= maxDistanceKm) return;
-      if (!item.lastTurnAt) item.lastTurnAt = now;
-      if (!Number.isFinite(item.targetDirection)) {
-        item.targetDirection = normalizeAngle(item.direction);
-      }
-      if (now - item.lastTurnAt > turnIntervalMs) {
-        item.targetDirection = pickNextDirection(item.direction);
-        item.lastTurnAt = now;
-        item.turnUntil = now + turnHoldMs;
-      }
-      const delta = ((item.targetDirection - item.direction + 540) % 360) - 180;
-      const maxStep = turnRate * dt;
-      if (Math.abs(delta) <= maxStep) {
-        item.direction = item.targetDirection;
-      } else {
-        item.direction = normalizeAngle(item.direction + Math.sign(delta) * maxStep);
-      }
-      if (!item.turnUntil || now >= item.turnUntil) {
-        const stepKm = (speedMps * dt * zoomFactor) / 1000;
-        item.distanceKm = Math.min(maxDistanceKm, item.distanceKm + stepKm);
-      }
-      const distanceKm = item.distanceKm * zoomFactor;
+      const stepKm = (speedMps * dt * zoomFactor) / 1000;
+      item.distanceKm = Math.min(maxDistanceKm, item.distanceKm + stepKm);
+      const distanceKm = item.distanceKm;
       const distanceDegLat = distanceKm / 111;
       const rad = (item.direction * Math.PI) / 180;
       const lat = item.baseLat + distanceDegLat * Math.cos(rad);
@@ -560,14 +541,16 @@ function renderMarkers() {
           marker: existing,
           baseLat: event.lat,
           baseLng: event.lng,
-          direction: event.direction || 0,
-          targetDirection: event.direction || 0,
+          direction: directionOrDefault(event.direction),
           distanceKm: 0,
           track: [],
           trailLine: null
         });
       }
       const drift = driftById.get(event.id);
+      if (drift && Number.isFinite(event.direction)) {
+        drift.direction = directionOrDefault(event.direction, drift.direction);
+      }
       if (drift && event.type === "shahed" && !drift.trailLine) {
         drift.trailLine = L.polyline(drift.track, {
           color: "#f59e0b",
@@ -590,8 +573,7 @@ function renderMarkers() {
       marker,
       baseLat: event.lat,
       baseLng: event.lng,
-      direction: event.direction || 0,
-      targetDirection: event.direction || 0,
+      direction: directionOrDefault(event.direction),
       distanceKm: 0,
       track: [[event.lat, event.lng]],
       trailLine: null

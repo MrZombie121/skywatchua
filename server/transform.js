@@ -39,7 +39,7 @@
 const locationHints = [
   { name: "Київ", keys: ["kyiv", "київ", "kiev"], lat: 50.45, lng: 30.52 },
   { name: "Харків", keys: ["kharkiv", "харків"], lat: 49.98, lng: 36.25 },
-  { name: "Одеса", keys: ["odesa", "odessa", "одеса"], lat: 46.48, lng: 30.72 },
+  { name: "Одеса", keys: ["odesa", "odessa", "одеса", "одессе"], lat: 46.48, lng: 30.72 },
   { name: "Львів", keys: ["lviv", "львів"], lat: 49.84, lng: 24.03 },
   { name: "Вінниця", keys: ["vinnytsia", "vinnytsya", "вінниця", "винница"], lat: 49.23, lng: 28.47 },
   { name: "Житомир", keys: ["zhytomyr", "житомир"], lat: 50.25, lng: 28.66 },
@@ -87,7 +87,7 @@ const alarmRegions = [
   { id: "kyivska", keys: ["київська", "киевская", "київщина", "киевщина"] },
   { id: "kyiv", keys: ["київ", "kiev", "kyiv"] },
   { id: "kharkivska", keys: ["харківська", "харьковская", "харківщина", "харьковщина"] },
-  { id: "odeska", keys: ["одеська", "одесская", "одещина"] },
+  { id: "odeska", keys: ["одеська", "одесская", "одещина", "одеса", "одесса"] },
   { id: "lvivska", keys: ["львівська", "львовская", "львівщина", "львовщина"] },
   { id: "dniprovska", keys: ["дніпропетровська", "днепропетровская", "дніпропетровщина"] },
   { id: "zaporizka", keys: ["запорізька", "запорожская", "запоріжжя", "запорожье"] },
@@ -386,11 +386,22 @@ function extractAlarmDistricts(text) {
 
 function parseDirection(text) {
   const lower = normalizeText(text);
-  if (lower.includes("північ")) return 0;
-  if (lower.includes("схід")) return 90;
-  if (lower.includes("південь")) return 180;
-  if (lower.includes("захід")) return 270;
-  return Math.floor(Math.random() * 360);
+  const degreeMatch = lower.match(/(\d{1,3})\s*(?:°|град|deg)/);
+  if (degreeMatch) {
+    const numeric = Number(degreeMatch[1]);
+    if (Number.isFinite(numeric)) {
+      return ((numeric % 360) + 360) % 360;
+    }
+  }
+  if (/(північн[оы]й?\s*схід|северо[- ]восток|north[- ]?east)/.test(lower)) return 45;
+  if (/(південн[оы]й?\s*схід|юго[- ]восток|south[- ]?east)/.test(lower)) return 135;
+  if (/(південн[оы]й?\s*захід|юго[- ]запад|south[- ]?west)/.test(lower)) return 225;
+  if (/(північн[оы]й?\s*захід|северо[- ]запад|north[- ]?west)/.test(lower)) return 315;
+  if (/(північ|север|north)/.test(lower)) return 0;
+  if (/(схід|восток|east)/.test(lower)) return 90;
+  if (/(південь|юг|south)/.test(lower)) return 180;
+  if (/(захід|запад|west)/.test(lower)) return 270;
+  return null;
 }
 
 function resolveRegionId(text, label) {
@@ -485,27 +496,63 @@ function hasTrackContext(text) {
   ].some((key) => lower.includes(key));
 }
 
-export function parseMessageToEvents(text, meta = {}) {
-  if (isDowned(text)) return [];
-  const coords = extractCoords(text);
-  const locationHits = coords ? [coords] : extractLocationHits(text);
-  const sea = pickSea(text);
+function bearingDeg(fromLat, fromLng, toLat, toLng) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const toDeg = (value) => (value * 180) / Math.PI;
+  const lat1 = toRad(fromLat);
+  const lat2 = toRad(toLat);
+  const dLng = toRad(toLng - fromLng);
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x =
+    Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  const brng = toDeg(Math.atan2(y, x));
+  return ((brng % 360) + 360) % 360;
+}
 
-  let type = meta.type || pickType(text);
+export function parseMessageToEvents(text, meta = {}) {
+  const contextTexts = Array.isArray(meta.context_texts)
+    ? meta.context_texts.filter(Boolean)
+    : [];
+  const mergedText = [text, ...contextTexts].filter(Boolean).join(" ");
+
+  if (isDowned(mergedText)) return [];
+  const coords = extractCoords(mergedText);
+  const locationHits = coords ? [coords] : extractLocationHits(mergedText);
+  const sea = pickSea(mergedText);
+
+  let type = meta.type || pickType(mergedText);
   const hasCount = locationHits.some((hit) => Number.isFinite(hit.count) && hit.count > 0);
-  if (!type && locationHits.length > 0 && (hasTrackContext(text) || hasCount)) {
+  if (!type && locationHits.length > 0 && (hasTrackContext(mergedText) || hasCount)) {
     type = "shahed";
   }
   if (!type) return [];
 
-  const direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(text);
+  let direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(mergedText);
+  if (
+    !Number.isFinite(direction) &&
+    Number.isFinite(meta.base_lat) &&
+    Number.isFinite(meta.base_lng) &&
+    locationHits.length > 0
+  ) {
+    direction = bearingDeg(
+      Number(meta.base_lat),
+      Number(meta.base_lng),
+      Number(locationHits[0].lat),
+      Number(locationHits[0].lng)
+    );
+  }
   const isTest = typeof meta.is_test === "boolean"
     ? meta.is_test
-    : normalizeText(text).includes("тест") || normalizeText(text).includes("test");
+    : normalizeText(mergedText).includes("тест") || normalizeText(mergedText).includes("test");
 
-  const forceSea = type === "airplane" || forceSeaForAviation(text);
-  const isTlk = String(meta.source || "").toLowerCase().includes("tlknewsua");
-  const regionId = resolveRegionId(text, "");
+  const forceSea = type === "airplane" || forceSeaForAviation(mergedText);
+  const sourceLower = String(meta.source || "").toLowerCase();
+  const isTlk = sourceLower.includes("tlknewsua");
+  let regionId = resolveRegionId(text, "");
+  if (!regionId && (sourceLower.includes("xydessa_live") || sourceLower.includes("pivdenmedia"))) {
+    regionId = "odeska";
+  }
   const regionCenter = regionId ? regionCenters[regionId] : null;
 
   if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !(isTlk && type === "shahed")) {
@@ -544,9 +591,16 @@ export function parseMessageToEvents(text, meta = {}) {
       label = `${center.name} (загально)`;
     }
 
-    const idSeed = `${meta.source || "tg"}-${meta.timestamp || ""}-${type}-${label}-${index}`;
+    const trackKey = meta.track_key ? String(meta.track_key) : null;
+    const idSeed = trackKey
+      ? `${trackKey}-${type}-${label}-${index}`
+      : `${meta.source || "tg"}-${meta.timestamp || ""}-${type}-${label}-${index}`;
     const seed = hashSeed(idSeed);
-    const resolvedRegionId = resolveRegionId(text, label) || regionId;
+    const resolvedRegionId =
+      resolveRegionId(label, label) ||
+      resolveRegionId(text, label) ||
+      resolveRegionId(mergedText, label) ||
+      regionId;
     const countText = target.count && target.count > 1 ? ` К-сть: ${target.count}.` : "";
     const jitteredLat = target.exact ? lat : addJitter(lat, seed);
     const jitteredLng = target.exact ? lng : addJitter(lng, seed + 7);
@@ -556,7 +610,7 @@ export function parseMessageToEvents(text, meta = {}) {
       type,
       lat: jitteredLat,
       lng: jitteredLng,
-      direction,
+      direction: Number.isFinite(direction) ? direction : null,
       source: meta.source || "tg",
       timestamp: meta.timestamp ? new Date(meta.timestamp).toISOString() : new Date().toISOString(),
       comment: `Джерело: ${meta.source || "tg"}. Локація: ${label}.${countText}`,

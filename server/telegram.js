@@ -9,10 +9,62 @@ const channels = (process.env.TG_CHANNELS || "")
   .split(",")
   .map((item) => item.trim())
   .filter(Boolean);
-const limit = Number(process.env.TG_LIMIT || 12);
+const limit = Number(process.env.TG_LIMIT || 100);
+const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
+const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
 
 let client;
 let clientReady = false;
+
+function haversineKm(a, b) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function refineEventsByConsensus(events) {
+  const refined = events.map((event) => ({ ...event }));
+  const windowMs = 6 * 60 * 1000;
+  const radiusKm = 80;
+  for (let i = 0; i < refined.length; i += 1) {
+    const current = refined[i];
+    const ts = Date.parse(current.timestamp);
+    if (!Number.isFinite(ts)) continue;
+
+    const peers = [];
+    for (let j = 0; j < refined.length; j += 1) {
+      if (i === j) continue;
+      const candidate = refined[j];
+      if (candidate.type !== current.type) continue;
+      const candidateTs = Date.parse(candidate.timestamp);
+      if (!Number.isFinite(candidateTs)) continue;
+      if (Math.abs(ts - candidateTs) > windowMs) continue;
+      const distance = haversineKm(
+        { lat: current.lat, lng: current.lng },
+        { lat: candidate.lat, lng: candidate.lng }
+      );
+      if (distance > radiusKm) continue;
+      peers.push(candidate);
+    }
+    if (peers.length === 0) continue;
+
+    const all = [current, ...peers];
+    current.lat = Number((all.reduce((sum, item) => sum + Number(item.lat || 0), 0) / all.length).toFixed(4));
+    current.lng = Number((all.reduce((sum, item) => sum + Number(item.lng || 0), 0) / all.length).toFixed(4));
+    const dirs = all.map((item) => item.direction).filter((dir) => Number.isFinite(dir));
+    if (dirs.length > 0) {
+      current.direction = dirs[dirs.length - 1];
+    }
+  }
+  return refined;
+}
 
 async function getClient() {
   if (!apiId || !apiHash) return null;
@@ -43,10 +95,17 @@ export async function loadTelegramEvents() {
   const alarmSet = new Set();
   const districtAlarmMap = new Map();
   let alarmsUpdated = false;
+
+  const channelMessages = new Map();
+  const allMessages = [];
   for (const channel of channels) {
     try {
       const messages = await tgClient.getMessages(channel, { limit });
-      const ordered = [...messages].reverse();
+      const ordered = [...messages].filter(Boolean).reverse();
+      channelMessages.set(channel, ordered);
+      ordered.forEach((msg) => {
+        allMessages.push({ channel, msg });
+      });
       for (const msg of ordered) {
         if (!msg.message) continue;
         const signal = extractAlarmSignals(msg.message);
@@ -67,20 +126,71 @@ export async function loadTelegramEvents() {
             }
           });
         }
-        const eventsFromMsg = parseMessageToEvents(msg.message, {
-          source: channel,
-          timestamp: msg.date * 1000,
-          raw_text: msg.message
-        });
-        if (eventsFromMsg.length) events.push(...eventsFromMsg);
       }
     } catch (error) {
       console.warn("Failed to read channel", channel, error?.message || error);
     }
   }
 
+  allMessages.sort((a, b) => (a.msg.date || 0) - (b.msg.date || 0));
+
+  function findReplyContext(channel, msg) {
+    const replyTo = msg.replyTo || {};
+    const replyId = replyTo.replyToMsgId;
+    if (!replyId) return { rootKey: `${channel}:${msg.id}`, parentText: null, baseEvent: null };
+
+    const sameChannel = channelMessages.get(channel) || [];
+    const parent = sameChannel.find((item) => item.id === replyId);
+    const root = replyTo.replyToTopId || replyId;
+    let baseEvent = null;
+    if (parent?.message) {
+      const parentEvents = parseMessageToEvents(parent.message, {
+        source: channel,
+        timestamp: parent.date * 1000,
+        raw_text: parent.message
+      });
+      if (parentEvents.length) {
+        baseEvent = parentEvents[0];
+      }
+    }
+    return {
+      rootKey: `${channel}:${root}`,
+      parentText: parent?.message || null,
+      baseEvent
+    };
+  }
+
+  for (const item of allMessages) {
+    const { channel, msg } = item;
+    if (!msg?.message) continue;
+
+    const nowTs = Number(msg.date || 0) * 1000;
+    const { rootKey, parentText, baseEvent } = findReplyContext(channel, msg);
+    const nearbySignals = [];
+    for (let i = allMessages.length - 1; i >= 0 && nearbySignals.length < contextMaxSignals; i -= 1) {
+      const current = allMessages[i];
+      const currentText = current.msg?.message;
+      if (!currentText || current.msg.id === msg.id) continue;
+      const ts = Number(current.msg.date || 0) * 1000;
+      if (Math.abs(nowTs - ts) > contextWindowMs) continue;
+      nearbySignals.push(currentText);
+    }
+
+    const contextTexts = [parentText, ...nearbySignals].filter(Boolean);
+    const eventsFromMsg = parseMessageToEvents(msg.message, {
+      source: channel,
+      timestamp: msg.date * 1000,
+      raw_text: msg.message,
+      context_texts: contextTexts,
+      base_lat: baseEvent?.lat,
+      base_lng: baseEvent?.lng,
+      track_key: rootKey
+    });
+    if (eventsFromMsg.length) events.push(...eventsFromMsg);
+  }
+
   return {
-    events,
+    events: refineEventsByConsensus(events),
     alarms: Array.from(alarmSet),
     district_alarms: Array.from(districtAlarmMap.values()),
     alarms_updated: alarmsUpdated
