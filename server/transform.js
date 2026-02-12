@@ -750,6 +750,9 @@ export function parseMessageToEvents(text, meta = {}) {
   if (!regionId && (sourceLower.includes("xydessa_live") || sourceLower.includes("pivdenmedia"))) {
     regionId = "odeska";
   }
+  if (!regionId && (sourceLower.includes("dnipro_alerts") || sourceLower.includes("onemaster_kr"))) {
+    regionId = "dniprovska";
+  }
   if (isTlk) {
     regionId = "kharkivska";
   }

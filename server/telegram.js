@@ -50,6 +50,8 @@ function preferredRegionIdForChannel(channel) {
   if (lower.includes("xydessa_live") || lower.includes("pivdenmedia")) return "odeska";
   if (lower.includes("kyivoperat")) return "kyiv";
   if (lower.includes("dneproperatyv")) return "dniprovska";
+  if (lower.includes("dnipro_alerts")) return "dniprovska";
+  if (lower.includes("onemaster_kr")) return "dniprovska";
   if (lower.includes("chernigivoperative")) return "chernihivska";
   return null;
 }
