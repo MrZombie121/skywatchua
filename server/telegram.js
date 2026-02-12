@@ -1,6 +1,10 @@
 ﻿import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseMessageToEvents, extractAlarmSignals } from "./transform.js";
+import { extractImageMarkers } from "./image.js";
 
 const apiId = process.env.TG_API_ID ? Number(process.env.TG_API_ID) : null;
 const apiHash = process.env.TG_API_HASH || null;
@@ -15,12 +19,21 @@ const testChannels = new Set(
     .map((item) => item.trim().toLowerCase().replace(/^@/, ""))
     .filter(Boolean)
 );
+const imageChannels = new Set(
+  (process.env.TG_IMAGE_CHANNELS || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase().replace(/^@/, ""))
+    .filter(Boolean)
+);
 const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
 
 let client;
 let clientReady = false;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const tmpDir = path.resolve(__dirname, "tmp");
 
 function normalizeText(text) {
   return String(text || "")
@@ -212,68 +225,107 @@ export async function loadTelegramEvents() {
 
   for (const item of allMessages) {
     const { channel, msg } = item;
-    if (!msg?.message) continue;
+    if (!msg) continue;
 
     const nowTs = Number(msg.date || 0) * 1000;
-    const turnSignal = isTurnMessage(msg.message);
-    const replyContext = findReplyContext(channel, msg);
-    const regionPreference = preferredRegionIdForChannel(channel);
-    const regionTrackKey = regionPreference ? lastTrackByRegion.get(regionPreference) : null;
-    const regionTrackEvent = regionPreference ? lastTrackEventByRegion.get(regionPreference) : null;
-    const useRegionalTrack =
-      !replyContext.hasReply && turnSignal && typeof regionTrackKey === "string";
-    const useLastTrack =
-      !replyContext.hasReply &&
-      turnSignal &&
-      !useRegionalTrack &&
-      typeof lastTrackKey === "string";
-    const rootKey = useRegionalTrack
-      ? regionTrackKey
-      : useLastTrack
-        ? lastTrackKey
-        : replyContext.rootKey;
-    const parentText = useRegionalTrack || useLastTrack ? null : replyContext.parentText;
-    const baseEvent = useRegionalTrack
-      ? regionTrackEvent
-      : useLastTrack
-        ? lastTrackEvent
-        : replyContext.baseEvent;
-    const nearbySignals = [];
-    for (let i = allMessages.length - 1; i >= 0 && nearbySignals.length < contextMaxSignals; i -= 1) {
-      const current = allMessages[i];
-      const currentText = current.msg?.message;
-      if (!currentText || current.msg.id === msg.id) continue;
-      const ts = Number(current.msg.date || 0) * 1000;
-      if (Math.abs(nowTs - ts) > contextWindowMs) continue;
-      nearbySignals.push(currentText);
+    if (msg.message) {
+      const turnSignal = isTurnMessage(msg.message);
+      const replyContext = findReplyContext(channel, msg);
+      const regionPreference = preferredRegionIdForChannel(channel);
+      const regionTrackKey = regionPreference ? lastTrackByRegion.get(regionPreference) : null;
+      const regionTrackEvent = regionPreference ? lastTrackEventByRegion.get(regionPreference) : null;
+      const useRegionalTrack =
+        !replyContext.hasReply && turnSignal && typeof regionTrackKey === "string";
+      const useLastTrack =
+        !replyContext.hasReply &&
+        turnSignal &&
+        !useRegionalTrack &&
+        typeof lastTrackKey === "string";
+      const rootKey = useRegionalTrack
+        ? regionTrackKey
+        : useLastTrack
+          ? lastTrackKey
+          : replyContext.rootKey;
+      const parentText = useRegionalTrack || useLastTrack ? null : replyContext.parentText;
+      const baseEvent = useRegionalTrack
+        ? regionTrackEvent
+        : useLastTrack
+          ? lastTrackEvent
+          : replyContext.baseEvent;
+      const nearbySignals = [];
+      for (let i = allMessages.length - 1; i >= 0 && nearbySignals.length < contextMaxSignals; i -= 1) {
+        const current = allMessages[i];
+        const currentText = current.msg?.message;
+        if (!currentText || current.msg.id === msg.id) continue;
+        const ts = Number(current.msg.date || 0) * 1000;
+        if (Math.abs(nowTs - ts) > contextWindowMs) continue;
+        nearbySignals.push(currentText);
+      }
+
+      const contextTexts = [parentText, ...nearbySignals].filter(Boolean);
+      const isTestChannel = testChannels.has(String(channel || "").toLowerCase().replace(/^@/, ""));
+      const parseMeta = {
+        source: channel,
+        timestamp: msg.date * 1000,
+        raw_text: msg.message,
+        is_test: isTestChannel,
+        context_texts: contextTexts,
+        base_lat: baseEvent?.lat,
+        base_lng: baseEvent?.lng,
+        allow_bearing_from_base: turnSignal,
+        track_key: rootKey
+      };
+
+      const eventsFromMsg = parseMessageToEvents(msg.message, parseMeta);
+
+      if (eventsFromMsg.length) {
+        events.push(...eventsFromMsg);
+        lastTrackKey = rootKey;
+        lastTrackEvent = eventsFromMsg[0];
+        eventsFromMsg.forEach((eventItem) => {
+          if (eventItem?.region_id) {
+            lastTrackByRegion.set(eventItem.region_id, rootKey);
+            lastTrackEventByRegion.set(eventItem.region_id, eventItem);
+          }
+        });
+      }
     }
 
-    const contextTexts = [parentText, ...nearbySignals].filter(Boolean);
-    const isTestChannel = testChannels.has(String(channel || "").toLowerCase().replace(/^@/, ""));
-    const parseMeta = {
-      source: channel,
-      timestamp: msg.date * 1000,
-      raw_text: msg.message,
-      is_test: isTestChannel,
-      context_texts: contextTexts,
-      base_lat: baseEvent?.lat,
-      base_lng: baseEvent?.lng,
-      allow_bearing_from_base: turnSignal,
-      track_key: rootKey
-    };
+    const channelKey = String(channel || "").toLowerCase().replace(/^@/, "");
+    const isImageChannel = imageChannels.has(channelKey);
+    const hasMedia = Boolean(msg?.media || msg?.photo || msg?.document);
+    if (!isImageChannel || !hasMedia) continue;
 
-    const eventsFromMsg = parseMessageToEvents(msg.message, parseMeta);
-
-    if (eventsFromMsg.length) {
-      events.push(...eventsFromMsg);
-      lastTrackKey = rootKey;
-      lastTrackEvent = eventsFromMsg[0];
-      eventsFromMsg.forEach((eventItem) => {
-        if (eventItem?.region_id) {
-          lastTrackByRegion.set(eventItem.region_id, rootKey);
-          lastTrackEventByRegion.set(eventItem.region_id, eventItem);
-        }
-      });
+    let imagePath = null;
+    try {
+      await fs.mkdir(tmpDir, { recursive: true });
+      imagePath = path.join(tmpDir, `tg-${channelKey}-${msg.id}-${Date.now()}.jpg`);
+      await tgClient.downloadMedia(msg, { outputFile: imagePath });
+      const markers = await extractImageMarkers(imagePath);
+      if (markers.length) {
+        markers.forEach((marker, index) => {
+          events.push({
+            id: `img-${channelKey}-${msg.id}-${index}`,
+            type: "shahed",
+            lat: Number(marker.lat.toFixed(4)),
+            lng: Number(marker.lng.toFixed(4)),
+            direction: null,
+            source: channel,
+            timestamp: new Date((msg.date || 0) * 1000).toISOString(),
+            comment: `Джерело: ${channel}. Локація: карта (маркер).`,
+            is_test: false,
+            confidence: 0.6,
+            region_id: null,
+            raw_text: msg.message || ""
+          });
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to process image message", channel, error?.message || error);
+    } finally {
+      if (imagePath) {
+        fs.unlink(imagePath).catch(() => {});
+      }
     }
   }
 
