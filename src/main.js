@@ -10,7 +10,7 @@ const map = L.map("map", {
 }).setView([49.0, 31.0], 6);
 
 const alarmsEnabled = true;
-const APP_VERSION = document.querySelector("meta[name=\"sw-version\"]")?.content || "1.5.1";
+const APP_VERSION = document.querySelector("meta[name=\"sw-version\"]")?.content || "1.5.1 beta";
 const mapStyleCatalog = {
   osm: {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
