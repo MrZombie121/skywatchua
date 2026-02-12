@@ -6,7 +6,7 @@
   "admins": [
     {
       "username": "admin26",
-      "password_hash": "bdfdfea5f14065058ef53a78f7c07c5b:12910ba7b8bf398344f11df69ea6e14511e260223873673f637e572da469e5052fc9d3082e65346c3a72b622b33c86d0cacb4ae3211755e7e165ef611ad0c573"
+      "password_hash": "bdfdfea5f14065058ef53a78f7c07c5b:e7ceaea688b8e1c406985b9d82b9b050b4c1dcca88e09bf94aa3599311036c17667ca7e3f88bfc6f687d6d1d16b3ffbfc717f9e34c3e1faed6203187e665c4b7"
     }
   ],
   "sessions": [

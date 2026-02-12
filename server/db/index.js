@@ -23,7 +23,7 @@ function hashPassword(password, salt) {
 
 async function ensureAdmin() {
   const username = process.env.ADMIN_USER || "admin26";
-  const password = process.env.ADMIN_PASS || "admlogin26";
+  const password = process.env.ADMIN_PASS || "admin26pass";
 
   await db.read();
   const exists = db.data.admins.find((admin) => admin.username === username);
