@@ -1,4 +1,7 @@
-﻿const typeRules = [
+﻿import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+const typeRules = [
   {
     type: "recon",
     patterns: [
@@ -251,6 +254,38 @@ const seaHints = [
   }
 ];
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const spawnPointsPath = process.env.SPAWN_POINTS_FILE
+  ? path.resolve(process.cwd(), process.env.SPAWN_POINTS_FILE)
+  : path.resolve(__dirname, "..", "public", "data", "spawn-points-ua.json");
+
+function loadSpawnPoints() {
+  try {
+    const raw = fs.readFileSync(spawnPointsPath, "utf8");
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item) =>
+          item &&
+          Number.isFinite(Number(item.lat)) &&
+          Number.isFinite(Number(item.lng))
+      )
+      .map((item) => ({
+        id: String(item.id || `${item.region_id || "ua"}:${item.lat}:${item.lng}`),
+        region_id: item.region_id ? String(item.region_id) : null,
+        lat: Number(item.lat),
+        lng: Number(item.lng),
+        types: Array.isArray(item.types) ? item.types.map((type) => String(type)) : null
+      }));
+  } catch {
+    return [];
+  }
+}
+
+const spawnPoints = loadSpawnPoints();
+
 function pickType(text) {
   const lower = normalizeText(text);
   if (lower.includes("йде на") && (lower.includes("район") || lower.includes("р-н"))) {
@@ -393,6 +428,11 @@ function addJitter(value, seed) {
   const normalized = (seed % 1000) / 1000;
   const offset = (normalized - 0.5) * 0.4;
   return Number((value + offset).toFixed(4));
+}
+
+function deterministicDirection(seedInput) {
+  const seed = hashSeed(String(seedInput || "dir"));
+  return seed % 360;
 }
 
 function normalizeText(text) {
@@ -541,7 +581,7 @@ function extractLocationHits(text) {
         label: hint.name,
         lat: hint.lat,
         lng: hint.lng,
-        exact: true,
+        exact: false,
         count: Number.isFinite(count) ? count : null,
         index: idx
       });
@@ -597,6 +637,65 @@ function bearingDeg(fromLat, fromLng, toLat, toLng) {
     Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
   const brng = toDeg(Math.atan2(y, x));
   return ((brng % 360) + 360) % 360;
+}
+
+function haversineKm(a, b) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function pickSpawnPoint({ regionId, type, lat, lng, seedInput }) {
+  if (spawnPoints.length === 0) return null;
+
+  const byRegion = regionId
+    ? spawnPoints.filter((item) => item.region_id === regionId)
+    : [];
+  const regionPool = byRegion.length > 0 ? byRegion : spawnPoints;
+  const typedPool = regionPool.filter(
+    (item) => !Array.isArray(item.types) || item.types.length === 0 || item.types.includes(type)
+  );
+  const pool = typedPool.length > 0 ? typedPool : regionPool;
+  if (pool.length === 0) return null;
+
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    let nearest = pool[0];
+    let bestDistance = haversineKm({ lat, lng }, { lat: nearest.lat, lng: nearest.lng });
+    for (let i = 1; i < pool.length; i += 1) {
+      const distance = haversineKm({ lat, lng }, { lat: pool[i].lat, lng: pool[i].lng });
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        nearest = pool[i];
+      }
+    }
+    return nearest;
+  }
+
+  const index = hashSeed(String(seedInput || "spawn")) % pool.length;
+  return pool[index];
+}
+
+function computeConfidenceScore({
+  hasExactCoords,
+  hasLocation,
+  hasDirection,
+  hasTrackKey,
+  contextCount
+}) {
+  let score = 0.35;
+  if (hasExactCoords) score += 0.28;
+  else if (hasLocation) score += 0.18;
+  if (hasDirection) score += 0.14;
+  if (hasTrackKey) score += 0.08;
+  score += Math.min(0.12, Math.max(0, contextCount) * 0.02);
+  return Number(Math.min(0.99, Math.max(0.15, score)).toFixed(2));
 }
 
 export function parseMessageToEvents(text, meta = {}) {
@@ -722,20 +821,48 @@ export function parseMessageToEvents(text, meta = {}) {
         resolveRegionId(mergedText, label) ||
         regionId
       );
+    const spawnRegionId =
+      sea?.name && sea.name.toLowerCase().includes("азов")
+        ? "sea_azov"
+        : (sea || forceSea)
+          ? "sea_black"
+          : resolvedRegionId;
+    const spawnCandidate = !target.exact
+      ? pickSpawnPoint({
+        regionId: spawnRegionId,
+        type,
+        lat,
+        lng,
+        seedInput: idSeed
+      })
+      : null;
+    if (spawnCandidate) {
+      lat = spawnCandidate.lat;
+      lng = spawnCandidate.lng;
+    }
     const countText = target.count && target.count > 1 ? ` К-сть: ${target.count}.` : "";
-    const jitteredLat = target.exact ? lat : addJitter(lat, seed);
-    const jitteredLng = target.exact ? lng : addJitter(lng, seed + 7);
+    const jitteredLat = target.exact || spawnCandidate ? lat : addJitter(lat, seed);
+    const jitteredLng = target.exact || spawnCandidate ? lng : addJitter(lng, seed + 7);
+    const finalDirection = Number.isFinite(direction) ? direction : deterministicDirection(idSeed);
+    const confidence = computeConfidenceScore({
+      hasExactCoords: Boolean(target.exact),
+      hasLocation: locationHits.length > 0 || Boolean(regionCenter),
+      hasDirection: Number.isFinite(direction),
+      hasTrackKey: Boolean(trackKey),
+      contextCount: contextTexts.length
+    });
 
     return {
       id: idSeed,
       type,
       lat: jitteredLat,
       lng: jitteredLng,
-      direction: Number.isFinite(direction) ? direction : null,
+      direction: finalDirection,
       source: meta.source || "tg",
       timestamp: meta.timestamp ? new Date(meta.timestamp).toISOString() : new Date().toISOString(),
       comment: `Джерело: ${meta.source || "tg"}. Локація: ${label}.${countText}`,
       is_test: isTest,
+      confidence,
       region_id: resolvedRegionId,
       raw_text: meta.raw_text || text
     };
@@ -743,3 +870,4 @@ export function parseMessageToEvents(text, meta = {}) {
 }
 
 export { extractAlarmRegions, extractAlarmSignals };
+

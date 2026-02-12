@@ -10,7 +10,7 @@ const map = L.map("map", {
 }).setView([49.0, 31.0], 6);
 
 const alarmsEnabled = true;
-const APP_VERSION = document.querySelector("meta[name=\"sw-version\"]")?.content || "1.4.1";
+const APP_VERSION = document.querySelector("meta[name=\"sw-version\"]")?.content || "1.5.0";
 const mapStyleCatalog = {
   osm: {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -214,22 +214,39 @@ function normalizeType(type) {
   return "shahed";
 }
 
+function deterministicDirection(seedInput) {
+  const text = String(seedInput || "");
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash << 5) - hash + text.charCodeAt(i);
+    hash |= 0;
+  }
+  const positive = Math.abs(hash);
+  return positive % 360;
+}
+
 function normalizeEvent(raw, sourceId) {
   const rawDirection = raw.direction ?? raw.heading;
   const parsedDirection = Number(rawDirection);
   const direction = Number.isFinite(parsedDirection) ? parsedDirection : null;
+  const rawId =
+    raw.id || `${sourceId}-${raw.timestamp || raw.time || Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const type = normalizeType(raw.type || raw.target_type || raw.category);
   return {
-    id: raw.id || `${sourceId}-${raw.timestamp || raw.time || Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: rawId,
     type,
     lat: Number(raw.lat ?? raw.latitude ?? raw.location?.lat ?? 0),
     lng: Number(raw.lng ?? raw.longitude ?? raw.location?.lng ?? 0),
     direction,
+    fallbackDirection: deterministicDirection(rawId),
     source: raw.source || sourceId,
     timestamp: raw.timestamp || raw.time || new Date().toISOString(),
     comment: raw.comment || raw.note || "",
     is_test: Boolean(raw.is_test ?? raw.isTest ?? false),
-    raw_text: raw.raw_text || raw.message || ""
+    raw_text: raw.raw_text || raw.message || "",
+    confidence: Number(raw.confidence ?? 0.5),
+    evidence_count: Number(raw.evidence_count ?? 1),
+    evidence_sources: Array.isArray(raw.evidence_sources) ? raw.evidence_sources : []
   };
 }
 
@@ -429,7 +446,7 @@ function makeMarkerIcon(event) {
         class="marker-icon-img ${typeClass} ${event.is_test ? "test" : "real"}"
         src="${iconUrl}"
         alt="${typeClass}"
-        style="transform: rotate(${(event.direction || 0) + iconRotationOffset}deg);"
+        style="transform: rotate(${directionOrDefault(event.direction, event.fallbackDirection) + iconRotationOffset}deg);"
       />
     </div>
   `;
@@ -580,7 +597,7 @@ function renderMarkers() {
           marker: existing,
           baseLat: event.lat,
           baseLng: event.lng,
-          direction: directionOrDefault(event.direction),
+          direction: directionOrDefault(event.direction, event.fallbackDirection),
           distanceKm: 0,
           track: [],
           trailLine: null
@@ -612,7 +629,7 @@ function renderMarkers() {
       marker,
       baseLat: event.lat,
       baseLng: event.lng,
-      direction: directionOrDefault(event.direction),
+      direction: directionOrDefault(event.direction, event.fallbackDirection),
       distanceKm: 0,
       track: [[event.lat, event.lng]],
       trailLine: null
@@ -633,6 +650,14 @@ function buildPopup(event, distanceKm) {
   const distanceLine = Number.isFinite(distanceKm)
     ? `<br /><span class="popup-meta">Пройдена відстань: ${distanceKm.toFixed(1)} км</span>`
     : "";
+  const confidenceLine = Number.isFinite(event.confidence)
+    ? `<br /><span class="popup-meta">Точність: ${Math.round(event.confidence * 100)}%</span>`
+    : "";
+  const evidenceCount = Number.isFinite(event.evidence_count) ? Math.max(1, event.evidence_count) : 1;
+  const evidenceLine = `<br /><span class="popup-meta">Підтверджень: ${evidenceCount}</span>`;
+  const evidenceSources = Array.isArray(event.evidence_sources) && event.evidence_sources.length > 0
+    ? `<br /><span class="popup-meta">Джерела: ${event.evidence_sources.join(", ")}</span>`
+    : "";
   return `
       <div class="popup">
         <strong>${event.type.toUpperCase()}</strong><br />
@@ -640,6 +665,9 @@ function buildPopup(event, distanceKm) {
         Час (Kyiv): ${formatTime(event.timestamp)}<br />
         Тестовий: ${event.is_test ? "так" : "ні"}<br />
         ${event.comment ? `Коментар: ${event.comment}` : ""}
+        ${confidenceLine}
+        ${evidenceLine}
+        ${evidenceSources}
         ${distanceLine}
       </div>
     `;

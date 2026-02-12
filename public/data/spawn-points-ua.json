@@ -1,0 +1,6758 @@
+[
+  {
+    "id": "vinnytska-01",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "vinnytska-02",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "vinnytska-03",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-04",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-05",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-06",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "vinnytska-07",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-08",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "vinnytska-09",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-10",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-11",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "vinnytska-12",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "vinnytska-13",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-14",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "vinnytska-15",
+    "region_id": "vinnytska",
+    "lat": 49.23,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-16",
+    "region_id": "vinnytska",
+    "lat": 49.45,
+    "lng": 28.47,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "vinnytska-17",
+    "region_id": "vinnytska",
+    "lat": 49.431,
+    "lng": 28.607,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-18",
+    "region_id": "vinnytska",
+    "lat": 49.3772,
+    "lng": 28.7204,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "vinnytska-19",
+    "region_id": "vinnytska",
+    "lat": 49.298,
+    "lng": 28.7904,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "vinnytska-20",
+    "region_id": "vinnytska",
+    "lat": 49.207,
+    "lng": 28.805,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "volynska-01",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "volynska-02",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "volynska-03",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-04",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-05",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-06",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "volynska-07",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-08",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "volynska-09",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-10",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-11",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "volynska-12",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "volynska-13",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-14",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "volynska-15",
+    "region_id": "volynska",
+    "lat": 50.75,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-16",
+    "region_id": "volynska",
+    "lat": 50.97,
+    "lng": 25.34,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "volynska-17",
+    "region_id": "volynska",
+    "lat": 50.951,
+    "lng": 25.4814,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-18",
+    "region_id": "volynska",
+    "lat": 50.8972,
+    "lng": 25.5984,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "volynska-19",
+    "region_id": "volynska",
+    "lat": 50.818,
+    "lng": 25.6707,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "volynska-20",
+    "region_id": "volynska",
+    "lat": 50.727,
+    "lng": 25.6858,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "luhanska-01",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "luhanska-02",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "luhanska-03",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-04",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-05",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-06",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "luhanska-07",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-08",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "luhanska-09",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-10",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-11",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "luhanska-12",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "luhanska-13",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-14",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "luhanska-15",
+    "region_id": "luhanska",
+    "lat": 48.57,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-16",
+    "region_id": "luhanska",
+    "lat": 48.79,
+    "lng": 39.31,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "luhanska-17",
+    "region_id": "luhanska",
+    "lat": 48.771,
+    "lng": 39.4452,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-18",
+    "region_id": "luhanska",
+    "lat": 48.7172,
+    "lng": 39.5571,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "luhanska-19",
+    "region_id": "luhanska",
+    "lat": 48.638,
+    "lng": 39.6262,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "luhanska-20",
+    "region_id": "luhanska",
+    "lat": 48.547,
+    "lng": 39.6407,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "dniprovska-01",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "dniprovska-02",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "dniprovska-03",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-04",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-05",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-06",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "dniprovska-07",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-08",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "dniprovska-09",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-10",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-11",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "dniprovska-12",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "dniprovska-13",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-14",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "dniprovska-15",
+    "region_id": "dniprovska",
+    "lat": 48.46,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-16",
+    "region_id": "dniprovska",
+    "lat": 48.68,
+    "lng": 35.05,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "dniprovska-17",
+    "region_id": "dniprovska",
+    "lat": 48.661,
+    "lng": 35.1849,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-18",
+    "region_id": "dniprovska",
+    "lat": 48.6072,
+    "lng": 35.2965,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "dniprovska-19",
+    "region_id": "dniprovska",
+    "lat": 48.528,
+    "lng": 35.3655,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "dniprovska-20",
+    "region_id": "dniprovska",
+    "lat": 48.437,
+    "lng": 35.3799,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "donetska-01",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "donetska-02",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "donetska-03",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-04",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-05",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-06",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "donetska-07",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-08",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "donetska-09",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-10",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-11",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "donetska-12",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "donetska-13",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-14",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "donetska-15",
+    "region_id": "donetska",
+    "lat": 48.02,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-16",
+    "region_id": "donetska",
+    "lat": 48.24,
+    "lng": 37.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "donetska-17",
+    "region_id": "donetska",
+    "lat": 48.221,
+    "lng": 37.9338,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-18",
+    "region_id": "donetska",
+    "lat": 48.1672,
+    "lng": 38.0444,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "donetska-19",
+    "region_id": "donetska",
+    "lat": 48.088,
+    "lng": 38.1128,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "donetska-20",
+    "region_id": "donetska",
+    "lat": 47.997,
+    "lng": 38.1271,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zhytomyrska-01",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zhytomyrska-02",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zhytomyrska-03",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-04",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-05",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-06",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zhytomyrska-07",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-08",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zhytomyrska-09",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-10",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-11",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zhytomyrska-12",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zhytomyrska-13",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-14",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zhytomyrska-15",
+    "region_id": "zhytomyrska",
+    "lat": 50.25,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-16",
+    "region_id": "zhytomyrska",
+    "lat": 50.47,
+    "lng": 28.66,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zhytomyrska-17",
+    "region_id": "zhytomyrska",
+    "lat": 50.451,
+    "lng": 28.7999,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-18",
+    "region_id": "zhytomyrska",
+    "lat": 50.3972,
+    "lng": 28.9157,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zhytomyrska-19",
+    "region_id": "zhytomyrska",
+    "lat": 50.318,
+    "lng": 28.9872,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zhytomyrska-20",
+    "region_id": "zhytomyrska",
+    "lat": 50.227,
+    "lng": 29.0022,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zakarpatska-01",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zakarpatska-02",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zakarpatska-03",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-04",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-05",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-06",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zakarpatska-07",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-08",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zakarpatska-09",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-10",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-11",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zakarpatska-12",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zakarpatska-13",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-14",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zakarpatska-15",
+    "region_id": "zakarpatska",
+    "lat": 48.62,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-16",
+    "region_id": "zakarpatska",
+    "lat": 48.84,
+    "lng": 22.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zakarpatska-17",
+    "region_id": "zakarpatska",
+    "lat": 48.821,
+    "lng": 22.4354,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-18",
+    "region_id": "zakarpatska",
+    "lat": 48.7672,
+    "lng": 22.5473,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zakarpatska-19",
+    "region_id": "zakarpatska",
+    "lat": 48.688,
+    "lng": 22.6165,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zakarpatska-20",
+    "region_id": "zakarpatska",
+    "lat": 48.597,
+    "lng": 22.631,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zaporizka-01",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zaporizka-02",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zaporizka-03",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-04",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-05",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-06",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zaporizka-07",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-08",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zaporizka-09",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-10",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-11",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zaporizka-12",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zaporizka-13",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-14",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zaporizka-15",
+    "region_id": "zaporizka",
+    "lat": 47.84,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-16",
+    "region_id": "zaporizka",
+    "lat": 48.06,
+    "lng": 35.14,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "zaporizka-17",
+    "region_id": "zaporizka",
+    "lat": 48.041,
+    "lng": 35.2733,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-18",
+    "region_id": "zaporizka",
+    "lat": 47.9872,
+    "lng": 35.3836,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "zaporizka-19",
+    "region_id": "zaporizka",
+    "lat": 47.908,
+    "lng": 35.4517,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "zaporizka-20",
+    "region_id": "zaporizka",
+    "lat": 47.817,
+    "lng": 35.466,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-01",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-02",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-03",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-04",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-05",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-06",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-07",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-08",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-09",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-10",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-11",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-12",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-13",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-14",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-15",
+    "region_id": "ivano-frankivska",
+    "lat": 48.92,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-16",
+    "region_id": "ivano-frankivska",
+    "lat": 49.14,
+    "lng": 24.71,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-17",
+    "region_id": "ivano-frankivska",
+    "lat": 49.121,
+    "lng": 24.8462,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-18",
+    "region_id": "ivano-frankivska",
+    "lat": 49.0672,
+    "lng": 24.9588,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-19",
+    "region_id": "ivano-frankivska",
+    "lat": 48.988,
+    "lng": 25.0284,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ivano-frankivska-20",
+    "region_id": "ivano-frankivska",
+    "lat": 48.897,
+    "lng": 25.043,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyiv-01",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kyiv-02",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyiv-03",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-04",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-05",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-06",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kyiv-07",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-08",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyiv-09",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-10",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-11",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kyiv-12",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyiv-13",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-14",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyiv-15",
+    "region_id": "kyiv",
+    "lat": 50.45,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-16",
+    "region_id": "kyiv",
+    "lat": 50.67,
+    "lng": 30.52,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kyiv-17",
+    "region_id": "kyiv",
+    "lat": 50.651,
+    "lng": 30.6605,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-18",
+    "region_id": "kyiv",
+    "lat": 50.5972,
+    "lng": 30.7768,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyiv-19",
+    "region_id": "kyiv",
+    "lat": 50.518,
+    "lng": 30.8486,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyiv-20",
+    "region_id": "kyiv",
+    "lat": 50.427,
+    "lng": 30.8636,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyivska-01",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kyivska-02",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyivska-03",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-04",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-05",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-06",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kyivska-07",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-08",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyivska-09",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-10",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-11",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kyivska-12",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyivska-13",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-14",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyivska-15",
+    "region_id": "kyivska",
+    "lat": 50.35,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-16",
+    "region_id": "kyivska",
+    "lat": 50.57,
+    "lng": 30.96,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kyivska-17",
+    "region_id": "kyivska",
+    "lat": 50.551,
+    "lng": 31.1002,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-18",
+    "region_id": "kyivska",
+    "lat": 50.4972,
+    "lng": 31.2162,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kyivska-19",
+    "region_id": "kyivska",
+    "lat": 50.418,
+    "lng": 31.2879,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kyivska-20",
+    "region_id": "kyivska",
+    "lat": 50.327,
+    "lng": 31.3029,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kirovohradska-01",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kirovohradska-02",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kirovohradska-03",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-04",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-05",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-06",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kirovohradska-07",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-08",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kirovohradska-09",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-10",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-11",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kirovohradska-12",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kirovohradska-13",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-14",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kirovohradska-15",
+    "region_id": "kirovohradska",
+    "lat": 48.51,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-16",
+    "region_id": "kirovohradska",
+    "lat": 48.73,
+    "lng": 32.26,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kirovohradska-17",
+    "region_id": "kirovohradska",
+    "lat": 48.711,
+    "lng": 32.3951,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-18",
+    "region_id": "kirovohradska",
+    "lat": 48.6572,
+    "lng": 32.5068,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kirovohradska-19",
+    "region_id": "kirovohradska",
+    "lat": 48.578,
+    "lng": 32.5758,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kirovohradska-20",
+    "region_id": "kirovohradska",
+    "lat": 48.487,
+    "lng": 32.5903,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "lvivska-01",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "lvivska-02",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "lvivska-03",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-04",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-05",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-06",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "lvivska-07",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-08",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "lvivska-09",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-10",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-11",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "lvivska-12",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "lvivska-13",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-14",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "lvivska-15",
+    "region_id": "lvivska",
+    "lat": 49.84,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-16",
+    "region_id": "lvivska",
+    "lat": 50.06,
+    "lng": 24.03,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "lvivska-17",
+    "region_id": "lvivska",
+    "lat": 50.041,
+    "lng": 24.1687,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-18",
+    "region_id": "lvivska",
+    "lat": 49.9872,
+    "lng": 24.2835,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "lvivska-19",
+    "region_id": "lvivska",
+    "lat": 49.908,
+    "lng": 24.3544,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "lvivska-20",
+    "region_id": "lvivska",
+    "lat": 49.817,
+    "lng": 24.3693,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "mykolaivska-01",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "mykolaivska-02",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "mykolaivska-03",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-04",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-05",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-06",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "mykolaivska-07",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-08",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "mykolaivska-09",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-10",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-11",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "mykolaivska-12",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "mykolaivska-13",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-14",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "mykolaivska-15",
+    "region_id": "mykolaivska",
+    "lat": 46.97,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-16",
+    "region_id": "mykolaivska",
+    "lat": 47.19,
+    "lng": 31.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "mykolaivska-17",
+    "region_id": "mykolaivska",
+    "lat": 47.171,
+    "lng": 32.1211,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-18",
+    "region_id": "mykolaivska",
+    "lat": 47.1172,
+    "lng": 32.2296,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "mykolaivska-19",
+    "region_id": "mykolaivska",
+    "lat": 47.038,
+    "lng": 32.2966,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "mykolaivska-20",
+    "region_id": "mykolaivska",
+    "lat": 46.947,
+    "lng": 32.3106,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "odeska-01",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "odeska-02",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "odeska-03",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-04",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-05",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-06",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "odeska-07",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-08",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "odeska-09",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-10",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-11",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "odeska-12",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "odeska-13",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-14",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "odeska-15",
+    "region_id": "odeska",
+    "lat": 46.48,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-16",
+    "region_id": "odeska",
+    "lat": 46.7,
+    "lng": 30.72,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "odeska-17",
+    "region_id": "odeska",
+    "lat": 46.681,
+    "lng": 30.8499,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-18",
+    "region_id": "odeska",
+    "lat": 46.6272,
+    "lng": 30.9574,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "odeska-19",
+    "region_id": "odeska",
+    "lat": 46.548,
+    "lng": 31.0238,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "odeska-20",
+    "region_id": "odeska",
+    "lat": 46.457,
+    "lng": 31.0377,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "poltavska-01",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "poltavska-02",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "poltavska-03",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-04",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-05",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-06",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "poltavska-07",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-08",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "poltavska-09",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-10",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-11",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "poltavska-12",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "poltavska-13",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-14",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "poltavska-15",
+    "region_id": "poltavska",
+    "lat": 49.59,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-16",
+    "region_id": "poltavska",
+    "lat": 49.81,
+    "lng": 34.55,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "poltavska-17",
+    "region_id": "poltavska",
+    "lat": 49.791,
+    "lng": 34.688,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-18",
+    "region_id": "poltavska",
+    "lat": 49.7372,
+    "lng": 34.8022,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "poltavska-19",
+    "region_id": "poltavska",
+    "lat": 49.658,
+    "lng": 34.8728,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "poltavska-20",
+    "region_id": "poltavska",
+    "lat": 49.567,
+    "lng": 34.8875,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "rivnenska-01",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "rivnenska-02",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "rivnenska-03",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-04",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-05",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-06",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "rivnenska-07",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-08",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "rivnenska-09",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-10",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-11",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "rivnenska-12",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "rivnenska-13",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-14",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "rivnenska-15",
+    "region_id": "rivnenska",
+    "lat": 50.62,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-16",
+    "region_id": "rivnenska",
+    "lat": 50.84,
+    "lng": 26.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "rivnenska-17",
+    "region_id": "rivnenska",
+    "lat": 50.821,
+    "lng": 26.391,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-18",
+    "region_id": "rivnenska",
+    "lat": 50.7672,
+    "lng": 26.5077,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "rivnenska-19",
+    "region_id": "rivnenska",
+    "lat": 50.688,
+    "lng": 26.5798,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "rivnenska-20",
+    "region_id": "rivnenska",
+    "lat": 50.597,
+    "lng": 26.5949,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sumyska-01",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "sumyska-02",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sumyska-03",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-04",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-05",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-06",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "sumyska-07",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-08",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sumyska-09",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-10",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-11",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "sumyska-12",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sumyska-13",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-14",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sumyska-15",
+    "region_id": "sumyska",
+    "lat": 50.91,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-16",
+    "region_id": "sumyska",
+    "lat": 51.13,
+    "lng": 34.8,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "sumyska-17",
+    "region_id": "sumyska",
+    "lat": 51.111,
+    "lng": 34.9419,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-18",
+    "region_id": "sumyska",
+    "lat": 51.0572,
+    "lng": 35.0593,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sumyska-19",
+    "region_id": "sumyska",
+    "lat": 50.978,
+    "lng": 35.1318,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sumyska-20",
+    "region_id": "sumyska",
+    "lat": 50.887,
+    "lng": 35.147,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ternopilska-01",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "ternopilska-02",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ternopilska-03",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-04",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-05",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-06",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "ternopilska-07",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-08",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ternopilska-09",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-10",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-11",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "ternopilska-12",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ternopilska-13",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-14",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ternopilska-15",
+    "region_id": "ternopilska",
+    "lat": 49.55,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-16",
+    "region_id": "ternopilska",
+    "lat": 49.77,
+    "lng": 25.59,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "ternopilska-17",
+    "region_id": "ternopilska",
+    "lat": 49.751,
+    "lng": 25.7279,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-18",
+    "region_id": "ternopilska",
+    "lat": 49.6972,
+    "lng": 25.842,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "ternopilska-19",
+    "region_id": "ternopilska",
+    "lat": 49.618,
+    "lng": 25.9125,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "ternopilska-20",
+    "region_id": "ternopilska",
+    "lat": 49.527,
+    "lng": 25.9272,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kharkivska-01",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kharkivska-02",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kharkivska-03",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-04",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-05",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-06",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kharkivska-07",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-08",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kharkivska-09",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-10",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-11",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kharkivska-12",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kharkivska-13",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-14",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kharkivska-15",
+    "region_id": "kharkivska",
+    "lat": 49.98,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-16",
+    "region_id": "kharkivska",
+    "lat": 50.2,
+    "lng": 36.25,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "kharkivska-17",
+    "region_id": "kharkivska",
+    "lat": 50.181,
+    "lng": 36.3892,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-18",
+    "region_id": "kharkivska",
+    "lat": 50.1272,
+    "lng": 36.5042,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "kharkivska-19",
+    "region_id": "kharkivska",
+    "lat": 50.048,
+    "lng": 36.5754,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "kharkivska-20",
+    "region_id": "kharkivska",
+    "lat": 49.957,
+    "lng": 36.5902,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khersonska-01",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "khersonska-02",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khersonska-03",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-04",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-05",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-06",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "khersonska-07",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-08",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khersonska-09",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-10",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-11",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "khersonska-12",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khersonska-13",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-14",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khersonska-15",
+    "region_id": "khersonska",
+    "lat": 46.63,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-16",
+    "region_id": "khersonska",
+    "lat": 46.85,
+    "lng": 32.62,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "khersonska-17",
+    "region_id": "khersonska",
+    "lat": 46.831,
+    "lng": 32.7503,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-18",
+    "region_id": "khersonska",
+    "lat": 46.7772,
+    "lng": 32.8581,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khersonska-19",
+    "region_id": "khersonska",
+    "lat": 46.698,
+    "lng": 32.9247,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khersonska-20",
+    "region_id": "khersonska",
+    "lat": 46.607,
+    "lng": 32.9386,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khmelnytska-01",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "khmelnytska-02",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khmelnytska-03",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-04",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-05",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-06",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "khmelnytska-07",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-08",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khmelnytska-09",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-10",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-11",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "khmelnytska-12",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khmelnytska-13",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-14",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khmelnytska-15",
+    "region_id": "khmelnytska",
+    "lat": 49.42,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-16",
+    "region_id": "khmelnytska",
+    "lat": 49.64,
+    "lng": 26.99,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "khmelnytska-17",
+    "region_id": "khmelnytska",
+    "lat": 49.621,
+    "lng": 27.1276,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-18",
+    "region_id": "khmelnytska",
+    "lat": 49.5672,
+    "lng": 27.2413,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "khmelnytska-19",
+    "region_id": "khmelnytska",
+    "lat": 49.488,
+    "lng": 27.3116,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "khmelnytska-20",
+    "region_id": "khmelnytska",
+    "lat": 49.397,
+    "lng": 27.3263,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "cherkaska-01",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "cherkaska-02",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "cherkaska-03",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-04",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-05",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-06",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "cherkaska-07",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-08",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "cherkaska-09",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-10",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-11",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "cherkaska-12",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "cherkaska-13",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-14",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "cherkaska-15",
+    "region_id": "cherkaska",
+    "lat": 49.44,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-16",
+    "region_id": "cherkaska",
+    "lat": 49.66,
+    "lng": 32.06,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "cherkaska-17",
+    "region_id": "cherkaska",
+    "lat": 49.641,
+    "lng": 32.1976,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-18",
+    "region_id": "cherkaska",
+    "lat": 49.5872,
+    "lng": 32.3114,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "cherkaska-19",
+    "region_id": "cherkaska",
+    "lat": 49.508,
+    "lng": 32.3818,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "cherkaska-20",
+    "region_id": "cherkaska",
+    "lat": 49.417,
+    "lng": 32.3965,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernihivska-01",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "chernihivska-02",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernihivska-03",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-04",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-05",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-06",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "chernihivska-07",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-08",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernihivska-09",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-10",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-11",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "chernihivska-12",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernihivska-13",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-14",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernihivska-15",
+    "region_id": "chernihivska",
+    "lat": 51.5,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-16",
+    "region_id": "chernihivska",
+    "lat": 51.72,
+    "lng": 31.3,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "chernihivska-17",
+    "region_id": "chernihivska",
+    "lat": 51.701,
+    "lng": 31.4437,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-18",
+    "region_id": "chernihivska",
+    "lat": 51.6472,
+    "lng": 31.5626,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernihivska-19",
+    "region_id": "chernihivska",
+    "lat": 51.568,
+    "lng": 31.6361,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernihivska-20",
+    "region_id": "chernihivska",
+    "lat": 51.477,
+    "lng": 31.6515,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernivetska-01",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "chernivetska-02",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernivetska-03",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-04",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-05",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-06",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "chernivetska-07",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-08",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernivetska-09",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-10",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-11",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "chernivetska-12",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernivetska-13",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-14",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernivetska-15",
+    "region_id": "chernivetska",
+    "lat": 48.29,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-16",
+    "region_id": "chernivetska",
+    "lat": 48.51,
+    "lng": 25.94,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "chernivetska-17",
+    "region_id": "chernivetska",
+    "lat": 48.491,
+    "lng": 26.0745,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-18",
+    "region_id": "chernivetska",
+    "lat": 48.4372,
+    "lng": 26.1857,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "chernivetska-19",
+    "region_id": "chernivetska",
+    "lat": 48.358,
+    "lng": 26.2545,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "chernivetska-20",
+    "region_id": "chernivetska",
+    "lat": 48.267,
+    "lng": 26.2688,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "crimea-01",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "crimea-02",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "crimea-03",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-04",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-05",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-06",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "crimea-07",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-08",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "crimea-09",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-10",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-11",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "crimea-12",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "crimea-13",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-14",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "crimea-15",
+    "region_id": "crimea",
+    "lat": 45.3,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-16",
+    "region_id": "crimea",
+    "lat": 45.52,
+    "lng": 34.2,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "crimea-17",
+    "region_id": "crimea",
+    "lat": 45.501,
+    "lng": 34.3272,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-18",
+    "region_id": "crimea",
+    "lat": 45.4472,
+    "lng": 34.4324,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "crimea-19",
+    "region_id": "crimea",
+    "lat": 45.368,
+    "lng": 34.4975,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "crimea-20",
+    "region_id": "crimea",
+    "lat": 45.277,
+    "lng": 34.5111,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sevastopol-01",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "sevastopol-02",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sevastopol-03",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-04",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-05",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-06",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "sevastopol-07",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-08",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sevastopol-09",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-10",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-11",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "sevastopol-12",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sevastopol-13",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-14",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sevastopol-15",
+    "region_id": "sevastopol",
+    "lat": 44.6,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-16",
+    "region_id": "sevastopol",
+    "lat": 44.82,
+    "lng": 33.5,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon",
+      "kab"
+    ]
+  },
+  {
+    "id": "sevastopol-17",
+    "region_id": "sevastopol",
+    "lat": 44.801,
+    "lng": 33.6257,
+    "types": [
+      "shahed",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-18",
+    "region_id": "sevastopol",
+    "lat": 44.7472,
+    "lng": 33.7296,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sevastopol-19",
+    "region_id": "sevastopol",
+    "lat": 44.668,
+    "lng": 33.7939,
+    "types": [
+      "shahed",
+      "missile",
+      "recon"
+    ]
+  },
+  {
+    "id": "sevastopol-20",
+    "region_id": "sevastopol",
+    "lat": 44.577,
+    "lng": 33.8073,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane"
+    ]
+  },
+  {
+    "id": "sea-black-01",
+    "region_id": "sea_black",
+    "lat": 45.25,
+    "lng": 32.6,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-02",
+    "region_id": "sea_black",
+    "lat": 45.4215,
+    "lng": 32.7336,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-03",
+    "region_id": "sea_black",
+    "lat": 45.5647,
+    "lng": 32.9522,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-04",
+    "region_id": "sea_black",
+    "lat": 45.664,
+    "lng": 33.2444,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-05",
+    "region_id": "sea_black",
+    "lat": 45.7058,
+    "lng": 33.5939,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-06",
+    "region_id": "sea_black",
+    "lat": 45.6794,
+    "lng": 33.9797,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-07",
+    "region_id": "sea_black",
+    "lat": 45.5776,
+    "lng": 34.3778,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-08",
+    "region_id": "sea_black",
+    "lat": 45.0082,
+    "lng": 33.0699,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-09",
+    "region_id": "sea_black",
+    "lat": 44.9711,
+    "lng": 33.3415,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-10",
+    "region_id": "sea_black",
+    "lat": 44.8681,
+    "lng": 33.6013,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-11",
+    "region_id": "sea_black",
+    "lat": 44.702,
+    "lng": 33.825,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-12",
+    "region_id": "sea_black",
+    "lat": 44.4795,
+    "lng": 33.989,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-13",
+    "region_id": "sea_black",
+    "lat": 44.2114,
+    "lng": 34.0728,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-14",
+    "region_id": "sea_black",
+    "lat": 43.9118,
+    "lng": 34.0592,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-15",
+    "region_id": "sea_black",
+    "lat": 44.6168,
+    "lng": 32.8904,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-16",
+    "region_id": "sea_black",
+    "lat": 44.4225,
+    "lng": 32.9246,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-17",
+    "region_id": "sea_black",
+    "lat": 44.2156,
+    "lng": 32.8667,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-18",
+    "region_id": "sea_black",
+    "lat": 44.0136,
+    "lng": 32.7126,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-19",
+    "region_id": "sea_black",
+    "lat": 43.8343,
+    "lng": 32.4646,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-20",
+    "region_id": "sea_black",
+    "lat": 43.695,
+    "lng": 32.1305,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-21",
+    "region_id": "sea_black",
+    "lat": 43.6116,
+    "lng": 31.7241,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-22",
+    "region_id": "sea_black",
+    "lat": 44.6168,
+    "lng": 32.3096,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-23",
+    "region_id": "sea_black",
+    "lat": 44.5337,
+    "lng": 32.0592,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-24",
+    "region_id": "sea_black",
+    "lat": 44.5089,
+    "lng": 31.7635,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-25",
+    "region_id": "sea_black",
+    "lat": 44.5502,
+    "lng": 31.4447,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-26",
+    "region_id": "sea_black",
+    "lat": 44.6619,
+    "lng": 31.1273,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-27",
+    "region_id": "sea_black",
+    "lat": 44.8439,
+    "lng": 30.8371,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-28",
+    "region_id": "sea_black",
+    "lat": 45.092,
+    "lng": 30.5995,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-29",
+    "region_id": "sea_black",
+    "lat": 45.0082,
+    "lng": 32.1301,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-30",
+    "region_id": "sea_black",
+    "lat": 45.1512,
+    "lng": 31.9411,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-31",
+    "region_id": "sea_black",
+    "lat": 45.3427,
+    "lng": 31.8163,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-32",
+    "region_id": "sea_black",
+    "lat": 45.5702,
+    "lng": 31.7733,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-33",
+    "region_id": "sea_black",
+    "lat": 45.8185,
+    "lng": 31.8252,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-34",
+    "region_id": "sea_black",
+    "lat": 46.0703,
+    "lng": 31.9799,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-black-35",
+    "region_id": "sea_black",
+    "lat": 46.307,
+    "lng": 32.2395,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-01",
+    "region_id": "sea_azov",
+    "lat": 46.32,
+    "lng": 36.4,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-02",
+    "region_id": "sea_azov",
+    "lat": 46.4106,
+    "lng": 36.5994,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-03",
+    "region_id": "sea_azov",
+    "lat": 46.4078,
+    "lng": 36.893,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-04",
+    "region_id": "sea_azov",
+    "lat": 46.2792,
+    "lng": 37.1955,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-05",
+    "region_id": "sea_azov",
+    "lat": 46.0268,
+    "lng": 37.404,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-06",
+    "region_id": "sea_azov",
+    "lat": 45.99,
+    "lng": 36.6748,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-07",
+    "region_id": "sea_azov",
+    "lat": 45.8249,
+    "lng": 36.6882,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-08",
+    "region_id": "sea_azov",
+    "lat": 45.6501,
+    "lng": 36.5379,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-09",
+    "region_id": "sea_azov",
+    "lat": 45.5327,
+    "lng": 36.2261,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-10",
+    "region_id": "sea_azov",
+    "lat": 45.5337,
+    "lng": 35.8066,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-11",
+    "region_id": "sea_azov",
+    "lat": 45.99,
+    "lng": 36.1252,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-12",
+    "region_id": "sea_azov",
+    "lat": 46.0645,
+    "lng": 35.9123,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-13",
+    "region_id": "sea_azov",
+    "lat": 46.2421,
+    "lng": 35.7691,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-14",
+    "region_id": "sea_azov",
+    "lat": 46.4881,
+    "lng": 35.7784,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  },
+  {
+    "id": "sea-azov-15",
+    "region_id": "sea_azov",
+    "lat": 46.7395,
+    "lng": 35.9894,
+    "types": [
+      "shahed",
+      "missile",
+      "airplane",
+      "recon"
+    ]
+  }
+]

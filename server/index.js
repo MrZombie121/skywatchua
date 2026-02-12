@@ -23,10 +23,32 @@ const port = process.env.PORT || 8787;
 const sessionDays = Number(process.env.ADMIN_SESSION_DAYS || 7);
 const EVENT_TTL_MIN = Number(process.env.EVENT_TTL_MIN || 8);
 const EVENT_STALE_KEEP_MIN = Number(process.env.EVENT_STALE_KEEP_MIN || 90);
+const DEDUP_RADIUS_KM = Number(process.env.EVENT_DEDUP_RADIUS_KM || 5);
+const DEDUP_WINDOW_MIN = Number(process.env.EVENT_DEDUP_WINDOW_MIN || 5);
 const forcedAlarmIds = (process.env.ALARM_FORCE_ON || "luhanska,donetska,khersonska,chernihivska")
   .split(",")
   .map((item) => item.trim())
   .filter(Boolean);
+const SOURCE_WEIGHT_FALLBACK = Number(process.env.SOURCE_WEIGHT_DEFAULT || 1);
+
+function parseSourceWeights(raw) {
+  if (!raw) return new Map();
+  const map = new Map();
+  raw
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .forEach((entry) => {
+      const [source, weight] = entry.split(":");
+      if (!source || !weight) return;
+      const numeric = Number(weight);
+      if (!Number.isFinite(numeric) || numeric <= 0) return;
+      map.set(source.trim().toLowerCase(), numeric);
+    });
+  return map;
+}
+
+const sourceWeights = parseSourceWeights(process.env.TG_SOURCE_WEIGHTS || "");
 
 const state = {
   lastFetch: 0,
@@ -51,6 +73,106 @@ function applyForcedAlarms(alarms) {
   const merged = new Set(Array.isArray(alarms) ? alarms : []);
   forcedAlarmIds.forEach((id) => merged.add(id));
   return Array.from(merged);
+}
+
+function normalizeHeading(event) {
+  const raw = Number(event.direction ?? event.heading);
+  return Number.isFinite(raw) ? ((raw % 360) + 360) % 360 : null;
+}
+
+function toIso(value) {
+  const ts = Date.parse(value);
+  return Number.isFinite(ts) ? new Date(ts).toISOString() : new Date().toISOString();
+}
+
+function getSourceWeight(source) {
+  const key = String(source || "").toLowerCase();
+  return sourceWeights.get(key) || SOURCE_WEIGHT_FALLBACK;
+}
+
+function haversineKm(a, b) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function withConfidence(event) {
+  const base = Number(event.confidence);
+  const baseConfidence = Number.isFinite(base) ? base : 0.45;
+  const weighted = Math.min(0.99, Number((baseConfidence * getSourceWeight(event.source)).toFixed(2)));
+  return {
+    ...event,
+    timestamp: toIso(event.timestamp),
+    direction: normalizeHeading(event),
+    confidence: weighted
+  };
+}
+
+function deduplicateEvents(events) {
+  const clusters = [];
+  const windowMs = Math.max(1, DEDUP_WINDOW_MIN) * 60 * 1000;
+  const sorted = [...events].sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
+
+  for (const event of sorted) {
+    const ts = Date.parse(event.timestamp);
+    if (!Number.isFinite(ts)) continue;
+    let matched = null;
+    for (const cluster of clusters) {
+      if (cluster.type !== event.type) continue;
+      if (cluster.is_test !== Boolean(event.is_test)) continue;
+      if (Math.abs(cluster.centerTs - ts) > windowMs) continue;
+      const distance = haversineKm(
+        { lat: cluster.centerLat, lng: cluster.centerLng },
+        { lat: Number(event.lat), lng: Number(event.lng) }
+      );
+      if (distance > DEDUP_RADIUS_KM) continue;
+      matched = cluster;
+      break;
+    }
+
+    if (!matched) {
+      clusters.push({
+        type: event.type,
+        is_test: Boolean(event.is_test),
+        centerLat: Number(event.lat),
+        centerLng: Number(event.lng),
+        centerTs: ts,
+        items: [event]
+      });
+      continue;
+    }
+
+    matched.items.push(event);
+    const totalWeight = matched.items.reduce((sum, item) => sum + Number(item.confidence || 0.1), 0);
+    matched.centerLat = matched.items.reduce((sum, item) => sum + Number(item.lat) * Number(item.confidence || 0.1), 0) / totalWeight;
+    matched.centerLng = matched.items.reduce((sum, item) => sum + Number(item.lng) * Number(item.confidence || 0.1), 0) / totalWeight;
+    matched.centerTs = Math.max(matched.centerTs, ts);
+  }
+
+  return clusters.map((cluster) => {
+    const best = [...cluster.items].sort((a, b) => Number(b.confidence || 0) - Number(a.confidence || 0))[0];
+    const ids = cluster.items.map((item) => String(item.id || "")).sort();
+    const uniqueSources = Array.from(new Set(cluster.items.map((item) => String(item.source || "")).filter(Boolean)));
+    const avgConfidence =
+      cluster.items.reduce((sum, item) => sum + Number(item.confidence || 0), 0) / Math.max(1, cluster.items.length);
+    return {
+      ...best,
+      id: ids[0] || best.id,
+      lat: Number(cluster.centerLat.toFixed(4)),
+      lng: Number(cluster.centerLng.toFixed(4)),
+      timestamp: new Date(cluster.centerTs).toISOString(),
+      confidence: Number(Math.min(0.99, avgConfidence).toFixed(2)),
+      evidence_count: cluster.items.length,
+      evidence_sources: uniqueSources
+    };
+  });
 }
 
 async function requireAdmin(req, res, next) {
@@ -167,12 +289,15 @@ app.get("/api/events", async (_req, res) => {
     const nowTs = Date.now();
     const ttlMs = Math.max(1, EVENT_TTL_MIN) * 60 * 1000;
     const staleKeepMs = Math.max(1, EVENT_STALE_KEEP_MIN) * 60 * 1000;
-    const alarms = new Set(tgPayload.alarms || []);
-    const combined = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents].filter((event) => {
+    const combinedRaw = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents]
+      .map(withConfidence)
+      .filter((event) => {
+      if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return false;
       const time = Date.parse(event.timestamp);
       if (!Number.isFinite(time)) return false;
       return nowTs - time <= ttlMs;
     });
+    const combined = deduplicateEvents(combinedRaw);
 
     if (combined.length === 0 && state.cache.length && now - state.lastFetch <= staleKeepMs) {
       return res.json({
