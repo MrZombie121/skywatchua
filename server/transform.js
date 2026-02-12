@@ -821,7 +821,8 @@ export function parseMessageToEvents(text, meta = {}) {
       : (
         resolveRegionId(label, label) ||
         resolveRegionId(text, label) ||
-        resolveRegionId(mergedText, label) ||
+        (locationHits.length === 0 ? resolveRegionId(mergedText, label) : null) ||
+        (locationHits.length === 0 ? regionId : null) ||
         regionId
       );
     const spawnRegionId =
