@@ -2,6 +2,7 @@
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { runtime } from "./config/runtime.js";
 import { loadTelegramEvents } from "./telegram.js";
 import { loadRssEvents } from "./rss.js";
 import { loadOpenEvents } from "./open.js";
@@ -19,17 +20,20 @@ import {
 } from "./db/index.js";
 
 const app = express();
-const port = process.env.PORT || 8787;
-const sessionDays = Number(process.env.ADMIN_SESSION_DAYS || 7);
-const EVENT_TTL_MIN = Number(process.env.EVENT_TTL_MIN || 8);
-const EVENT_STALE_KEEP_MIN = Number(process.env.EVENT_STALE_KEEP_MIN || 90);
-const DEDUP_RADIUS_KM = Number(process.env.EVENT_DEDUP_RADIUS_KM || 5);
-const DEDUP_WINDOW_MIN = Number(process.env.EVENT_DEDUP_WINDOW_MIN || 5);
-const forcedAlarmIds = (process.env.ALARM_FORCE_ON || "luhanska,donetska,khersonska,chernihivska")
-  .split(",")
-  .map((item) => item.trim())
-  .filter(Boolean);
-const SOURCE_WEIGHT_FALLBACK = Number(process.env.SOURCE_WEIGHT_DEFAULT || 1);
+const {
+  appVersion,
+  apiDefaultVersion,
+  port,
+  sessionDays,
+  refreshMs,
+  eventTtlMin,
+  eventStaleKeepMin,
+  dedupRadiusKm,
+  dedupWindowMin,
+  sourceWeightDefault,
+  forcedAlarmIds,
+  featureFlags
+} = runtime;
 
 function parseSourceWeights(raw) {
   if (!raw) return new Map();
@@ -55,7 +59,6 @@ const state = {
   cache: []
 };
 
-const REFRESH_MS = Number(process.env.REFRESH_MS || 12000);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const distPath = path.resolve(__dirname, "..", "dist");
@@ -87,7 +90,7 @@ function toIso(value) {
 
 function getSourceWeight(source) {
   const key = String(source || "").toLowerCase();
-  return sourceWeights.get(key) || SOURCE_WEIGHT_FALLBACK;
+  return sourceWeights.get(key) || sourceWeightDefault;
 }
 
 function haversineKm(a, b) {
@@ -117,7 +120,7 @@ function withConfidence(event) {
 
 function deduplicateEvents(events) {
   const clusters = [];
-  const windowMs = Math.max(1, DEDUP_WINDOW_MIN) * 60 * 1000;
+  const windowMs = Math.max(1, dedupWindowMin) * 60 * 1000;
   const sorted = [...events].sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
 
   for (const event of sorted) {
@@ -132,7 +135,7 @@ function deduplicateEvents(events) {
         { lat: cluster.centerLat, lng: cluster.centerLng },
         { lat: Number(event.lat), lng: Number(event.lng) }
       );
-      if (distance > DEDUP_RADIUS_KM) continue;
+      if (distance > dedupRadiusKm) continue;
       matched = cluster;
       break;
     }
@@ -209,16 +212,31 @@ async function getMaintenanceState() {
   return { enabled: false, until: null };
 }
 
-app.get("/api/status", async (_req, res) => {
+const apiMetaPayload = {
+  app_version: appVersion,
+  api: {
+    default_version: apiDefaultVersion,
+    supported_versions: ["v1"],
+    next_version: featureFlags.enableV2Api ? "v2_preview" : "v2_planned"
+  },
+  refresh_ms: refreshMs,
+  feature_flags: featureFlags
+};
+
+function sendMeta(_req, res) {
+  res.json(apiMetaPayload);
+}
+
+async function sendStatus(_req, res) {
   const state = await getMaintenanceState();
   res.json({
     maintenance: state.enabled,
     maintenance_until: state.until,
-    event_ttl_min: EVENT_TTL_MIN
+    event_ttl_min: eventTtlMin
   });
-});
+}
 
-app.get("/api/events", async (_req, res) => {
+async function sendEvents(_req, res) {
   try {
     const tgPayload = await loadTelegramEvents();
     const maintenance = await getMaintenanceState();
@@ -261,7 +279,7 @@ app.get("/api/events", async (_req, res) => {
     }
 
     const now = Date.now();
-    if (now - state.lastFetch < REFRESH_MS && state.cache.length) {
+    if (now - state.lastFetch < refreshMs && state.cache.length) {
       return res.json({
         events: state.cache,
         alarms: alarmState,
@@ -287,8 +305,8 @@ app.get("/api/events", async (_req, res) => {
       .filter(Boolean);
 
     const nowTs = Date.now();
-    const ttlMs = Math.max(1, EVENT_TTL_MIN) * 60 * 1000;
-    const staleKeepMs = Math.max(1, EVENT_STALE_KEEP_MIN) * 60 * 1000;
+    const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
+    const staleKeepMs = Math.max(1, eventStaleKeepMin) * 60 * 1000;
     const combinedRaw = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents]
       .map(withConfidence)
       .filter((event) => {
@@ -326,7 +344,14 @@ app.get("/api/events", async (_req, res) => {
     console.error("Failed to load events", error);
     res.status(500).json({ error: "failed_to_load" });
   }
-});
+}
+
+app.get("/api/meta", sendMeta);
+app.get("/api/v1/meta", sendMeta);
+app.get("/api/status", sendStatus);
+app.get("/api/v1/status", sendStatus);
+app.get("/api/events", sendEvents);
+app.get("/api/v1/events", sendEvents);
 
 app.post("/api/admin/login", async (req, res) => {
   const { username, password } = req.body || {};

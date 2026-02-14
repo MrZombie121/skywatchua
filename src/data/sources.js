@@ -2,7 +2,7 @@
   {
     id: "backend",
     label: "Aggregated Sources (API)",
-    url: "/api/events",
+    url: "/api/v1/events",
     format: "json"
   }
 ];
