@@ -34,7 +34,7 @@ const typeRules = [
       "молния"
     ]
   },
-  { type: "missile", patterns: ["missile", "ракета", "крилат", "баліст", "ballistic"] },
+  { type: "missile", patterns: ["missile", "ракета", "ракет", "крилат", "баліст", "баллист", "ballistic"] },
   { type: "kab", patterns: ["kab", "каб"] },
   {
     type: "airplane",
@@ -65,7 +65,7 @@ const locationHints = [
   { name: "Вінниця", keys: ["vinnytsia", "vinnytsya", "вінниця", "винница"], lat: 49.23, lng: 28.47 },
   { name: "Житомир", keys: ["zhytomyr", "житомир"], lat: 50.25, lng: 28.66 },
   { name: "Черкаси", keys: ["cherkasy", "черкаси"], lat: 49.44, lng: 32.06 },
-  { name: "Дніпро", keys: ["dnipro", "дніпро"], lat: 48.46, lng: 35.05 },
+  { name: "Дніпро", keys: ["dnipro", "dnepr", "дніпро", "днепр", "днепро"], lat: 48.46, lng: 35.05 },
   { name: "Кривий Ріг", keys: ["kryvyi rih", "кривий ріг", "кривой рог"], lat: 47.91, lng: 33.39 },
   { name: "Кропивницький", keys: ["kropyvnytskyi", "кропивницький", "кировоград"], lat: 48.51, lng: 32.26 },
   { name: "Запоріжжя", keys: ["zaporizh", "запор"], lat: 47.84, lng: 35.14 },
@@ -620,6 +620,10 @@ function hasTrackContext(text) {
     "в р-не",
     "у напрямку",
     "в направлении",
+    "по направлению",
+    "прямує",
+    "движется",
+    "движение",
     "загроза",
     "небезпека"
   ].some((key) => lower.includes(key));
@@ -698,6 +702,52 @@ function computeConfidenceScore({
   return Number(Math.min(0.99, Math.max(0.15, score)).toFixed(2));
 }
 
+function routeCueOffsets(text) {
+  const lower = normalizeText(text);
+  const offsets = [];
+  const cueRegex =
+    /(в направлении|у напрямку|в сторону|по направлению|курс(?:ом)? на|рух(?:ається)? на|йде на|летить на|на|до)\s+/g;
+  let match = cueRegex.exec(lower);
+  while (match) {
+    offsets.push(match.index + match[0].length);
+    match = cueRegex.exec(lower);
+  }
+  const seaRouteRegex =
+    /(чорне море|черное море|black sea|азовське море|азовское море|azov sea)\s*(?:-|—|->|→|в направлении|у напрямку|в сторону|на)\s*/g;
+  match = seaRouteRegex.exec(lower);
+  while (match) {
+    offsets.push(match.index + match[0].length);
+    match = seaRouteRegex.exec(lower);
+  }
+  return offsets;
+}
+
+function extractGuidedTargets(text, locationHits) {
+  if (!Array.isArray(locationHits) || locationHits.length === 0) return [];
+  const cues = routeCueOffsets(text);
+  if (cues.length === 0) return [];
+  const scored = locationHits.map((hit) => {
+    let best = Infinity;
+    cues.forEach((offset) => {
+      const delta = hit.index - offset;
+      const score = delta >= 0 ? delta : Math.abs(delta) + 80;
+      if (score < best) best = score;
+    });
+    return { ...hit, __score: best };
+  });
+  return scored
+    .sort((a, b) => a.__score - b.__score)
+    .slice(0, 3)
+    .map(({ __score, ...hit }) => hit);
+}
+
+function shouldInferTrackFromSea({ sea, forceSea, locationHits, mergedText, regionCenter }) {
+  if (sea && locationHits.length > 0) return true;
+  if (forceSea && (locationHits.length > 0 || regionCenter)) return true;
+  if (sea && hasTrackContext(mergedText) && regionCenter) return true;
+  return false;
+}
+
 export function parseMessageToEvents(text, meta = {}) {
   const baseText = String(text || "");
   const sourceLower = String(meta.source || "").toLowerCase();
@@ -712,12 +762,23 @@ export function parseMessageToEvents(text, meta = {}) {
   if (isDowned(mergedText)) return [];
   // Parse locations only from the original message to avoid marker explosions from context.
   const coords = extractCoords(baseText);
-  const locationHits = coords ? [coords] : extractLocationHits(baseText);
+  const locationHitsRaw = coords ? [coords] : extractLocationHits(baseText);
   const sea = pickSea(baseText);
+  const guidedTargets = extractGuidedTargets(baseText, locationHitsRaw);
+  const locationHits = guidedTargets.length > 0 ? guidedTargets : locationHitsRaw;
 
   let type = meta.type || pickType(mergedText);
   const hasCount = locationHits.some((hit) => Number.isFinite(hit.count) && hit.count > 0);
   if (!type && locationHits.length > 0 && (hasTrackContext(mergedText) || hasCount)) {
+    type = "shahed";
+  }
+  if (!type && shouldInferTrackFromSea({
+    sea,
+    forceSea: false,
+    locationHits,
+    mergedText,
+    regionCenter: null
+  })) {
     type = "shahed";
   }
   if (!type && meta.is_test === true && locationHits.length > 0) {
@@ -726,6 +787,7 @@ export function parseMessageToEvents(text, meta = {}) {
   }
   if (!type) return [];
 
+  const forceSea = type === "airplane" || forceSeaForAviation(mergedText);
   let direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(mergedText);
   if (
     !Number.isFinite(direction) &&
@@ -745,7 +807,6 @@ export function parseMessageToEvents(text, meta = {}) {
     ? meta.is_test
     : normalizeText(mergedText).includes("тест") || normalizeText(mergedText).includes("test");
 
-  const forceSea = type === "airplane" || forceSeaForAviation(mergedText);
   let regionId = resolveRegionId(text, "");
   if (!regionId && (sourceLower.includes("xydessa_live") || sourceLower.includes("pivdenmedia"))) {
     regionId = "odeska";
@@ -765,7 +826,7 @@ export function parseMessageToEvents(text, meta = {}) {
   const seaAnchor = sea ? sea.anchor : seaHints[0].anchor;
 
   let targets = locationHits.length > 0
-    ? locationHits
+    ? locationHits.slice(0, 3)
     : regionCenter
       ? [{ lat: regionCenter.lat, lng: regionCenter.lng, label: regionCenter.name, exact: false }]
       : [{ lat: seaAnchor.lat, lng: seaAnchor.lng, label: sea ? sea.name : "Чорне море", exact: false }];
@@ -784,6 +845,9 @@ export function parseMessageToEvents(text, meta = {}) {
   }
 
   return targets.map((target, index) => {
+    const targetLat = target.lat;
+    const targetLng = target.lng;
+    const targetLabel = target.label;
     let lat = target.lat;
     let lng = target.lng;
     let label = target.label;
@@ -801,7 +865,7 @@ export function parseMessageToEvents(text, meta = {}) {
       const scale = 0.35;
       lat = seaAnchor.lat + vectorLat * scale;
       lng = seaAnchor.lng + vectorLng * scale;
-      label = `${sea ? sea.name : "Чорне море"} → ${target.label}`;
+      label = `${sea ? sea.name : "Чорне море"} -> ${target.label}`;
     } else if (!isTlk && (sea || forceSea)) {
       lat = seaAnchor.lat;
       lng = seaAnchor.lng;
@@ -844,10 +908,21 @@ export function parseMessageToEvents(text, meta = {}) {
       lat = spawnCandidate.lat;
       lng = spawnCandidate.lng;
     }
+    const fallbackDirection = !Number.isFinite(direction) &&
+      Number.isFinite(targetLat) &&
+      Number.isFinite(targetLng) &&
+      !target.exact &&
+      ((sea || forceSea) || (locationHits.length > 0 && meta.allow_bearing_from_base !== true))
+      ? bearingDeg(lat, lng, targetLat, targetLng)
+      : null;
     const countText = target.count && target.count > 1 ? ` К-сть: ${target.count}.` : "";
     const jitteredLat = target.exact || spawnCandidate ? lat : addJitter(lat, seed);
     const jitteredLng = target.exact || spawnCandidate ? lng : addJitter(lng, seed + 7);
-    const finalDirection = Number.isFinite(direction) ? direction : deterministicDirection(idSeed);
+    const finalDirection = Number.isFinite(direction)
+      ? direction
+      : Number.isFinite(fallbackDirection)
+        ? fallbackDirection
+        : deterministicDirection(idSeed);
     const confidence = computeConfidenceScore({
       hasExactCoords: Boolean(target.exact),
       hasLocation: locationHits.length > 0 || Boolean(regionCenter),
@@ -864,7 +939,7 @@ export function parseMessageToEvents(text, meta = {}) {
       direction: finalDirection,
       source: meta.source || "tg",
       timestamp: meta.timestamp ? new Date(meta.timestamp).toISOString() : new Date().toISOString(),
-      comment: `Джерело: ${meta.source || "tg"}. Локація: ${label}.${countText}`,
+      comment: `Джерело: ${meta.source || "tg"}. Локація: ${label}.${countText}${(sea || forceSea) && targetLabel ? ` Ціль: ${targetLabel}.` : ""}`,
       is_test: isTest,
       confidence,
       region_id: resolvedRegionId,
