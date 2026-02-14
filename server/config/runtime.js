@@ -1,4 +1,4 @@
-function toNumber(value, fallback) {
+﻿function toNumber(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
@@ -20,7 +20,7 @@ function toList(value, fallback = []) {
 }
 
 export const runtime = {
-  appVersion: process.env.APP_VERSION || "1.5.3",
+  appVersion: process.env.APP_VERSION || "2.0.0 beta",
   apiDefaultVersion: process.env.API_DEFAULT_VERSION || "v1",
   port: toNumber(process.env.PORT, 8787),
   sessionDays: toNumber(process.env.ADMIN_SESSION_DAYS, 7),
@@ -39,3 +39,4 @@ export const runtime = {
     enableV2Ui: toBoolean(process.env.ENABLE_V2_UI, false)
   }
 };
+

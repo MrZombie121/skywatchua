@@ -1,7 +1,7 @@
-{
+﻿{
   "name": "skywatch-ua",
   "private": true,
-  "version": "1.5.3",
+  "version": "2.0.0-beta",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,3 +23,4 @@
     "telegram": "^2.26.11"
   }
 }
+

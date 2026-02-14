@@ -56,7 +56,8 @@ const sourceWeights = parseSourceWeights(process.env.TG_SOURCE_WEIGHTS || "");
 
 const state = {
   lastFetch: 0,
-  cache: []
+  cache: [],
+  inFlight: null
 };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -237,37 +238,49 @@ async function sendStatus(_req, res) {
 }
 
 async function sendEvents(_req, res) {
-  try {
-    const tgPayload = await loadTelegramEvents();
-    const maintenance = await getMaintenanceState();
-    let alarmState = tgPayload.alarms || [];
-    let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
-    alarmState = applyForcedAlarms(alarmState);
-    if (tgPayload.alarms_updated) {
-      await setSetting("alarms_state", JSON.stringify(alarmState));
-      await setSetting("district_alarms_state", JSON.stringify(districtAlarmState));
-      await setSetting("alarms_updated_at", String(Date.now()));
-    } else {
-      const stored = await getSetting("alarms_state", "[]");
-      const storedDistricts = await getSetting("district_alarms_state", "[]");
-      try {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length >= 0) {
-          alarmState = applyForcedAlarms(parsed);
-        }
-      } catch {
-        alarmState = applyForcedAlarms(alarmState || []);
+  async function readStoredAlarmState() {
+    const stored = await getSetting("alarms_state", "[]");
+    const storedDistricts = await getSetting("district_alarms_state", "[]");
+    let alarmState = applyForcedAlarms([]);
+    let districtAlarmState = [];
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        alarmState = applyForcedAlarms(parsed);
       }
-      try {
-        const parsedDistricts = JSON.parse(storedDistricts);
-        if (Array.isArray(parsedDistricts)) {
-          districtAlarmState = parsedDistricts;
-        }
-      } catch {
-        districtAlarmState = districtAlarmState || [];
-      }
+    } catch {
+      alarmState = applyForcedAlarms([]);
     }
+    try {
+      const parsedDistricts = JSON.parse(storedDistricts);
+      if (Array.isArray(parsedDistricts)) {
+        districtAlarmState = parsedDistricts;
+      }
+    } catch {
+      districtAlarmState = [];
+    }
+    return { alarmState, districtAlarmState };
+  }
+
+  try {
+    const maintenance = await getMaintenanceState();
+    const now = Date.now();
+
+    // Serve from backend cache without touching Telegram API.
+    if (now - state.lastFetch < refreshMs && state.cache.length) {
+      const { alarmState, districtAlarmState } = await readStoredAlarmState();
+      return res.json({
+        events: maintenance.enabled ? [] : state.cache,
+        alarms: alarmState,
+        district_alarms: districtAlarmState,
+        cached: true,
+        maintenance: maintenance.enabled,
+        maintenance_until: maintenance.enabled ? maintenance.until : null
+      });
+    }
+
     if (maintenance.enabled) {
+      const { alarmState, districtAlarmState } = await readStoredAlarmState();
       return res.json({
         events: [],
         alarms: alarmState,
@@ -278,71 +291,91 @@ async function sendEvents(_req, res) {
       });
     }
 
-    const now = Date.now();
-    if (now - state.lastFetch < refreshMs && state.cache.length) {
-      return res.json({
-        events: state.cache,
-        alarms: alarmState,
-        district_alarms: districtAlarmState,
-        cached: true,
-        maintenance: false
-      });
+    // Collapse concurrent requests into one upstream Telegram call.
+    if (state.inFlight) {
+      const payload = await state.inFlight;
+      return res.json(payload);
     }
 
-    const [rssEvents, openEvents] = await Promise.all([loadRssEvents(), loadOpenEvents()]);
+    state.inFlight = (async () => {
+      const tgPayload = await loadTelegramEvents();
+      let alarmState = tgPayload.alarms || [];
+      let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
+      alarmState = applyForcedAlarms(alarmState);
+      if (tgPayload.alarms_updated) {
+        await setSetting("alarms_state", JSON.stringify(alarmState));
+        await setSetting("district_alarms_state", JSON.stringify(districtAlarmState));
+        await setSetting("alarms_updated_at", String(Date.now()));
+      } else {
+        const storedStates = await readStoredAlarmState();
+        if (storedStates.alarmState.length > 0) {
+          alarmState = storedStates.alarmState;
+        }
+        if (storedStates.districtAlarmState.length > 0) {
+          districtAlarmState = storedStates.districtAlarmState;
+        }
+      }
 
-    const storedTests = await listTestEvents();
-    const testEvents = storedTests
-      .flatMap((item) =>
-        parseMessageToEvents(item.message, {
-          source: item.source || "admin",
-          timestamp: item.createdAt,
-          type: item.type,
-          direction: item.direction,
-          is_test: true
-        })
-      )
-      .filter(Boolean);
+      const [rssEvents, openEvents] = await Promise.all([loadRssEvents(), loadOpenEvents()]);
 
-    const nowTs = Date.now();
-    const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
-    const staleKeepMs = Math.max(1, eventStaleKeepMin) * 60 * 1000;
-    const combinedRaw = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents]
-      .map(withConfidence)
-      .filter((event) => {
-      if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return false;
-      const time = Date.parse(event.timestamp);
-      if (!Number.isFinite(time)) return false;
-      return nowTs - time <= ttlMs;
-    });
-    const combined = deduplicateEvents(combinedRaw);
+      const storedTests = await listTestEvents();
+      const testEvents = storedTests
+        .flatMap((item) =>
+          parseMessageToEvents(item.message, {
+            source: item.source || "admin",
+            timestamp: item.createdAt,
+            type: item.type,
+            direction: item.direction,
+            is_test: true
+          })
+        )
+        .filter(Boolean);
 
-    if (combined.length === 0 && state.cache.length && now - state.lastFetch <= staleKeepMs) {
-      return res.json({
-        events: state.cache,
+      const nowTs = Date.now();
+      const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
+      const staleKeepMs = Math.max(1, eventStaleKeepMin) * 60 * 1000;
+      const combinedRaw = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents]
+        .map(withConfidence)
+        .filter((event) => {
+          if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return false;
+          const time = Date.parse(event.timestamp);
+          if (!Number.isFinite(time)) return false;
+          return nowTs - time <= ttlMs;
+        });
+      const combined = deduplicateEvents(combinedRaw);
+
+      if (combined.length === 0 && state.cache.length && nowTs - state.lastFetch <= staleKeepMs) {
+        return {
+          events: state.cache,
+          alarms: alarmState,
+          district_alarms: districtAlarmState,
+          cached: true,
+          stale: true,
+          maintenance: false,
+          maintenance_until: null
+        };
+      }
+
+      state.cache = combined;
+      state.lastFetch = nowTs;
+
+      return {
+        events: combined,
         alarms: alarmState,
         district_alarms: districtAlarmState,
-        cached: true,
-        stale: true,
+        cached: false,
         maintenance: false,
         maintenance_until: null
-      });
-    }
+      };
+    })();
 
-    state.cache = combined;
-    state.lastFetch = now;
-
-    res.json({
-      events: combined,
-      alarms: alarmState,
-      district_alarms: districtAlarmState,
-      cached: false,
-      maintenance: false,
-      maintenance_until: null
-    });
+    const payload = await state.inFlight;
+    return res.json(payload);
   } catch (error) {
     console.error("Failed to load events", error);
     res.status(500).json({ error: "failed_to_load" });
+  } finally {
+    state.inFlight = null;
   }
 }
 
