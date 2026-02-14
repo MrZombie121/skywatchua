@@ -57,15 +57,26 @@ const alarmLayer = L.layerGroup().addTo(map);
 const districtAlarmLayer = L.layerGroup().addTo(map);
 const trackLayer = L.layerGroup().addTo(map);
 const shahedTrailLayer = L.layerGroup().addTo(map);
+const historyLayer = L.layerGroup().addTo(map);
 let oblastGeoLayer = null;
 let oblastGeoReady = false;
 const markerById = new Map();
 const eventById = new Map();
 const driftById = new Map();
+const markerSpawnAt = new Map();
+const historyByKey = new Map();
 let driftTimer = null;
 let maintenanceTimer = null;
+let refreshTimer = null;
+let markerAgingTimer = null;
 let activeTrackId = null;
 let activeTrackLine = null;
+const MARKER_TTL_MS = 10 * 60 * 1000;
+const STALE_WARN_MS = 5 * 60 * 1000;
+const STALE_CRITICAL_MS = 9 * 60 * 1000;
+const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
+const SPAWN_ANIMATION_MS = 3000;
+const HISTORY_STORAGE_KEY = "sw_history_24h_v2";
 
 const state = {
   events: [],
@@ -80,7 +91,9 @@ const state = {
   districtAlarms: [],
   adminBypassMaintenance: false,
   refreshPaused: false,
-  autoFollow: false
+  autoFollow: false,
+  showHistory: true,
+  refreshIntervalMs: 12000
 };
 
 const typeContainer = document.getElementById("type-filters");
@@ -131,8 +144,10 @@ const themeApply = document.getElementById("theme-apply");
 const panelToggle = document.getElementById("panel-toggle");
 const panelBackdrop = document.getElementById("panel-backdrop");
 const toggleRefresh = document.getElementById("toggle-refresh");
+const toggleHistory = document.getElementById("toggle-history");
 const toggleFollow = document.getElementById("toggle-follow");
 const fitVisible = document.getElementById("fit-visible");
+const refreshModeSelect = document.getElementById("refresh-mode-select");
 const toolTabs = toolPanel ? toolPanel.querySelectorAll("button[data-tab]") : [];
 
 const typeLabels = {
@@ -384,6 +399,125 @@ function formatTime(value) {
   });
 }
 
+function eventTimestampMs(event) {
+  const ts = new Date(event.timestamp).getTime();
+  return Number.isFinite(ts) ? ts : Date.now();
+}
+
+function eventAgeMs(event, now = Date.now()) {
+  return Math.max(0, now - eventTimestampMs(event));
+}
+
+function isEventAlive(event, now = Date.now()) {
+  return eventAgeMs(event, now) <= MARKER_TTL_MS;
+}
+
+function freshnessState(event, now = Date.now()) {
+  const age = eventAgeMs(event, now);
+  if (age >= STALE_CRITICAL_MS) {
+    return { markerClass: "stale-9", popupClass: "critical", label: "Застаріла (скоро зникне)" };
+  }
+  if (age >= STALE_WARN_MS) {
+    return { markerClass: "stale-5", popupClass: "warn", label: "Не свіжа (5+ хв)" };
+  }
+  return { markerClass: "fresh", popupClass: "fresh", label: "Свіжа" };
+}
+
+function formatAge(ms) {
+  const mins = Math.floor(ms / 60000);
+  const secs = Math.floor((ms % 60000) / 1000);
+  if (mins <= 0) return `${secs}с`;
+  return `${mins}хв ${secs.toString().padStart(2, "0")}с`;
+}
+
+function buildHistoryKey(event) {
+  const text = `${event.raw_text || ""} ${event.comment || ""}`
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+  return text ? `${event.source}|${event.type}|${text}` : `${event.source}|${event.type}|${event.id}`;
+}
+
+function pruneHistory(now = Date.now()) {
+  const cutoff = now - HISTORY_WINDOW_MS;
+  historyByKey.forEach((points, key) => {
+    const filtered = points.filter((point) => point.ts >= cutoff);
+    if (filtered.length === 0) {
+      historyByKey.delete(key);
+      return;
+    }
+    historyByKey.set(key, filtered);
+  });
+}
+
+function saveHistoryStore() {
+  try {
+    const payload = JSON.stringify(Array.from(historyByKey.entries()));
+    localStorage.setItem(HISTORY_STORAGE_KEY, payload);
+  } catch (error) {
+    console.warn("History save failed", error);
+  }
+}
+
+function loadHistoryStore() {
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return;
+    parsed.forEach((entry) => {
+      if (!Array.isArray(entry) || entry.length !== 2) return;
+      const [key, points] = entry;
+      if (typeof key !== "string" || !Array.isArray(points)) return;
+      const safePoints = points
+        .map((point) => ({
+          lat: Number(point.lat),
+          lng: Number(point.lng),
+          ts: Number(point.ts)
+        }))
+        .filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng) && Number.isFinite(point.ts));
+      if (safePoints.length > 0) {
+        historyByKey.set(key, safePoints);
+      }
+    });
+    pruneHistory();
+  } catch (error) {
+    console.warn("History load failed", error);
+  }
+}
+
+function ingestHistory(events) {
+  const now = Date.now();
+  const cutoff = now - HISTORY_WINDOW_MS;
+  events.forEach((event) => {
+    const ts = eventTimestampMs(event);
+    if (ts < cutoff) return;
+    const key = buildHistoryKey(event);
+    const points = historyByKey.get(key) || [];
+    const last = points[points.length - 1];
+    const isDuplicate =
+      last &&
+      Math.abs(last.lat - event.lat) < 0.0001 &&
+      Math.abs(last.lng - event.lng) < 0.0001 &&
+      Math.abs(last.ts - ts) < 120000;
+    if (!isDuplicate) {
+      points.push({ lat: event.lat, lng: event.lng, ts });
+      historyByKey.set(key, points);
+    }
+  });
+  pruneHistory(now);
+  saveHistoryStore();
+}
+
+function getHistoryTrack(event) {
+  const points = historyByKey.get(buildHistoryKey(event)) || [];
+  return points
+    .slice()
+    .sort((a, b) => a.ts - b.ts)
+    .map((point) => [point.lat, point.lng]);
+}
+
 function normalizeRegionName(value) {
   return String(value || "")
     .toLowerCase()
@@ -440,8 +574,11 @@ function makeMarkerIcon(event) {
     other: "/ico/shahed.png"
   };
   const iconUrl = iconMap[typeClass] || iconMap.other;
+  const freshness = freshnessState(event);
+  const spawnedAt = markerSpawnAt.get(event.id) || 0;
+  const spawnClass = Date.now() - spawnedAt <= SPAWN_ANIMATION_MS ? "spawn" : "";
   const html = `
-    <div class="marker-wrap">
+    <div class="marker-wrap ${freshness.markerClass} ${spawnClass}">
       <img
         class="marker-icon-img ${typeClass} ${event.is_test ? "test" : "real"}"
         src="${iconUrl}"
@@ -491,7 +628,9 @@ function startDrift() {
     lastFrame = now;
     const zoom = map.getZoom();
     const zoomFactor = zoom <= 7 ? 0.45 : zoom <= 9 ? 0.7 : 1;
+    const nowMs = Date.now();
     driftById.forEach((item) => {
+      if (item.spawnUntil && nowMs < item.spawnUntil) return;
       if (item.distanceKm >= maxDistanceKm) return;
       const stepKm = (speedMps * dt * zoomFactor) / 1000;
       item.distanceKm = Math.min(maxDistanceKm, item.distanceKm + stepKm);
@@ -534,11 +673,32 @@ function startDrift() {
 }
 
 function getVisibleEvents() {
+  const now = Date.now();
   return state.events.filter((event) => {
     if (!state.showTests && event.is_test) return false;
     if (!state.selectedTypes.has(event.type)) return false;
     if (!state.selectedSources.has(event.source)) return false;
+    if (!isEventAlive(event, now)) return false;
     return true;
+  });
+}
+
+function renderHistory(events) {
+  historyLayer.clearLayers();
+  if (!state.showHistory) return;
+  const rendered = new Set();
+  events.forEach((event) => {
+    const key = buildHistoryKey(event);
+    if (rendered.has(key)) return;
+    rendered.add(key);
+    const track = getHistoryTrack(event);
+    if (track.length < 2) return;
+    L.polyline(track, {
+      color: "#8b5cf6",
+      weight: 2,
+      opacity: 0.42,
+      dashArray: "3 7"
+    }).addTo(historyLayer);
   });
 }
 
@@ -575,6 +735,8 @@ function renderMarkers() {
     if (!nextIds.has(id)) {
       markerLayer.removeLayer(marker);
       markerById.delete(id);
+      markerSpawnAt.delete(id);
+      eventById.delete(id);
       const drift = driftById.get(id);
       if (drift?.trailLine) {
         shahedTrailLayer.removeLayer(drift.trailLine);
@@ -600,7 +762,8 @@ function renderMarkers() {
           direction: directionOrDefault(event.direction, event.fallbackDirection),
           distanceKm: 0,
           track: [],
-          trailLine: null
+          trailLine: null,
+          spawnUntil: Date.now()
         });
       }
       const drift = driftById.get(event.id);
@@ -623,6 +786,7 @@ function renderMarkers() {
     marker.on("click", () => toggleTrackFor(event.id, marker));
     marker.on("popupopen", () => toggleTrackFor(event.id, marker));
     markerById.set(event.id, marker);
+    markerSpawnAt.set(event.id, Date.now());
     eventById.set(event.id, event);
     const drift = {
       id: event.id,
@@ -632,7 +796,8 @@ function renderMarkers() {
       direction: directionOrDefault(event.direction, event.fallbackDirection),
       distanceKm: 0,
       track: [[event.lat, event.lng]],
-      trailLine: null
+      trailLine: null,
+      spawnUntil: Date.now() + SPAWN_ANIMATION_MS
     };
     if (event.type === "shahed") {
       drift.trailLine = L.polyline(drift.track, {
@@ -643,10 +808,16 @@ function renderMarkers() {
     }
     driftById.set(event.id, drift);
   });
+  renderHistory(filtered);
   startDrift();
 }
 
 function buildPopup(event, distanceKm) {
+  const now = Date.now();
+  const ageMs = eventAgeMs(event, now);
+  const freshness = freshnessState(event, now);
+  const ttlLeftMs = Math.max(0, MARKER_TTL_MS - ageMs);
+  const historyTrack = getHistoryTrack(event);
   const distanceLine = Number.isFinite(distanceKm)
     ? `<br /><span class="popup-meta">Пройдена відстань: ${distanceKm.toFixed(1)} км</span>`
     : "";
@@ -660,11 +831,19 @@ function buildPopup(event, distanceKm) {
     : "";
   return `
       <div class="popup">
-        <strong>${event.type.toUpperCase()}</strong><br />
-        Джерело: ${event.source}<br />
-        Час (Kyiv): ${formatTime(event.timestamp)}<br />
-        Тестовий: ${event.is_test ? "так" : "ні"}<br />
-        ${event.comment ? `Коментар: ${event.comment}` : ""}
+        <div class="popup-head">
+          <strong class="popup-title">${event.type.toUpperCase()}</strong>
+          <span class="popup-status ${freshness.popupClass}">${freshness.label}</span>
+        </div>
+        <div class="popup-grid">
+          <span>Джерело: ${event.source}</span>
+          <span>Час (Kyiv): ${formatTime(event.timestamp)}</span>
+          <span>Вік мітки: ${formatAge(ageMs)}</span>
+          <span>До авто-очищення: ${formatAge(ttlLeftMs)}</span>
+          <span>Історія 24г: ${historyTrack.length} точок</span>
+          <span>Тестовий: ${event.is_test ? "так" : "ні"}</span>
+        </div>
+        ${event.comment ? `<br />Коментар: ${event.comment}` : ""}
         ${confidenceLine}
         ${evidenceLine}
         ${evidenceSources}
@@ -733,9 +912,11 @@ function renderRadarList() {
   }
   items.forEach((event) => {
     const text = event.raw_text || event.comment || `${event.type} ${event.source}`;
+    const age = formatAge(eventAgeMs(event));
+    const status = freshnessState(event).label;
     const row = document.createElement("div");
     row.className = "tool-item";
-    row.innerHTML = `<small>${formatTime(event.timestamp)} · ${event.source}</small><br />${text}`;
+    row.innerHTML = `<small>${formatTime(event.timestamp)} · ${event.source} · ${age}</small><br />${text}<br /><small>${status}</small>`;
     radarList.appendChild(row);
   });
 }
@@ -852,6 +1033,7 @@ async function refresh() {
   try {
     if (state.refreshPaused) return;
     const events = await loadEvents();
+    ingestHistory(events);
     state.events = events;
     updateFilterSets(events);
     renderFilterControls();
@@ -1118,6 +1300,35 @@ function applyCustomTheme() {
   localStorage.setItem("sw_theme_custom", JSON.stringify({ accent, bg, panel }));
 }
 
+function restartRefreshTimer() {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+  refreshTimer = setInterval(refresh, state.refreshIntervalMs);
+}
+
+function applyRefreshInterval(value, persist = true) {
+  const parsed = Number(value);
+  const next = Number.isFinite(parsed) && parsed >= 250 ? parsed : 12000;
+  state.refreshIntervalMs = next;
+  if (refreshModeSelect) {
+    refreshModeSelect.value = String(next);
+  }
+  if (persist) {
+    localStorage.setItem("sw_refresh_interval", String(next));
+  }
+  restartRefreshTimer();
+}
+
+function startMarkerAgingTicker() {
+  if (markerAgingTimer) return;
+  markerAgingTimer = setInterval(() => {
+    if (state.maintenance) return;
+    renderMarkers();
+  }, 1000);
+}
+
 if (toolSettings && settingsModal && settingsClose) {
   toolSettings.addEventListener("click", () => {
     settingsModal.classList.add("active");
@@ -1155,6 +1366,13 @@ if (mapStyleSelect) {
   });
 }
 
+if (refreshModeSelect) {
+  refreshModeSelect.addEventListener("change", (event) => {
+    applyRefreshInterval(event.target.value);
+    refresh();
+  });
+}
+
 function openPanel() {
   const panel = document.querySelector(".panel");
   if (!panel) return;
@@ -1186,6 +1404,14 @@ if (toggleRefresh) {
   toggleRefresh.addEventListener("change", (event) => {
     state.refreshPaused = event.target.checked;
     localStorage.setItem("sw_refresh_paused", state.refreshPaused ? "1" : "0");
+  });
+}
+
+if (toggleHistory) {
+  toggleHistory.addEventListener("change", (event) => {
+    state.showHistory = event.target.checked;
+    localStorage.setItem("sw_show_history", state.showHistory ? "1" : "0");
+    renderMarkers();
   });
 }
 
@@ -1245,6 +1471,7 @@ applyMapStyle(savedMapStyle);
 map.on("zoomend", updateMarkerScale);
 updateMarkerScale();
 state.adminBypassMaintenance = localStorage.getItem("sw_admin_bypass") === "1";
+loadHistoryStore();
 
 const savedTheme = localStorage.getItem("sw_theme") || "dark";
 const savedCustom = localStorage.getItem("sw_theme_custom");
@@ -1272,6 +1499,17 @@ if (toggleRefresh) {
   toggleRefresh.checked = paused;
 }
 
+const savedShowHistory = localStorage.getItem("sw_show_history");
+if (savedShowHistory !== null) {
+  state.showHistory = savedShowHistory === "1";
+}
+if (toggleHistory) {
+  toggleHistory.checked = state.showHistory;
+}
+
+const savedRefreshInterval = localStorage.getItem("sw_refresh_interval") || "12000";
+applyRefreshInterval(savedRefreshInterval, false);
+
 const savedFollow = localStorage.getItem("sw_auto_follow") === "1";
 state.autoFollow = savedFollow;
 if (toggleFollow) {
@@ -1286,4 +1524,4 @@ if (toggleFollow) {
 }
 
 refresh();
-setInterval(refresh, 12000);
+startMarkerAgingTicker();

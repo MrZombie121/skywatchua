@@ -129,14 +129,21 @@ body.theme-skymap {
 }
 
 .admin-btn {
+  display: inline-block;
   padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid rgba(59, 185, 255, 0.4);
   background: rgba(59, 185, 255, 0.15);
   color: var(--text);
+  text-decoration: none;
   font-size: 12px;
   cursor: pointer;
   transition: 0.2s ease;
+}
+
+.admin-btn.ghost {
+  border-color: rgba(159, 176, 200, 0.4);
+  background: rgba(159, 176, 200, 0.14);
 }
 
 .admin-btn:hover {
@@ -576,6 +583,34 @@ body.theme-skymap {
 .marker-wrap {
   transform: scale(var(--marker-scale, 1));
   transform-origin: center;
+  position: relative;
+}
+
+.marker-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  border: 2px solid var(--fresh-color, #33d17a);
+  box-shadow: 0 0 8px var(--fresh-color, #33d17a);
+  opacity: 0.7;
+}
+
+.marker-wrap.spawn::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 999px;
+  border: 2px solid rgba(59, 185, 255, 0.9);
+  animation: markerSpawnPulse 1.4s ease-out 2;
+}
+
+.marker-wrap.stale-5::after {
+  --fresh-color: #f4c542;
+}
+
+.marker-wrap.stale-9::after {
+  --fresh-color: #ef4444;
 }
 
 .marker-icon-img {
@@ -608,6 +643,44 @@ body.theme-skymap {
 .popup {
   font-size: 12px;
   color: #0f172a;
+  min-width: 220px;
+}
+
+.popup-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.popup-title {
+  font-size: 14px;
+}
+
+.popup-status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.popup-status.fresh {
+  background: #2ca24f;
+}
+
+.popup-status.warn {
+  background: #b5860d;
+}
+
+.popup-status.critical {
+  background: #c93131;
+}
+
+.popup-grid {
+  display: grid;
+  gap: 3px;
 }
 
 .popup strong {
@@ -617,6 +690,21 @@ body.theme-skymap {
 .popup-meta {
   color: #334155;
   font-size: 11px;
+}
+
+@keyframes markerSpawnPulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.about-body strong {
+  font-size: 13px;
 }
 
 

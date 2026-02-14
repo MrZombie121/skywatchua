@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skywatch UA 2.0 - Про систему</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --panel: #101722;
+        --text: #e6edf3;
+        --muted: #9fb0c8;
+        --accent: #3bb9ff;
+        --border: #24314a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: var(--text);
+        background: radial-gradient(circle at top, #14233a 0%, #0a0f16 55%, #070b11 100%);
+      }
+      main {
+        width: min(900px, 92vw);
+        margin: 28px auto;
+        display: grid;
+        gap: 16px;
+      }
+      .card {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        border-radius: 16px;
+        padding: 18px;
+      }
+      h1 { margin: 0 0 10px; font-size: 28px; }
+      h2 { margin: 0 0 10px; font-size: 18px; }
+      p, li { color: var(--muted); line-height: 1.45; }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .back {
+        display: inline-block;
+        padding: 8px 12px;
+        border: 1px solid rgba(59, 185, 255, 0.5);
+        border-radius: 999px;
+        background: rgba(59, 185, 255, 0.14);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="/">Повернутися до карти</a>
+      <section class="card">
+        <h1>Про систему Skywatch UA 2.0</h1>
+        <p>Система агрегує повідомлення з відкритих джерел для візуального моніторингу повітряних цілей.</p>
+      </section>
+      <section class="card">
+        <h2>Оновлення версії 2.0</h2>
+        <ul>
+          <li>Історія польоту цілей за останні 24 години.</li>
+          <li>Авто-очищення міток через 10 хвилин від моменту публікації.</li>
+          <li>Індикатор актуальності: зелений, жовтий (5+ хв), червоний (скоро зникне).</li>
+          <li>Покращені popup картки міток.</li>
+          <li>Режими оновлення: 12с, 5с, 1с, 250мс.</li>
+          <li>Індикатор появи мітки з коротким миготінням.</li>
+        </ul>
+      </section>
+      <section class="card">
+        <h2>Важливо</h2>
+        <p>Дані є оціночними та можуть містити похибки. Не використовуйте координати і траєкторії для бойового або навігаційного планування.</p>
+      </section>
+    </main>
+  </body>
+</html>

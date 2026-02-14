@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="sw-version" content="1.5.3" />
+    <meta name="sw-version" content="2.0.0" />
     <title>Skywatch UA — Моніторинг</title>
     <link
       rel="stylesheet"
@@ -26,6 +26,7 @@
       <div class="status">
         <div class="status-item">Затримка даних: 2–5 хв</div>
         <div class="status-item" id="last-updated">Оновлення: —</div>
+        <a class="admin-btn ghost" href="/about.html">Про систему</a>
         <button class="admin-btn" id="admin-open">Для адмінів</button>
       </div>
     </header>
@@ -108,6 +109,10 @@
               <span>Пауза оновлень</span>
             </label>
             <label class="toggle">
+              <input type="checkbox" id="toggle-history" checked />
+              <span>Історія 24г</span>
+            </label>
+            <label class="toggle">
               <input type="checkbox" id="toggle-follow" />
               <span>Автофокус на новій цілі</span>
             </label>
@@ -141,6 +146,16 @@
               <option value="carto-light">Світла (CARTO)</option>
               <option value="topo">Топографічна</option>
               <option value="satellite">Супутникова</option>
+            </select>
+          </div>
+
+          <div class="settings-group">
+            <label class="settings-label" for="refresh-mode-select">Режим оновлення карти</label>
+            <select id="refresh-mode-select" class="settings-select">
+              <option value="12000">Стандарт (12 сек)</option>
+              <option value="5000">Частіше (5 сек)</option>
+              <option value="1000">Реальний час (1 сек)</option>
+              <option value="250">Екстра (250 мс)</option>
             </select>
           </div>
 
