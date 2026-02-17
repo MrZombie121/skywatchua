@@ -750,9 +750,13 @@ function renderMarkers() {
 
     if (markerById.has(event.id)) {
       const existing = markerById.get(event.id);
+      const previous = eventById.get(event.id);
+      const hasReportedMove =
+        !previous ||
+        Math.abs(Number(previous.lat) - Number(event.lat)) > 0.0001 ||
+        Math.abs(Number(previous.lng) - Number(event.lng)) > 0.0001;
       existing.setIcon(makeMarkerIcon(event));
       existing.setPopupContent(popup);
-      existing.setLatLng([event.lat, event.lng]);
       eventById.set(event.id, event);
       if (!driftById.has(event.id)) {
         driftById.set(event.id, {
@@ -769,18 +773,21 @@ function renderMarkers() {
       }
       const drift = driftById.get(event.id);
       if (drift) {
-        const last = drift.track && drift.track.length > 0 ? drift.track[drift.track.length - 1] : null;
-        const jumpKm = last ? haversineKm(last, [event.lat, event.lng]) : 0;
-        // Large jumps indicate a new reported position for the same track key; restart local drift base.
-        if (!last || jumpKm > 40) {
-          drift.track = [[event.lat, event.lng]];
-        } else if (Math.abs(last[0] - event.lat) > 0.0001 || Math.abs(last[1] - event.lng) > 0.0001) {
-          drift.track.push([event.lat, event.lng]);
-          if (drift.track.length > 80) drift.track.shift();
+        if (hasReportedMove) {
+          existing.setLatLng([event.lat, event.lng]);
+          const last = drift.track && drift.track.length > 0 ? drift.track[drift.track.length - 1] : null;
+          const jumpKm = last ? haversineKm(last, [event.lat, event.lng]) : 0;
+          // Large jumps indicate a new reported position for the same track key; restart local drift base.
+          if (!last || jumpKm > 40) {
+            drift.track = [[event.lat, event.lng]];
+          } else if (Math.abs(last[0] - event.lat) > 0.0001 || Math.abs(last[1] - event.lng) > 0.0001) {
+            drift.track.push([event.lat, event.lng]);
+            if (drift.track.length > 80) drift.track.shift();
+          }
+          drift.baseLat = event.lat;
+          drift.baseLng = event.lng;
+          drift.distanceKm = 0;
         }
-        drift.baseLat = event.lat;
-        drift.baseLng = event.lng;
-        drift.distanceKm = 0;
       }
       if (drift && Number.isFinite(event.direction)) {
         drift.direction = directionOrDefault(event.direction, drift.direction);
