@@ -1,0 +1,2 @@
+
+82658d65778972469192702698eebdc2593fcbfd	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/websocket/-/websocket-1.0.35.tgz","integrity":null,"time":1771330754942,"size":"0","metadata":{"time":1771330754942,"url":"http://registry.npmjs.org/websocket/-/websocket-1.0.35.tgz","reqHeaders":{},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:14 GMT","location":"https://registry.npmjs.org/websocket/-/websocket-1.0.35.tgz","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

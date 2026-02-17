@@ -1,0 +1,2 @@
+
+f595d726b2d794e73563ca2a679cf8bcff077892	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/vite/-/vite-5.4.21.tgz","integrity":null,"time":1771330754942,"size":"0","metadata":{"time":1771330754942,"url":"http://registry.npmjs.org/vite/-/vite-5.4.21.tgz","reqHeaders":{},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:14 GMT","location":"https://registry.npmjs.org/vite/-/vite-5.4.21.tgz","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

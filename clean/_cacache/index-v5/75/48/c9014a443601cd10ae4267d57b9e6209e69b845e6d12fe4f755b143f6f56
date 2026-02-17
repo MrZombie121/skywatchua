@@ -1,0 +1,2 @@
+
+fe526d733d1109d315ca713710ce55ce1b36c460	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/tr46","integrity":null,"time":1771330754292,"size":"0","metadata":{"time":1771330754292,"url":"http://registry.npmjs.org/tr46","reqHeaders":{"accept":"application/json"},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:14 GMT","location":"https://registry.npmjs.org/tr46","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

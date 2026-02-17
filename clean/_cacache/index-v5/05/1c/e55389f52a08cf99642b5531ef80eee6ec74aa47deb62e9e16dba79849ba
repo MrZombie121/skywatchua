@@ -1,0 +1,2 @@
+
+ec33166f4844c80cbfe6488c788259cd8cc6f1ac	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/event-emitter/-/event-emitter-0.3.5.tgz","integrity":null,"time":1771330755506,"size":"0","metadata":{"time":1771330755506,"url":"http://registry.npmjs.org/event-emitter/-/event-emitter-0.3.5.tgz","reqHeaders":{},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:15 GMT","location":"https://registry.npmjs.org/event-emitter/-/event-emitter-0.3.5.tgz","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

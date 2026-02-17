@@ -1,0 +1,2 @@
+
+0e0b93bfa78a0b045ea9a41fc2b7672d54eff3d9	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/web-streams-polyfill","integrity":null,"time":1771330754186,"size":"0","metadata":{"time":1771330754186,"url":"http://registry.npmjs.org/web-streams-polyfill","reqHeaders":{"accept":"application/json"},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:13 GMT","location":"https://registry.npmjs.org/web-streams-polyfill","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

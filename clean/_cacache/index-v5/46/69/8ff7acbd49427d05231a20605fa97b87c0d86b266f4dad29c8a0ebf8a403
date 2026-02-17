@@ -1,0 +1,2 @@
+
+666ceca9e235c5583cc87ebeae761ed2d86261ad	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/telegram/-/telegram-2.26.22.tgz","integrity":null,"time":1771330754950,"size":"0","metadata":{"time":1771330754949,"url":"http://registry.npmjs.org/telegram/-/telegram-2.26.22.tgz","reqHeaders":{},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:14 GMT","location":"https://registry.npmjs.org/telegram/-/telegram-2.26.22.tgz","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

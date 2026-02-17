@@ -1,0 +1,53 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.7.0
+2 info using node@v22.11.0
+3 silly config load:file:C:\Users\User\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:H:\skywatchuaair\1.0\.npmrc
+5 silly config load:file:C:\Users\User\.npmrc
+6 silly config load:file:C:\Users\User\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm config set offline false
+8 verbose argv "config" "set" "offline" "false"
+9 verbose logfile logs-max:10 dir:H:\skywatchuaair\1.0\clean\_logs\2026-02-17T12_19_57_395Z-
+10 verbose logfile H:\skywatchuaair\1.0\clean\_logs\2026-02-17T12_19_57_395Z-debug-0.log
+11 silly logfile done cleaning log files
+12 info config set "offline" "false"
+13 verbose stack Error: EPERM: operation not permitted, open 'C:\Users\User\.npmrc'
+13 verbose stack     at async open (node:internal/fs/promises:638:25)
+13 verbose stack     at async writeFile (node:internal/fs/promises:1208:14)
+13 verbose stack     at async Config.save (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\config\lib\index.js:799:5)
+13 verbose stack     at async Config.set (C:\Users\User\AppData\Roaming\npm\node_modules\npm\lib\commands\config.js:194:5)
+13 verbose stack     at async Config.exec (C:\Users\User\AppData\Roaming\npm\node_modules\npm\lib\commands\config.js:139:9)
+13 verbose stack     at async Npm.exec (C:\Users\User\AppData\Roaming\npm\node_modules\npm\lib\npm.js:208:9)
+13 verbose stack     at async module.exports (C:\Users\User\AppData\Roaming\npm\node_modules\npm\lib\cli\entry.js:67:5)
+14 error code EPERM
+15 error syscall open
+16 error path C:\Users\User\.npmrc
+17 error errno -4048
+18 error Error: EPERM: operation not permitted, open 'C:\Users\User\.npmrc'
+18 error     at async open (node:internal/fs/promises:638:25)
+18 error     at async writeFile (node:internal/fs/promises:1208:14)
+18 error     at async Config.save (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\config\lib\index.js:799:5)
+18 error     at async Config.set (C:\Users\User\AppData\Roaming\npm\node_modules\npm\lib\commands\config.js:194:5)
+18 error     at async Config.exec (C:\Users\User\AppData\Roaming\npm\node_modules\npm\lib\commands\config.js:139:9)
+18 error     at async Npm.exec (C:\Users\User\AppData\Roaming\npm\node_modules\npm\lib\npm.js:208:9)
+18 error     at async module.exports (C:\Users\User\AppData\Roaming\npm\node_modules\npm\lib\cli\entry.js:67:5) {
+18 error   errno: -4048,
+18 error   code: 'EPERM',
+18 error   syscall: 'open',
+18 error   path: 'C:\\Users\\User\\.npmrc'
+18 error }
+19 error
+19 error The operation was rejected by your operating system.
+19 error It's possible that the file was already in use (by a text editor or antivirus),
+19 error or that you lack permissions to access it.
+19 error
+19 error If you believe this might be a permissions issue, please double-check the
+19 error permissions of the file and its containing directories, or try running
+19 error the command again as root/Administrator.
+20 verbose cwd H:\skywatchuaair\1.0
+21 verbose os Windows_NT 10.0.19045
+22 verbose node v22.11.0
+23 verbose npm  v11.7.0
+24 verbose exit -4048
+25 verbose code -4048
+26 error A complete log of this run can be found in: H:\skywatchuaair\1.0\clean\_logs\2026-02-17T12_19_57_395Z-debug-0.log

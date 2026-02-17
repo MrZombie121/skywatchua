@@ -1,0 +1,2 @@
+
+75bf92b3b688996bd38a40f036ebd9f1d9783cd0	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/sax/-/sax-1.4.4.tgz","integrity":null,"time":1771330755042,"size":"0","metadata":{"time":1771330755041,"url":"http://registry.npmjs.org/sax/-/sax-1.4.4.tgz","reqHeaders":{},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:14 GMT","location":"https://registry.npmjs.org/sax/-/sax-1.4.4.tgz","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

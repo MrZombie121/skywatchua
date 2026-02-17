@@ -76,7 +76,7 @@ const locationHints = [
   { name: "Слов'янськ", keys: ["sloviansk", "slovyansk", "слов'янськ", "славянск"], lat: 48.85, lng: 37.6 },
   { name: "Донецьк", keys: ["donetsk", "донецьк", "донецк"], lat: 48.02, lng: 37.8 },
   { name: "Луганськ", keys: ["luhansk", "луганськ", "луганск"], lat: 48.57, lng: 39.31 },
-  { name: "Чернігів", keys: ["chernih", "черніг"], lat: 51.5, lng: 31.3 },
+  { name: "Чернігів", keys: ["chernih", "черніг", "чернигов"], lat: 51.5, lng: 31.3 },
   { name: "Суми", keys: ["sumy", "суми"], lat: 50.91, lng: 34.8 },
   { name: "Полтава", keys: ["poltava", "полтава"], lat: 49.59, lng: 34.55 },
   { name: "Оржицький район", keys: ["оржицький район", "оржицкий район", "orzhytskyi"], lat: 49.74, lng: 32.92 },
@@ -549,6 +549,20 @@ function resolveRegionId(text, label) {
   return null;
 }
 
+function inferRegionIdFromCoords(lat, lng) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  let bestId = null;
+  let bestDistance = Infinity;
+  Object.entries(regionCenters).forEach(([id, center]) => {
+    const distance = haversineKm({ lat, lng }, { lat: center.lat, lng: center.lng });
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestId = id;
+    }
+  });
+  return bestDistance <= 260 ? bestId : null;
+}
+
 export function parseMessageToEvent(text, meta = {}) {
   return parseMessageToEvents(text, meta)[0] || null;
 }
@@ -656,13 +670,34 @@ function haversineKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-function pickSpawnPoint({ regionId, type, lat, lng, seedInput }) {
+function angularDiffDeg(a, b) {
+  const raw = Math.abs(((a - b) % 360 + 360) % 360);
+  return raw > 180 ? 360 - raw : raw;
+}
+
+function pickSpawnPoint({
+  regionId,
+  type,
+  lat,
+  lng,
+  seedInput,
+  preferredDirection,
+  preferRouteApproach
+}) {
   if (spawnPoints.length === 0) return null;
 
   const byRegion = regionId
     ? spawnPoints.filter((item) => item.region_id === regionId)
     : [];
-  const regionPool = byRegion.length > 0 ? byRegion : spawnPoints;
+  let regionPool = byRegion.length > 0 ? byRegion : spawnPoints;
+  if (byRegion.length === 0 && Number.isFinite(lat) && Number.isFinite(lng) && spawnPoints.length > 140) {
+    regionPool = [...spawnPoints]
+      .sort((a, b) =>
+        haversineKm({ lat, lng }, { lat: a.lat, lng: a.lng }) -
+        haversineKm({ lat, lng }, { lat: b.lat, lng: b.lng })
+      )
+      .slice(0, 140);
+  }
   const typedPool = regionPool.filter(
     (item) => !Array.isArray(item.types) || item.types.length === 0 || item.types.includes(type)
   );
@@ -670,6 +705,51 @@ function pickSpawnPoint({ regionId, type, lat, lng, seedInput }) {
   if (pool.length === 0) return null;
 
   if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    if (preferRouteApproach && pool.length > 1) {
+      let bestRoute = null;
+      for (const candidate of pool) {
+        const distKm = haversineKm({ lat, lng }, { lat: candidate.lat, lng: candidate.lng });
+        const bearingToTarget = bearingDeg(candidate.lat, candidate.lng, lat, lng);
+        const directionPenalty = Number.isFinite(preferredDirection)
+          ? angularDiffDeg(preferredDirection, bearingToTarget) * 0.25
+          : 0;
+        const tooClosePenalty = distKm < 10 ? (10 - distKm) * 10 : 0;
+        const farBonus = Math.min(distKm, 80) * 0.9;
+        const score = farBonus - directionPenalty - tooClosePenalty;
+        if (!bestRoute || score > bestRoute.score) {
+          bestRoute = { candidate, score };
+        }
+      }
+      if (bestRoute && bestRoute.score > 8) {
+        return bestRoute.candidate;
+      }
+    }
+
+    if (Number.isFinite(preferredDirection) && pool.length > 1) {
+      const theta = (preferredDirection * Math.PI) / 180;
+      const ux = Math.sin(theta);
+      const uy = Math.cos(theta);
+      let best = null;
+
+      for (const candidate of pool) {
+        const meanLatRad = ((lat + candidate.lat) / 2) * (Math.PI / 180);
+        const dxKm = (candidate.lng - lng) * 111 * Math.cos(meanLatRad);
+        const dyKm = (candidate.lat - lat) * 111;
+        const forwardKm = dxKm * ux + dyKm * uy;
+        const lateralKm = Math.abs(-dxKm * uy + dyKm * ux);
+        const bearing = bearingDeg(lat, lng, candidate.lat, candidate.lng);
+        const anglePenalty = angularDiffDeg(preferredDirection, bearing) * 0.12;
+        const score = forwardKm - lateralKm * 0.65 - anglePenalty;
+        if (!best || score > best.score) {
+          best = { candidate, score };
+        }
+      }
+
+      if (best && best.score > 0.8) {
+        return best.candidate;
+      }
+    }
+
     let nearest = pool[0];
     let bestDistance = haversineKm({ lat, lng }, { lat: nearest.lat, lng: nearest.lng });
     for (let i = 1; i < pool.length; i += 1) {
@@ -722,6 +802,11 @@ function routeCueOffsets(text) {
   return offsets;
 }
 
+function hasRouteCue(text) {
+  const lower = normalizeText(text);
+  return /(в направлении|у напрямку|в сторону|по направлению|курс(?:ом)? на|рух(?:ається)? на|йде на|летить на|на)\s+/.test(lower);
+}
+
 function extractGuidedTargets(text, locationHits) {
   if (!Array.isArray(locationHits) || locationHits.length === 0) return [];
   const cues = routeCueOffsets(text);
@@ -764,6 +849,7 @@ export function parseMessageToEvents(text, meta = {}) {
   const coords = extractCoords(baseText);
   const locationHitsRaw = coords ? [coords] : extractLocationHits(baseText);
   const sea = pickSea(baseText);
+  const hasRouteGuidance = hasRouteCue(baseText);
   const guidedTargets = extractGuidedTargets(baseText, locationHitsRaw);
   const locationHits = guidedTargets.length > 0 ? guidedTargets : locationHitsRaw;
 
@@ -885,6 +971,7 @@ export function parseMessageToEvents(text, meta = {}) {
       : (
         resolveRegionId(label, label) ||
         resolveRegionId(text, label) ||
+        inferRegionIdFromCoords(target.lat, target.lng) ||
         (locationHits.length === 0 ? resolveRegionId(mergedText, label) : null) ||
         (locationHits.length === 0 ? regionId : null) ||
         regionId
@@ -901,7 +988,9 @@ export function parseMessageToEvents(text, meta = {}) {
         type,
         lat,
         lng,
-        seedInput: idSeed
+        seedInput: idSeed,
+        preferredDirection: Number.isFinite(direction) && !sea && !forceSea ? direction : null,
+        preferRouteApproach: hasRouteGuidance && !sea && !forceSea
       })
       : null;
     if (spawnCandidate) {

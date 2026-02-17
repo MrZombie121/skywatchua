@@ -1,0 +1,2 @@
+
+f03905729d061f7b13c29fa3556fa8e8bbb71fe8	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/big-integer/-/big-integer-1.6.52.tgz","integrity":null,"time":1771330755644,"size":"0","metadata":{"time":1771330755644,"url":"http://registry.npmjs.org/big-integer/-/big-integer-1.6.52.tgz","reqHeaders":{},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:15 GMT","location":"https://registry.npmjs.org/big-integer/-/big-integer-1.6.52.tgz","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

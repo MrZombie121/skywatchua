@@ -1,0 +1,2 @@
+
+238132498710fd86f8cc503cf80ad6123b231a91	{"key":"make-fetch-happen:request-cache:http://registry.npmjs.org/cross-fetch","integrity":null,"time":1771330752611,"size":"0","metadata":{"time":1771330752611,"url":"http://registry.npmjs.org/cross-fetch","reqHeaders":{"accept":"application/json"},"resHeaders":{"content-type":"text/plain;charset=UTF-8","date":"Tue, 17 Feb 2026 12:19:12 GMT","location":"https://registry.npmjs.org/cross-fetch","vary":"Accept-Encoding"},"options":{"compress":true},"status":301}}

@@ -1,0 +1,49 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.7.0
+2 info using node@v22.11.0
+3 silly config load:file:C:\Users\User\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:H:\skywatchuaair\1.0\.npmrc
+5 silly config load:file:C:\Users\User\.npmrc
+6 silly config load:file:C:\Users\User\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install @libsql/client
+8 verbose argv "install" "@libsql/client"
+9 verbose logfile logs-max:10 dir:H:\skywatchuaair\1.0\clean\_logs\2026-02-17T12_20_11_658Z-
+10 verbose logfile H:\skywatchuaair\1.0\clean\_logs\2026-02-17T12_20_11_658Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly logfile error removing log file H:\skywatchuaair\1.0\clean\_logs\2026-02-14T14_24_06_710Z-debug-0.log [Error: EPERM: operation not permitted, unlink 'H:\skywatchuaair\1.0\clean\_logs\2026-02-14T14_24_06_710Z-debug-0.log'] {
+13 silly logfile   errno: -4048,
+13 silly logfile   code: 'EPERM',
+13 silly logfile   syscall: 'unlink',
+13 silly logfile   path: 'H:\\skywatchuaair\\1.0\\clean\\_logs\\2026-02-14T14_24_06_710Z-debug-0.log'
+13 silly logfile }
+14 silly logfile done cleaning log files
+15 silly idealTree buildDeps
+16 silly fetch manifest lowdb@^7.0.1
+17 silly packumentCache full:http://registry.npmjs.org/lowdb cache-miss
+18 silly fetch manifest @libsql/client@*
+19 silly packumentCache full:http://registry.npmjs.org/@libsql%2fclient cache-miss
+20 silly placeDep ROOT @libsql/client@ REPLACE for: skywatch-ua@2.0.0-beta want: *
+21 silly placeDep ROOT lowdb@ OK for: skywatch-ua@2.0.0-beta want: ^7.0.1
+22 verbose stack Error: request to http://registry.npmjs.org/@libsql%2fclient failed: cache mode is 'only-if-cached' but no cached response is available.
+22 verbose stack     at cacheFetch (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\make-fetch-happen\lib\cache\index.js:12:13)
+22 verbose stack     at async fetch (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\make-fetch-happen\lib\fetch.js:98:7)
+22 verbose stack     at async RegistryFetcher.packument (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\pacote\lib\registry.js:90:19)
+22 verbose stack     at async RegistryFetcher.manifest (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\pacote\lib\registry.js:128:23)
+22 verbose stack     at async #fetchManifest (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:1216:20)
+22 verbose stack     at async #nodeFromEdge (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:1054:19)
+22 verbose stack     at async #buildDepStep (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:918:11)
+22 verbose stack     at async Arborist.buildIdealTree (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:170:7)
+22 verbose stack     at async Promise.all (index 1)
+22 verbose stack     at async Arborist.reify (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\reify.js:110:5)
+23 error code ENOTCACHED
+24 error request to http://registry.npmjs.org/@libsql%2fclient failed: cache mode is 'only-if-cached' but no cached response is available.
+25 silly unfinished npm timer reify 1771330812638
+26 silly unfinished npm timer reify:loadTrees 1771330812639
+27 verbose cwd H:\skywatchuaair\1.0
+28 verbose os Windows_NT 10.0.19045
+29 verbose node v22.11.0
+30 verbose npm  v11.7.0
+31 verbose exit 1
+32 verbose code 1
+33 error A complete log of this run can be found in: H:\skywatchuaair\1.0\clean\_logs\2026-02-17T12_20_11_658Z-debug-0.log
