@@ -56,6 +56,13 @@ const locationHints = [
   { name: "Харків", keys: ["kharkiv", "харків"], lat: 49.98, lng: 36.25 },
   { name: "Одеса", keys: ["odesa", "odessa", "одеса", "одессе"], lat: 46.48, lng: 30.72 },
   {
+    name: "Дніпровське (Миколаївська)",
+    keys: ["дніпровське", "днепровское", "dniprovske", "dniprovskoe"],
+    context: ["миколаїв", "николаев", "mykolaiv", "mykolaivska"],
+    lat: 46.74,
+    lng: 32.02
+  },
+  {
     name: "Затока",
     keys: ["затока", "zatoka", "затоке", "в затоке", "у затоці"],
     lat: 46.07,
@@ -377,13 +384,13 @@ function pickLocation(text) {
   const lower = normalizeText(text);
   const contextual = allLocationHints.filter((hint) => Array.isArray(hint.context) && hint.context.length > 0);
   for (const hint of contextual) {
-    if (hint.keys.some((key) => lower.includes(key)) && hint.context.some((ctx) => lower.includes(ctx))) {
+    if (hint.keys.some((key) => containsWholeKey(lower, key)) && hint.context.some((ctx) => lower.includes(ctx))) {
       return { lat: hint.lat, lng: hint.lng, label: hint.name };
     }
   }
   for (const hint of allLocationHints) {
     if (Array.isArray(hint.context) && hint.context.length > 0) continue;
-    if (hint.keys.some((key) => lower.includes(key))) {
+    if (hint.keys.some((key) => containsWholeKey(lower, key))) {
       return { lat: hint.lat, lng: hint.lng, label: hint.name };
     }
   }
@@ -442,6 +449,16 @@ function normalizeText(text) {
     .replace(/[.,;:()\\[\\]{}<>]/g, " ")
     .replace(/\\s+/g, " ")
     .trim();
+}
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsWholeKey(text, key) {
+  const escaped = escapeRegex(normalizeText(key));
+  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`, "u");
+  return pattern.test(text);
 }
 
 function loadOverrideLocations() {
@@ -551,6 +568,20 @@ function resolveRegionId(text, label) {
 
 function inferRegionIdFromCoords(lat, lng) {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  let bestSpawnRegionId = null;
+  let bestSpawnDistance = Infinity;
+  spawnPoints.forEach((point) => {
+    if (!point.region_id || String(point.region_id).startsWith("sea_")) return;
+    const distance = haversineKm({ lat, lng }, { lat: point.lat, lng: point.lng });
+    if (distance < bestSpawnDistance) {
+      bestSpawnDistance = distance;
+      bestSpawnRegionId = point.region_id;
+    }
+  });
+  if (bestSpawnRegionId && bestSpawnDistance <= 140) {
+    return bestSpawnRegionId;
+  }
+
   let bestId = null;
   let bestDistance = Infinity;
   Object.entries(regionCenters).forEach(([id, center]) => {
@@ -583,8 +614,14 @@ function extractLocationHits(text) {
   const lower = normalizeText(text);
   const hits = [];
   allLocationHints.forEach((hint) => {
+    if (Array.isArray(hint.context) && hint.context.length > 0) {
+      const hasContext = hint.context.some((ctx) => lower.includes(ctx));
+      if (!hasContext) return;
+    }
     hint.keys.forEach((key) => {
-      const idx = lower.indexOf(key);
+      if (!containsWholeKey(lower, key)) return;
+      const keyNorm = normalizeText(key);
+      const idx = lower.indexOf(keyNorm);
       if (idx === -1) return;
       const before = lower.slice(Math.max(0, idx - 30), idx);
       const countMatch = before.match(
@@ -706,21 +743,34 @@ function pickSpawnPoint({
 
   if (Number.isFinite(lat) && Number.isFinite(lng)) {
     if (preferRouteApproach && pool.length > 1) {
+      const nearbyRoutePool = pool
+        .map((candidate) => ({
+          candidate,
+          distKm: haversineKm({ lat, lng }, { lat: candidate.lat, lng: candidate.lng })
+        }))
+        .filter((item) => item.distKm <= 55);
+      const routePool = nearbyRoutePool.length > 0
+        ? nearbyRoutePool
+        : pool
+          .map((candidate) => ({
+            candidate,
+            distKm: haversineKm({ lat, lng }, { lat: candidate.lat, lng: candidate.lng })
+          }))
+          .sort((a, b) => a.distKm - b.distKm)
+          .slice(0, 8);
       let bestRoute = null;
-      for (const candidate of pool) {
-        const distKm = haversineKm({ lat, lng }, { lat: candidate.lat, lng: candidate.lng });
+      for (const { candidate, distKm } of routePool) {
         const bearingToTarget = bearingDeg(candidate.lat, candidate.lng, lat, lng);
-        const directionPenalty = Number.isFinite(preferredDirection)
-          ? angularDiffDeg(preferredDirection, bearingToTarget) * 0.25
+        const alignBonus = Number.isFinite(preferredDirection)
+          ? (180 - angularDiffDeg(preferredDirection, bearingToTarget)) * 0.05
           : 0;
-        const tooClosePenalty = distKm < 10 ? (10 - distKm) * 10 : 0;
-        const farBonus = Math.min(distKm, 80) * 0.9;
-        const score = farBonus - directionPenalty - tooClosePenalty;
+        const tooClosePenalty = distKm < 4 ? (4 - distKm) * 4 : 0;
+        const score = -distKm + alignBonus - tooClosePenalty;
         if (!bestRoute || score > bestRoute.score) {
           bestRoute = { candidate, score };
         }
       }
-      if (bestRoute && bestRoute.score > 8) {
+      if (bestRoute) {
         return bestRoute.candidate;
       }
     }
@@ -732,6 +782,8 @@ function pickSpawnPoint({
       let best = null;
 
       for (const candidate of pool) {
+        const distKm = haversineKm({ lat, lng }, { lat: candidate.lat, lng: candidate.lng });
+        if (distKm > 70) continue;
         const meanLatRad = ((lat + candidate.lat) / 2) * (Math.PI / 180);
         const dxKm = (candidate.lng - lng) * 111 * Math.cos(meanLatRad);
         const dyKm = (candidate.lat - lat) * 111;
@@ -739,7 +791,7 @@ function pickSpawnPoint({
         const lateralKm = Math.abs(-dxKm * uy + dyKm * ux);
         const bearing = bearingDeg(lat, lng, candidate.lat, candidate.lng);
         const anglePenalty = angularDiffDeg(preferredDirection, bearing) * 0.12;
-        const score = forwardKm - lateralKm * 0.65 - anglePenalty;
+        const score = forwardKm - lateralKm * 0.65 - anglePenalty - distKm * 0.25;
         if (!best || score > best.score) {
           best = { candidate, score };
         }
