@@ -298,15 +298,15 @@ function pickType(text) {
   if (lower.includes("йде на") && (lower.includes("район") || lower.includes("р-н"))) {
     return "shahed";
   }
-  // Match KAB as a standalone token to avoid accidental substring matches.
-  if (/(^|[^\p{L}\p{N}])(kab|каб)(и|ів|ы)?([^\p{L}\p{N}]|$)/u.test(lower)) {
-    return "kab";
-  }
+  const hasKabToken = /(^|[^\p{L}\p{N}])(kab|каб)(и|ів|ы)?([^\p{L}\p{N}]|$)/u.test(lower);
   for (const rule of typeRules) {
     if (rule.type === "kab") continue;
     if (rule.patterns.some((pattern) => lower.includes(pattern))) {
       return rule.type;
     }
+  }
+  if (hasKabToken) {
+    return "kab";
   }
   return null;
 }
@@ -738,7 +738,20 @@ function pickSpawnPoint({
   const typedPool = regionPool.filter(
     (item) => !Array.isArray(item.types) || item.types.length === 0 || item.types.includes(type)
   );
-  const pool = typedPool.length > 0 ? typedPool : regionPool;
+  let pool = typedPool.length > 0 ? typedPool : regionPool;
+  if (typedPool.length > 0 && Number.isFinite(lat) && Number.isFinite(lng)) {
+    const nearestTypedKm = typedPool.reduce((best, candidate) => {
+      const dist = haversineKm({ lat, lng }, { lat: candidate.lat, lng: candidate.lng });
+      return Math.min(best, dist);
+    }, Infinity);
+    const nearestRegionKm = regionPool.reduce((best, candidate) => {
+      const dist = haversineKm({ lat, lng }, { lat: candidate.lat, lng: candidate.lng });
+      return Math.min(best, dist);
+    }, Infinity);
+    if (nearestTypedKm > 45 && nearestRegionKm < nearestTypedKm - 10) {
+      pool = regionPool;
+    }
+  }
   if (pool.length === 0) return null;
 
   if (Number.isFinite(lat) && Number.isFinite(lng)) {

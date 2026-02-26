@@ -13,18 +13,20 @@
     />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
-  <body>
+  <body class="v2">
     <header class="topbar">
       <button class="mobile-menu" id="panel-toggle">☰</button>
       <div class="brand">
         <div class="brand-mark">SW</div>
         <div class="brand-text">
           <div class="brand-title">Skywatch UA</div>
-          <div class="brand-subtitle">Моніторинг повітряних цілей з відкритих джерел</div>
+          <div class="brand-subtitle">OSINT Radar 2.0 • Моніторинг повітряних цілей з відкритих джерел</div>
         </div>
       </div>
       <div class="status">
         <div class="status-item">Затримка даних: 2–5 хв</div>
+        <div class="status-item" id="visible-count">Цілі: —</div>
+        <div class="status-item" id="source-count">Джерела: —</div>
         <div class="status-item" id="last-updated">Оновлення: —</div>
         <a class="admin-btn ghost" href="/about.html">Про систему</a>
         <button class="admin-btn" id="admin-open">Для адмінів</button>

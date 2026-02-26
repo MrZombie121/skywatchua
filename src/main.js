@@ -100,6 +100,8 @@ const typeContainer = document.getElementById("type-filters");
 const sourceContainer = document.getElementById("source-filters");
 const toggleTests = document.getElementById("toggle-tests");
 const lastUpdated = document.getElementById("last-updated");
+const visibleCount = document.getElementById("visible-count");
+const sourceCount = document.getElementById("source-count");
 const maintenanceBanner = document.getElementById("maintenance-banner");
 const maintenanceScreen = document.getElementById("maintenance-screen");
 const maintenanceScreenText = document.getElementById("maintenance-screen-text");
@@ -683,6 +685,15 @@ function getVisibleEvents() {
   });
 }
 
+function renderHeaderStats() {
+  if (visibleCount) {
+    visibleCount.textContent = `Цілі: ${getVisibleEvents().length}`;
+  }
+  if (sourceCount) {
+    sourceCount.textContent = `Джерела: ${state.sources.size}`;
+  }
+}
+
 function renderHistory(events) {
   historyLayer.clearLayers();
   if (!state.showHistory) return;
@@ -724,10 +735,12 @@ function renderMarkers() {
     maintenanceScreen.classList.remove("active");
   }
   if (state.maintenance) {
+    renderHeaderStats();
     return;
   }
 
   const filtered = getVisibleEvents();
+  renderHeaderStats();
 
   const nextIds = new Set(filtered.map((event) => event.id));
 

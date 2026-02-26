@@ -1,12 +1,12 @@
 ﻿@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=IBM+Plex+Sans:wght@400;500&display=swap");
 
 :root {
-  --bg: #0d1117;
-  --panel: #101722;
-  --panel-light: #172133;
-  --text: #e6edf3;
-  --muted: #9fb0c8;
-  --accent: #3bb9ff;
+  --bg: #06151a;
+  --panel: #0b2027;
+  --panel-light: #11323c;
+  --text: #ecf7f5;
+  --muted: #9fc1c8;
+  --accent: #00d1b2;
   --real: #ff3b30;
   --test: #3b82f6;
   --shahed: #f59e0b;
@@ -47,7 +47,10 @@ body.theme-skymap {
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #14233a 0%, #0a0f16 55%, #070b11 100%);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(0, 209, 178, 0.18) 0%, transparent 30%),
+    radial-gradient(circle at 90% 0%, rgba(59, 185, 255, 0.14) 0%, transparent 28%),
+    linear-gradient(180deg, #061217 0%, #050d11 100%);
   color: var(--text);
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
@@ -64,11 +67,15 @@ body.theme-skymap {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 28px;
+  padding: 16px 24px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(120deg, #121c2b 0%, #0a111b 60%);
-  box-shadow: 0 10px 30px var(--shadow);
+  background: linear-gradient(120deg, rgba(8, 25, 32, 0.94) 0%, rgba(5, 17, 22, 0.94) 70%);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 32px var(--shadow);
   gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 1002;
 }
 
 .mobile-menu {
@@ -93,8 +100,8 @@ body.theme-skymap {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #3bb9ff, #38ef7d);
-  color: #08121f;
+  background: linear-gradient(145deg, #00d1b2, #37b8ff);
+  color: #031319;
   font-weight: 700;
   font-family: "Space Grotesk", sans-serif;
   display: grid;
@@ -125,7 +132,7 @@ body.theme-skymap {
   padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: rgba(20, 30, 50, 0.6);
+  background: rgba(12, 34, 41, 0.78);
 }
 
 .admin-btn {
@@ -175,7 +182,7 @@ body.theme-skymap {
 
 .panel {
   border-right: 1px solid var(--border);
-  background: linear-gradient(180deg, #0f1623 0%, #0b111a 100%);
+  background: linear-gradient(180deg, rgba(8, 25, 32, 0.96) 0%, rgba(5, 17, 22, 0.96) 100%);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -187,7 +194,7 @@ body.theme-skymap {
   padding: 16px;
   border-radius: 16px;
   border: 1px solid var(--border);
-  box-shadow: 0 20px 40px rgba(5, 9, 20, 0.4);
+  box-shadow: 0 12px 28px rgba(1, 8, 10, 0.45);
 }
 
 .panel-section h2 {
@@ -297,7 +304,7 @@ body.theme-skymap {
   right: 24px;
   bottom: 24px;
   width: min(360px, 86vw);
-  background: rgba(12, 18, 28, 0.92);
+  background: rgba(7, 22, 27, 0.93);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(2, 6, 23, 0.6);
@@ -573,11 +580,11 @@ body.theme-skymap {
   border-radius: 20px;
   overflow: hidden;
   border: 1px solid var(--border);
-  box-shadow: 0 30px 60px var(--shadow);
+  box-shadow: 0 26px 52px var(--shadow);
 }
 
 .leaflet-container {
-  background: #0f1725;
+  background: #091922;
 }
 
 .marker-wrap {

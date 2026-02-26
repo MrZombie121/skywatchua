@@ -5,14 +5,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseMessageToEvents, extractAlarmSignals } from "./transform.js";
 import { extractImageMarkers } from "./image.js";
+import { getTelegramChannels } from "./config/source-presets.js";
 
 const apiId = process.env.TG_API_ID ? Number(process.env.TG_API_ID) : null;
 const apiHash = process.env.TG_API_HASH || null;
 const sessionString = process.env.TG_SESSION || "";
-const channels = (process.env.TG_CHANNELS || "")
-  .split(",")
-  .map((item) => item.trim())
-  .filter(Boolean);
+const channels = getTelegramChannels();
 const testChannels = new Set(
   (process.env.TG_TEST_CHANNELS || "")
     .split(",")

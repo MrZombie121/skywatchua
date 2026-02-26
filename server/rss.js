@@ -1,11 +1,9 @@
-﻿import Parser from "rss-parser";
+import Parser from "rss-parser";
 import { parseMessageToEvents } from "./transform.js";
+import { getRssUrls } from "./config/source-presets.js";
 
 const parser = new Parser();
-const urls = (process.env.RSS_URLS || "")
-  .split(",")
-  .map((item) => item.trim())
-  .filter(Boolean);
+const urls = getRssUrls();
 
 export async function loadRssEvents() {
   if (urls.length === 0) return [];

@@ -1,9 +1,7 @@
 import { parseMessageToEvents } from "./transform.js";
+import { getOpenJsonUrls } from "./config/source-presets.js";
 
-const urls = (process.env.OPEN_JSON_FEEDS || "")
-  .split(",")
-  .map((item) => item.trim())
-  .filter(Boolean);
+const urls = getOpenJsonUrls();
 
 function normalizeEvent(item, sourceFallback) {
   const lat = Number(item.lat ?? item.latitude ?? item.location?.lat);
