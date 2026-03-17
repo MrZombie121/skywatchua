@@ -65,12 +65,10 @@ async function ensureAdmin() {
   const password = process.env.ADMIN_PASS || "admin26pass";
 
   await db.read();
-  const exists = db.data.admins.find((admin) => admin.username === username);
-  if (exists) return;
-
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = hashPassword(password, salt);
-  db.data.admins.push({ username, password_hash: `${salt}:${hash}` });
+  const nextAdmin = { username, password_hash: `${salt}:${hash}` };
+  db.data.admins = [nextAdmin];
   await db.write();
 }
 

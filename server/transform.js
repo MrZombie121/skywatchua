@@ -311,6 +311,20 @@ function pickType(text) {
   return null;
 }
 
+function shouldUseContextForType(meta = {}, baseText = "") {
+  if (meta.allow_bearing_from_base === true) return true;
+  if (meta.has_reply === true) return true;
+  return hasTrackContext(baseText);
+}
+
+function pickTypeWithContext(baseText, mergedText, meta = {}) {
+  if (meta.type) return meta.type;
+  const baseType = pickType(baseText);
+  if (baseType) return baseType;
+  if (!shouldUseContextForType(meta, baseText)) return null;
+  return pickType(mergedText);
+}
+
 function extractAlarmRegions(text) {
   const lower = normalizeText(text);
   const matches = [];
@@ -910,6 +924,8 @@ export function parseMessageToEvents(text, meta = {}) {
     : [baseText, ...contextTexts].filter(Boolean).join(" ");
 
   if (isDowned(mergedText)) return [];
+  const allowContextForType = shouldUseContextForType(meta, baseText);
+  const trackContextText = allowContextForType ? mergedText : baseText;
   // Parse locations only from the original message to avoid marker explosions from context.
   const coords = extractCoords(baseText);
   const locationHitsRaw = coords ? [coords] : extractLocationHits(baseText);
@@ -918,16 +934,16 @@ export function parseMessageToEvents(text, meta = {}) {
   const guidedTargets = extractGuidedTargets(baseText, locationHitsRaw);
   const locationHits = guidedTargets.length > 0 ? guidedTargets : locationHitsRaw;
 
-  let type = meta.type || pickType(mergedText);
+  let type = pickTypeWithContext(baseText, mergedText, meta);
   const hasCount = locationHits.some((hit) => Number.isFinite(hit.count) && hit.count > 0);
-  if (!type && locationHits.length > 0 && (hasTrackContext(mergedText) || hasCount)) {
+  if (!type && locationHits.length > 0 && (hasTrackContext(trackContextText) || hasCount)) {
     type = "shahed";
   }
   if (!type && shouldInferTrackFromSea({
     sea,
     forceSea: false,
     locationHits,
-    mergedText,
+    mergedText: trackContextText,
     regionCenter: null
   })) {
     type = "shahed";

@@ -1,4 +1,5 @@
-﻿import { sources } from "./data/sources.js";
+﻿
+import { sources } from "./data/sources.js";
 import { oblasts } from "./data/oblasts.js";
 import "./styles.css";
 
@@ -71,12 +72,22 @@ let refreshTimer = null;
 let markerAgingTimer = null;
 let activeTrackId = null;
 let activeTrackLine = null;
-const MARKER_TTL_MS = 10 * 60 * 1000;
+let lastSoundAt = 0;
+
+const DEFAULT_MARKER_TTL_MS = 10 * 60 * 1000;
 const STALE_WARN_MS = 5 * 60 * 1000;
 const STALE_CRITICAL_MS = 9 * 60 * 1000;
 const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const SPAWN_ANIMATION_MS = 3000;
 const HISTORY_STORAGE_KEY = "sw_history_24h_v2";
+const PINNED_STORAGE_KEY = "sw_pinned_v2";
+const SAVED_VIEWS_KEY = "sw_saved_views_v2";
+const OPS_NOTES_KEY = "sw_ops_notes_v2";
+const MARKER_TTL_KEY = "sw_marker_ttl_ms";
+const SOUND_COOLDOWN_MS = 4000;
+const MAP_HEIGHT_STORAGE_KEY = "sw_map_height_v1";
+const MAP_MIN_HEIGHT = 360;
+const DOCK_MIN_HEIGHT = 160;
 
 const state = {
   events: [],
@@ -93,7 +104,11 @@ const state = {
   refreshPaused: false,
   autoFollow: false,
   showHistory: true,
-  refreshIntervalMs: 12000
+  refreshIntervalMs: 12000,
+  pinnedIds: new Set(),
+  savedViews: [],
+  soundEnabled: false,
+  markerTtlMs: DEFAULT_MARKER_TTL_MS
 };
 
 const typeContainer = document.getElementById("type-filters");
@@ -129,10 +144,7 @@ const testClear = document.getElementById("test-clear");
 const adminLogout = document.getElementById("admin-logout");
 const radarList = document.getElementById("radar-list");
 const alarmList = document.getElementById("alarm-list");
-const toolPanel = document.getElementById("tool-panel");
-const toolOpen = document.getElementById("tool-open");
-const toolClose = document.getElementById("tool-close");
-const toolSettings = document.getElementById("tool-settings");
+const watchlistList = document.getElementById("watchlist-list");
 const settingsModal = document.getElementById("settings-modal");
 const settingsClose = document.getElementById("settings-close");
 const mapStyleSelect = document.getElementById("map-style-select");
@@ -144,13 +156,37 @@ const themeBg = document.getElementById("theme-bg");
 const themePanel = document.getElementById("theme-panel");
 const themeApply = document.getElementById("theme-apply");
 const panelToggle = document.getElementById("panel-toggle");
+const intelToggle = document.getElementById("intel-toggle");
 const panelBackdrop = document.getElementById("panel-backdrop");
 const toggleRefresh = document.getElementById("toggle-refresh");
 const toggleHistory = document.getElementById("toggle-history");
 const toggleFollow = document.getElementById("toggle-follow");
+const toggleSound = document.getElementById("toggle-sound");
 const fitVisible = document.getElementById("fit-visible");
 const refreshModeSelect = document.getElementById("refresh-mode-select");
-const toolTabs = toolPanel ? toolPanel.querySelectorAll("button[data-tab]") : [];
+const ttlSelect = document.getElementById("ttl-select");
+const toolSettings = document.getElementById("tool-settings");
+const saveViewButton = document.getElementById("save-view");
+const savedViewsList = document.getElementById("saved-views");
+const opsNotes = document.getElementById("ops-notes");
+const intelFeed = document.getElementById("intel-feed");
+const pinnedList = document.getElementById("pinned-list");
+const exportBrief = document.getElementById("export-brief");
+const metricActive = document.getElementById("metric-active");
+const metricTests = document.getElementById("metric-tests");
+const metricConfidence = document.getElementById("metric-confidence");
+const metricSources = document.getElementById("metric-sources");
+const mapExpand = document.getElementById("map-expand");
+const mapSizeButtons = document.querySelectorAll("[data-map-size]");
+const oblastSelect = document.getElementById("oblast-select");
+const leftSidebar = document.querySelector(".sidebar.left");
+const rightSidebar = document.querySelector(".sidebar.right");
+const dockTabs = document.querySelectorAll(".dock-tabs button");
+const stage = document.querySelector(".stage.v3");
+const stageHead = document.querySelector(".stage-head");
+const mapShell = document.querySelector(".map-shell");
+const mapResizer = document.getElementById("map-resizer");
+const dock = document.querySelector(".dock");
 
 const typeLabels = {
   shahed: "Shahed",
@@ -219,7 +255,6 @@ const oblastAliases = {
   crimea: ["crimea", "крим", "крым", "автономна республіка крим", "автономная республика крым", "арк"],
   sevastopol: ["sevastopol", "севастополь", "м. севастополь", "місто севастополь"]
 };
-
 function normalizeType(type) {
   if (!type) return "other";
   const key = String(type).toLowerCase();
@@ -347,6 +382,7 @@ function createFilterChip({ id, label, checked, onChange }) {
 }
 
 function renderFilterControls() {
+  if (!typeContainer || !sourceContainer) return;
   typeContainer.innerHTML = "";
   sourceContainer.innerHTML = "";
 
@@ -365,6 +401,11 @@ function renderFilterControls() {
             state.selectedTypes.delete(type);
           }
           renderMarkers();
+          renderRadarList();
+          renderIntelFeed();
+          renderPinnedList();
+          renderDockWatchlist();
+          renderMetrics();
         }
       });
       typeContainer.appendChild(chip);
@@ -386,6 +427,11 @@ function renderFilterControls() {
             state.selectedSources.delete(sourceId);
           }
           renderMarkers();
+          renderRadarList();
+          renderIntelFeed();
+          renderPinnedList();
+          renderDockWatchlist();
+          renderMetrics();
         }
       });
       sourceContainer.appendChild(chip);
@@ -411,7 +457,7 @@ function eventAgeMs(event, now = Date.now()) {
 }
 
 function isEventAlive(event, now = Date.now()) {
-  return eventAgeMs(event, now) <= MARKER_TTL_MS;
+  return eventAgeMs(event, now) <= state.markerTtlMs;
 }
 
 function freshnessState(event, now = Date.now()) {
@@ -790,7 +836,6 @@ function renderMarkers() {
           existing.setLatLng([event.lat, event.lng]);
           const last = drift.track && drift.track.length > 0 ? drift.track[drift.track.length - 1] : null;
           const jumpKm = last ? haversineKm(last, [event.lat, event.lng]) : 0;
-          // Large jumps indicate a new reported position for the same track key; restart local drift base.
           if (!last || jumpKm > 40) {
             drift.track = [[event.lat, event.lng]];
           } else if (Math.abs(last[0] - event.lat) > 0.0001 || Math.abs(last[1] - event.lng) > 0.0001) {
@@ -846,12 +891,11 @@ function renderMarkers() {
   renderHistory(filtered);
   startDrift();
 }
-
 function buildPopup(event, distanceKm) {
   const now = Date.now();
   const ageMs = eventAgeMs(event, now);
   const freshness = freshnessState(event, now);
-  const ttlLeftMs = Math.max(0, MARKER_TTL_MS - ageMs);
+  const ttlLeftMs = Math.max(0, state.markerTtlMs - ageMs);
   const historyTrack = getHistoryTrack(event);
   const distanceLine = Number.isFinite(distanceKm)
     ? `<br /><span class="popup-meta">Пройдена відстань: ${distanceKm.toFixed(1)} км</span>`
@@ -864,8 +908,9 @@ function buildPopup(event, distanceKm) {
   const evidenceSources = Array.isArray(event.evidence_sources) && event.evidence_sources.length > 0
     ? `<br /><span class="popup-meta">Джерела: ${event.evidence_sources.join(", ")}</span>`
     : "";
+  const pinnedLabel = state.pinnedIds.has(event.id) ? "Відкріпити" : "Закріпити";
   return `
-      <div class="popup">
+      <div class="popup" data-event-id="${event.id}">
         <div class="popup-head">
           <strong class="popup-title">${event.type.toUpperCase()}</strong>
           <span class="popup-status ${freshness.popupClass}">${freshness.label}</span>
@@ -883,6 +928,9 @@ function buildPopup(event, distanceKm) {
         ${evidenceLine}
         ${evidenceSources}
         ${distanceLine}
+        <div class="popup-actions" style="margin-top:10px;display:flex;gap:8px;">
+          <button class="ghost-btn" data-pin="${event.id}" type="button">${pinnedLabel}</button>
+        </div>
       </div>
     `;
 }
@@ -936,48 +984,156 @@ function toggleTrackFor(eventId, marker) {
   }
 }
 
+function riskScore(event) {
+  const confidence = Number.isFinite(event.confidence) ? event.confidence : 0.5;
+  const evidence = Number.isFinite(event.evidence_count) ? event.evidence_count : 1;
+  return Math.min(1, confidence * 0.7 + Math.min(1, evidence / 5) * 0.3);
+}
+
 function renderRadarList() {
+  if (!radarList) return;
   radarList.innerHTML = "";
-  const items = [...state.events]
+  const items = [...getVisibleEvents()]
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    .slice(0, 12);
+    .slice(0, 14);
   if (items.length === 0) {
-    radarList.innerHTML = "<div class=\"tool-item\">Немає активних повідомлень.</div>";
+    radarList.innerHTML = "<div class=\"feed-item\">Немає активних повідомлень.</div>";
     return;
   }
   items.forEach((event) => {
     const text = event.raw_text || event.comment || `${event.type} ${event.source}`;
     const age = formatAge(eventAgeMs(event));
     const status = freshnessState(event).label;
+    const isPinned = state.pinnedIds.has(event.id);
     const row = document.createElement("div");
-    row.className = "tool-item";
-    row.innerHTML = `<small>${formatTime(event.timestamp)} · ${event.source} · ${age}</small><br />${text}<br /><small>${status}</small>`;
+    row.className = "feed-item";
+    row.innerHTML = `
+      <div class="meta">${formatTime(event.timestamp)} · ${event.source} · ${age}</div>
+      <div>${text}</div>
+      <div class="meta">${status}</div>
+      <div class="actions">
+        <button class="ghost-btn" data-focus="${event.id}">Фокус</button>
+        <button class="ghost-btn" data-pin="${event.id}">${isPinned ? "Відкріпити" : "Закріпити"}</button>
+      </div>
+    `;
     radarList.appendChild(row);
   });
 }
 
+function renderDockWatchlist() {
+  if (!watchlistList) return;
+  watchlistList.innerHTML = "";
+  const items = state.events.filter((event) => state.pinnedIds.has(event.id));
+  if (items.length === 0) {
+    watchlistList.innerHTML = "<div class=\"feed-item\">Немає закріплених цілей.</div>";
+    return;
+  }
+  items.forEach((event) => {
+    const row = document.createElement("div");
+    row.className = "feed-item";
+    row.innerHTML = `
+      <div class="meta">${formatTime(event.timestamp)} · ${event.source}</div>
+      <div>${event.raw_text || event.comment || event.type}</div>
+      <div class="actions">
+        <button class="ghost-btn" data-focus="${event.id}">Фокус</button>
+        <button class="ghost-btn" data-pin="${event.id}">Відкріпити</button>
+      </div>
+    `;
+    watchlistList.appendChild(row);
+  });
+}
+
 function renderAlarmList() {
+  if (!alarmList) return;
   alarmList.innerHTML = "";
   const active = new Set(state.alarms || []);
   const districtItems = Array.isArray(state.districtAlarms) ? state.districtAlarms : [];
   if (active.size === 0 && districtItems.length === 0) {
-    alarmList.innerHTML = "<div class=\"tool-item\">Тривог немає.</div>";
+    alarmList.innerHTML = "<div class=\"feed-item\">Тривог немає.</div>";
     return;
   }
   oblasts
     .filter((region) => active.has(region.id))
     .forEach((region) => {
       const row = document.createElement("div");
-      row.className = "tool-item";
+      row.className = "feed-item";
       row.textContent = region.name;
       alarmList.appendChild(row);
     });
   districtItems.forEach((district) => {
     const row = document.createElement("div");
-    row.className = "tool-item";
+    row.className = "feed-item";
     row.textContent = `${district.name} (${district.region_id})`;
     alarmList.appendChild(row);
   });
+}
+
+function renderIntelFeed() {
+  if (!intelFeed) return;
+  intelFeed.innerHTML = "";
+  const items = [...getVisibleEvents()]
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 10);
+  if (items.length === 0) {
+    intelFeed.innerHTML = "<div class=\"feed-item\">Intel порожній.</div>";
+    return;
+  }
+  items.forEach((event) => {
+    const score = riskScore(event);
+    const isHot = score >= 0.75;
+    const row = document.createElement("div");
+    row.className = "feed-item";
+    row.innerHTML = `
+      <div class="meta">${formatTime(event.timestamp)} · ${event.source}</div>
+      <div>${event.raw_text || event.comment || event.type}</div>
+      <div class="meta">
+        Ризик: ${(score * 100).toFixed(0)}%
+        ${isHot ? '<span class="badge alert">HOT</span>' : ""}
+      </div>
+      <div class="actions">
+        <button class="ghost-btn" data-focus="${event.id}">Фокус</button>
+        <button class="ghost-btn" data-pin="${event.id}">${state.pinnedIds.has(event.id) ? "Відкріпити" : "Закріпити"}</button>
+      </div>
+    `;
+    intelFeed.appendChild(row);
+  });
+}
+
+function renderPinnedList() {
+  if (!pinnedList) return;
+  pinnedList.innerHTML = "";
+  const items = state.events.filter((event) => state.pinnedIds.has(event.id));
+  if (items.length === 0) {
+    pinnedList.innerHTML = "<div class=\"feed-item\">Закріплень немає.</div>";
+    return;
+  }
+  items.slice(0, 8).forEach((event) => {
+    const row = document.createElement("div");
+    row.className = "feed-item";
+    row.innerHTML = `
+      <div class="meta">${formatTime(event.timestamp)} · ${event.source}</div>
+      <div>${event.raw_text || event.comment || event.type}</div>
+      <div class="actions">
+        <button class="ghost-btn" data-focus="${event.id}">Фокус</button>
+        <button class="ghost-btn" data-pin="${event.id}">Відкріпити</button>
+      </div>
+    `;
+    pinnedList.appendChild(row);
+  });
+}
+
+function renderMetrics() {
+  const visible = getVisibleEvents();
+  if (metricActive) metricActive.textContent = String(visible.length);
+  if (metricTests) metricTests.textContent = String(visible.filter((event) => event.is_test).length);
+  if (metricSources) metricSources.textContent = String(state.sources.size);
+  if (metricConfidence) {
+    const avg = visible.length
+      ? visible.reduce((sum, event) => sum + (Number.isFinite(event.confidence) ? event.confidence : 0.5), 0) /
+        visible.length
+      : 0;
+    metricConfidence.textContent = `${Math.round(avg * 100)}%`;
+  }
 }
 
 async function renderAlarmMap() {
@@ -1030,7 +1186,6 @@ async function renderAlarmMap() {
     return;
   }
 }
-
 function formatCountdown(ms) {
   const total = Math.max(0, Math.floor(ms / 1000));
   const hours = Math.floor(total / 3600);
@@ -1064,9 +1219,150 @@ function stopMaintenanceCountdown() {
   maintenanceTimer = null;
 }
 
+function playPing() {
+  if (!state.soundEnabled) return;
+  const now = Date.now();
+  if (now - lastSoundAt < SOUND_COOLDOWN_MS) return;
+  lastSoundAt = now;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 740;
+    gain.gain.value = 0.08;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.18);
+  } catch (error) {
+    console.warn("Sound failed", error);
+  }
+}
+
+function syncPinnedStore() {
+  localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify([...state.pinnedIds]));
+}
+
+function togglePin(eventId) {
+  if (state.pinnedIds.has(eventId)) {
+    state.pinnedIds.delete(eventId);
+  } else {
+    state.pinnedIds.add(eventId);
+  }
+  syncPinnedStore();
+  renderRadarList();
+  renderIntelFeed();
+  renderPinnedList();
+  renderDockWatchlist();
+}
+
+function focusEvent(eventId) {
+  const event = eventById.get(eventId) || state.events.find((item) => item.id === eventId);
+  if (!event) return;
+  map.panTo([event.lat, event.lng], { animate: true, duration: 1 });
+  const marker = markerById.get(eventId);
+  if (marker) marker.openPopup();
+}
+
+function downloadJson(filename, payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportBriefNow() {
+  const visible = getVisibleEvents();
+  const payload = {
+    exported_at: new Date().toISOString(),
+    count: visible.length,
+    filters: {
+      types: [...state.selectedTypes],
+      sources: [...state.selectedSources]
+    },
+    events: visible
+  };
+  downloadJson(`skywatch-brief-${Date.now()}.json`, payload);
+}
+
+function renderSavedViews() {
+  if (!savedViewsList) return;
+  savedViewsList.innerHTML = "";
+  if (!state.savedViews.length) {
+    savedViewsList.innerHTML = "<div class=\"saved-view\">Поки що немає збережених видів.</div>";
+    return;
+  }
+  state.savedViews.forEach((view) => {
+    const row = document.createElement("div");
+    row.className = "saved-view";
+    row.innerHTML = `
+      <span>${view.name}</span>
+      <span>
+        <button data-view-apply="${view.id}">Застосувати</button>
+        <button data-view-remove="${view.id}">✕</button>
+      </span>
+    `;
+    savedViewsList.appendChild(row);
+  });
+}
+
+function persistSavedViews() {
+  localStorage.setItem(SAVED_VIEWS_KEY, JSON.stringify(state.savedViews));
+}
+
+function saveCurrentView() {
+  const name = window.prompt("Назва виду", "Оперативний");
+  if (!name) return;
+  const center = map.getCenter();
+  const view = {
+    id: `view-${Date.now()}`,
+    name: name.trim() || "Оперативний",
+    center: { lat: center.lat, lng: center.lng },
+    zoom: map.getZoom(),
+    types: [...state.selectedTypes],
+    sources: [...state.selectedSources],
+    ttl: state.markerTtlMs,
+    refresh: state.refreshIntervalMs,
+    mapStyle: localStorage.getItem("sw_map_style") || "osm"
+  };
+  state.savedViews = [view, ...state.savedViews].slice(0, 8);
+  persistSavedViews();
+  renderSavedViews();
+}
+
+function applySavedView(view) {
+  state.selectedTypes = new Set(view.types || []);
+  state.selectedSources = new Set(view.sources || []);
+  state.markerTtlMs = view.ttl || DEFAULT_MARKER_TTL_MS;
+  if (ttlSelect) ttlSelect.value = String(state.markerTtlMs);
+  applyRefreshInterval(view.refresh || state.refreshIntervalMs);
+  applyMapStyle(view.mapStyle || "osm");
+  map.setView([view.center.lat, view.center.lng], view.zoom || 6, { animate: true, duration: 0.8 });
+  renderFilterControls();
+  renderMarkers();
+  renderRadarList();
+  renderIntelFeed();
+  renderPinnedList();
+  renderDockWatchlist();
+  renderMetrics();
+}
+
+function deleteSavedView(id) {
+  state.savedViews = state.savedViews.filter((view) => view.id !== id);
+  persistSavedViews();
+  renderSavedViews();
+}
+
 async function refresh() {
   try {
     if (state.refreshPaused) return;
+    const previousIds = new Set(state.events.map((event) => event.id));
     const events = await loadEvents();
     ingestHistory(events);
     state.events = events;
@@ -1075,6 +1371,10 @@ async function refresh() {
     renderMarkers();
     renderRadarList();
     renderAlarmList();
+    renderIntelFeed();
+    renderPinnedList();
+    renderDockWatchlist();
+    renderMetrics();
     await renderAlarmMap();
     if (!state.maintenance && state.autoFollow) {
       followLatestTarget();
@@ -1085,16 +1385,27 @@ async function refresh() {
     } else {
       stopMaintenanceCountdown();
     }
-    lastUpdated.textContent = `Оновлення: ${formatTime(new Date().toISOString())}`;
+    const hasNew = events.some((event) => !previousIds.has(event.id));
+    if (hasNew) playPing();
+    if (lastUpdated) {
+      lastUpdated.textContent = `Оновлення: ${formatTime(new Date().toISOString())}`;
+    }
   } catch (error) {
     console.error("Failed to refresh", error);
   }
 }
 
-toggleTests.addEventListener("change", (event) => {
-  state.showTests = event.target.checked;
-  renderMarkers();
-});
+if (toggleTests) {
+  toggleTests.addEventListener("change", (event) => {
+    state.showTests = event.target.checked;
+    renderMarkers();
+    renderRadarList();
+    renderIntelFeed();
+    renderPinnedList();
+    renderDockWatchlist();
+    renderMetrics();
+  });
+}
 
 function openAdminModal() {
   adminModal.classList.add("active");
@@ -1179,126 +1490,299 @@ async function scheduleMaintenance(payload) {
     : "—";
   renderMarkers();
 }
-
-adminOpen.addEventListener("click", () => {
-  openAdminModal();
-  loadAdminStatus();
-});
-
-adminClose.addEventListener("click", closeAdminModal);
-adminModal.addEventListener("click", (event) => {
-  if (event.target === adminModal) closeAdminModal();
-});
-
-adminLoginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const formData = new FormData(adminLoginForm);
-  const username = formData.get("username");
-  const password = formData.get("password");
-  await loginAdmin({ username, password });
-});
-
-maintenanceToggle.addEventListener("change", (event) => {
-  toggleMaintenance(event.target.checked);
-});
-
-maintenanceApply.addEventListener("click", () => {
-  const minutesValue = Number(maintenanceMinutes.value);
-  const untilValue = maintenanceUntilInput.value;
-  if (Number.isFinite(minutesValue) && minutesValue > 0) {
-    scheduleMaintenance({ minutes: minutesValue });
-    return;
-  }
-  if (untilValue) {
-    scheduleMaintenance({ until: new Date(untilValue).toISOString() });
-    return;
-  }
-  alert("Вкажіть таймер у хвилинах або дату/час.");
-});
-
-maintenanceClear.addEventListener("click", () => {
-  scheduleMaintenance({ clear: true });
-});
-
-maintenanceShow.addEventListener("click", () => {
-  state.adminBypassMaintenance = false;
-  localStorage.removeItem("sw_admin_bypass");
-  renderMarkers();
-});
-
-testAdd.addEventListener("click", async () => {
-  const payload = {
-    type: testType.value,
-    city: testCity.value.trim(),
-    sea: testSea.checked,
-    direction: testDirection.value ? Number(testDirection.value) : null,
-    note: testNote.value.trim()
-  };
-  if (!payload.city) {
-    alert("Вкажіть місто/регіон для тестової мітки.");
-    return;
-  }
-  const response = await fetch("/api/admin/test-events", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+if (adminOpen) {
+  adminOpen.addEventListener("click", () => {
+    openAdminModal();
+    loadAdminStatus();
   });
-  if (!response.ok) {
-    alert("Не вдалося додати тестову мітку.");
-    return;
-  }
-  testNote.value = "";
-  refresh();
-});
+}
 
-testClear.addEventListener("click", async () => {
-  const response = await fetch("/api/admin/test-events/clear", { method: "POST" });
-  if (!response.ok) {
-    alert("Не вдалося очистити тестові мітки.");
-    return;
-  }
-  refresh();
-});
+if (adminClose) adminClose.addEventListener("click", closeAdminModal);
+if (adminModal) {
+  adminModal.addEventListener("click", (event) => {
+    if (event.target === adminModal) closeAdminModal();
+  });
+}
 
-adminLogout.addEventListener("click", async () => {
-  await fetch("/api/admin/logout", { method: "POST" });
-  adminPanel.classList.add("hidden");
-  adminLoginForm.classList.remove("hidden");
-  adminStatus.textContent = "Гість";
-  maintenanceUntil.textContent = "—";
-  state.adminBypassMaintenance = false;
-  localStorage.removeItem("sw_admin_bypass");
-});
+if (adminLoginForm) {
+  adminLoginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(adminLoginForm);
+    const username = formData.get("username");
+    const password = formData.get("password");
+    await loginAdmin({ username, password });
+  });
+}
 
-maintenanceAdminOpen.addEventListener("click", () => {
-  openAdminModal();
-  loadAdminStatus();
-});
+if (maintenanceToggle) {
+  maintenanceToggle.addEventListener("change", (event) => {
+    toggleMaintenance(event.target.checked);
+  });
+}
 
-toolTabs.forEach((tab) => {
-  tab.addEventListener("click", () => {
-    toolTabs.forEach((btn) => btn.classList.remove("active"));
-    tab.classList.add("active");
-    const target = tab.dataset.tab;
-    if (target === "radar") {
-      radarList.classList.remove("hidden");
-      alarmList.classList.add("hidden");
-    } else {
-      alarmList.classList.remove("hidden");
-      radarList.classList.add("hidden");
+if (maintenanceApply) {
+  maintenanceApply.addEventListener("click", () => {
+    const minutesValue = Number(maintenanceMinutes.value);
+    const untilValue = maintenanceUntilInput.value;
+    if (Number.isFinite(minutesValue) && minutesValue > 0) {
+      scheduleMaintenance({ minutes: minutesValue });
+      return;
     }
+    if (untilValue) {
+      scheduleMaintenance({ until: new Date(untilValue).toISOString() });
+      return;
+    }
+    alert("Вкажіть таймер у хвилинах або дату/час.");
   });
-});
+}
 
-if (toolOpen && toolPanel && toolClose) {
-  toolOpen.addEventListener("click", () => {
-    toolPanel.classList.remove("hidden");
-    toolOpen.classList.add("hidden");
+if (maintenanceClear) {
+  maintenanceClear.addEventListener("click", () => {
+    scheduleMaintenance({ clear: true });
   });
-  toolClose.addEventListener("click", () => {
-    toolPanel.classList.add("hidden");
-    toolOpen.classList.remove("hidden");
+}
+
+if (maintenanceShow) {
+  maintenanceShow.addEventListener("click", () => {
+    state.adminBypassMaintenance = false;
+    localStorage.removeItem("sw_admin_bypass");
+    renderMarkers();
   });
+}
+
+if (testAdd) {
+  testAdd.addEventListener("click", async () => {
+    const payload = {
+      type: testType.value,
+      city: testCity.value.trim(),
+      sea: testSea.checked,
+      direction: testDirection.value ? Number(testDirection.value) : null,
+      note: testNote.value.trim()
+    };
+    if (!payload.city) {
+      alert("Вкажіть місто/регіон для тестової мітки.");
+      return;
+    }
+    const response = await fetch("/api/admin/test-events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      alert("Не вдалося додати тестову мітку.");
+      return;
+    }
+    testNote.value = "";
+    refresh();
+  });
+}
+
+if (testClear) {
+  testClear.addEventListener("click", async () => {
+    const response = await fetch("/api/admin/test-events/clear", { method: "POST" });
+    if (!response.ok) {
+      alert("Не вдалося очистити тестові мітки.");
+      return;
+    }
+    refresh();
+  });
+}
+
+if (adminLogout) {
+  adminLogout.addEventListener("click", async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    adminPanel.classList.add("hidden");
+    adminLoginForm.classList.remove("hidden");
+    adminStatus.textContent = "Гість";
+    maintenanceUntil.textContent = "—";
+    state.adminBypassMaintenance = false;
+    localStorage.removeItem("sw_admin_bypass");
+  });
+}
+
+if (maintenanceAdminOpen) {
+  maintenanceAdminOpen.addEventListener("click", () => {
+    openAdminModal();
+    loadAdminStatus();
+  });
+}
+
+if (dockTabs) {
+  dockTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      dockTabs.forEach((btn) => btn.classList.remove("active"));
+      tab.classList.add("active");
+      const target = tab.dataset.dock;
+      if (target === "radar") {
+        radarList?.classList.remove("hidden");
+        alarmList?.classList.add("hidden");
+        watchlistList?.classList.add("hidden");
+      } else if (target === "alarms") {
+        radarList?.classList.add("hidden");
+        alarmList?.classList.remove("hidden");
+        watchlistList?.classList.add("hidden");
+      } else {
+        radarList?.classList.add("hidden");
+        alarmList?.classList.add("hidden");
+        watchlistList?.classList.remove("hidden");
+      }
+    });
+  });
+}
+
+if (mapExpand) {
+  mapExpand.addEventListener("click", () => {
+    const next = !document.body.classList.contains("map-expanded");
+    setMapExpanded(next);
+  });
+}
+
+if (mapSizeButtons) {
+  mapSizeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      applyMapSizePreset(button.dataset.mapSize);
+    });
+  });
+}
+
+if (oblastSelect) {
+  populateOblastSelect();
+  oblastSelect.addEventListener("change", (event) => {
+    focusOblastById(event.target.value);
+  });
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getStageGapPx() {
+  if (!stage) return 0;
+  const styles = window.getComputedStyle(stage);
+  const rawGap = styles.rowGap || styles.gap || "0";
+  const parsed = Number.parseFloat(rawGap);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getMapHeightBounds() {
+  if (!stage || !stageHead || !dock || !mapResizer) {
+    return { min: MAP_MIN_HEIGHT, max: MAP_MIN_HEIGHT };
+  }
+  const stageHeight = stage.clientHeight;
+  const headHeight = stageHead.offsetHeight;
+  const resizerHeight = mapResizer.offsetHeight || 0;
+  const gap = getStageGapPx();
+  const totalGap = gap * 3;
+  const dockMin = document.body.classList.contains("map-expanded") ? 0 : DOCK_MIN_HEIGHT;
+  const max = stageHeight - headHeight - dockMin - resizerHeight - totalGap;
+  return {
+    min: MAP_MIN_HEIGHT,
+    max: Math.max(MAP_MIN_HEIGHT, max)
+  };
+}
+
+function applyMapHeight(nextHeight, persist = true) {
+  if (!stage || !mapShell) return;
+  const bounds = getMapHeightBounds();
+  const clamped = clamp(nextHeight, bounds.min, bounds.max);
+  stage.style.setProperty("--map-height", `${clamped}px`);
+  if (persist) {
+    localStorage.setItem(MAP_HEIGHT_STORAGE_KEY, String(clamped));
+  }
+  requestAnimationFrame(() => {
+    map.invalidateSize();
+  });
+}
+
+function initMapHeight() {
+  if (!stage || !mapShell) return;
+  const stored = Number(localStorage.getItem(MAP_HEIGHT_STORAGE_KEY));
+  const bounds = getMapHeightBounds();
+  const target = Number.isFinite(stored)
+    ? stored
+    : clamp(bounds.max * 0.72, bounds.min, bounds.max);
+  applyMapHeight(target);
+}
+
+function attachMapResizer() {
+  if (!mapResizer || !mapShell) return;
+  let startY = 0;
+  let startHeight = 0;
+
+  const onPointerMove = (event) => {
+    const next = startHeight + (event.clientY - startY);
+    applyMapHeight(next);
+  };
+
+  const onPointerUp = () => {
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+  };
+
+  mapResizer.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    startY = event.clientY;
+    startHeight = mapShell.getBoundingClientRect().height;
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  });
+}
+
+let mapHeightBeforeExpand = null;
+
+function setMapExpanded(enabled) {
+  if (!mapExpand) return;
+  document.body.classList.toggle("map-expanded", enabled);
+  mapExpand.textContent = enabled ? "Згорнути карту" : "Розгорнути карту";
+  if (enabled) {
+    const stored = Number(localStorage.getItem(MAP_HEIGHT_STORAGE_KEY));
+    mapHeightBeforeExpand = Number.isFinite(stored) ? stored : null;
+    const bounds = getMapHeightBounds();
+    applyMapHeight(bounds.max, false);
+    return;
+  }
+  if (Number.isFinite(mapHeightBeforeExpand)) {
+    applyMapHeight(mapHeightBeforeExpand);
+  }
+}
+
+function applyMapSizePreset(preset) {
+  const bounds = getMapHeightBounds();
+  const ratios = {
+    small: 0.5,
+    medium: 0.65,
+    large: 0.8
+  };
+  const ratio = ratios[preset] ?? 0.65;
+  applyMapHeight(clamp(bounds.max * ratio, bounds.min, bounds.max));
+}
+
+function populateOblastSelect() {
+  if (!oblastSelect) return;
+  oblastSelect.innerHTML = "<option value=\"\">—</option>";
+  const ukraineOption = document.createElement("option");
+  ukraineOption.value = "ukraine";
+  ukraineOption.textContent = "Україна (вся)";
+  oblastSelect.appendChild(ukraineOption);
+  oblasts.forEach((oblast) => {
+    const option = document.createElement("option");
+    option.value = oblast.id;
+    option.textContent = oblast.name;
+    oblastSelect.appendChild(option);
+  });
+}
+
+function focusOblastById(id) {
+  if (!id) return;
+  if (id === "ukraine") {
+    map.setView([49.0, 31.0], 6, { animate: true, duration: 0.8 });
+    return;
+  }
+  const match = oblasts.find((oblast) => oblast.id === id);
+  if (!match) return;
+  const bounds = L.latLngBounds(match.bbox);
+  if (!bounds.isValid()) return;
+  map.fitBounds(bounds.pad(0.15), { animate: true, duration: 0.8 });
 }
 
 function applyMapStyle(styleId) {
@@ -1376,17 +1860,19 @@ if (toolSettings && settingsModal && settingsClose) {
   });
 }
 
-themeOptions.forEach((option) => {
-  option.addEventListener("change", () => {
-    const value = option.value;
-    if (value === "custom") {
-      themeCustom.classList.remove("hidden");
-    } else {
-      themeCustom.classList.add("hidden");
-      applyTheme(value);
-    }
+if (themeOptions) {
+  themeOptions.forEach((option) => {
+    option.addEventListener("change", () => {
+      const value = option.value;
+      if (value === "custom") {
+        themeCustom.classList.remove("hidden");
+      } else {
+        themeCustom.classList.add("hidden");
+        applyTheme(value);
+      }
+    });
   });
-});
+}
 
 if (themeApply) {
   themeApply.addEventListener("click", () => {
@@ -1408,32 +1894,39 @@ if (refreshModeSelect) {
   });
 }
 
-function openPanel() {
-  const panel = document.querySelector(".panel");
-  if (!panel) return;
-  panel.classList.add("open");
-  panelBackdrop.classList.add("active");
+function openSidebar(side) {
+  if (side === "left" && leftSidebar) leftSidebar.classList.add("open");
+  if (side === "right" && rightSidebar) rightSidebar.classList.add("open");
+  panelBackdrop?.classList.add("active");
 }
 
-function closePanel() {
-  const panel = document.querySelector(".panel");
-  if (!panel) return;
-  panel.classList.remove("open");
-  panelBackdrop.classList.remove("active");
+function closeSidebars() {
+  leftSidebar?.classList.remove("open");
+  rightSidebar?.classList.remove("open");
+  panelBackdrop?.classList.remove("active");
 }
 
 if (panelToggle && panelBackdrop) {
   panelToggle.addEventListener("click", () => {
-    const panel = document.querySelector(".panel");
-    if (!panel) return;
-    if (panel.classList.contains("open")) {
-      closePanel();
+    if (leftSidebar?.classList.contains("open")) {
+      closeSidebars();
     } else {
-      openPanel();
+      openSidebar("left");
     }
   });
-  panelBackdrop.addEventListener("click", closePanel);
 }
+
+if (intelToggle && panelBackdrop) {
+  intelToggle.addEventListener("click", () => {
+    if (rightSidebar?.classList.contains("open")) {
+      closeSidebars();
+    } else {
+      openSidebar("right");
+    }
+  });
+}
+
+panelBackdrop?.addEventListener("click", closeSidebars);
 
 if (toggleRefresh) {
   toggleRefresh.addEventListener("change", (event) => {
@@ -1447,6 +1940,13 @@ if (toggleHistory) {
     state.showHistory = event.target.checked;
     localStorage.setItem("sw_show_history", state.showHistory ? "1" : "0");
     renderMarkers();
+  });
+}
+
+if (toggleSound) {
+  toggleSound.addEventListener("change", (event) => {
+    state.soundEnabled = event.target.checked;
+    localStorage.setItem("sw_sound_enabled", state.soundEnabled ? "1" : "0");
   });
 }
 
@@ -1500,11 +2000,79 @@ if (siteVersion) {
   siteVersion.textContent = APP_VERSION;
 }
 
+if (ttlSelect) {
+  ttlSelect.addEventListener("change", (event) => {
+    const next = Number(event.target.value);
+    state.markerTtlMs = Number.isFinite(next) ? next : DEFAULT_MARKER_TTL_MS;
+    localStorage.setItem(MARKER_TTL_KEY, String(state.markerTtlMs));
+    renderMarkers();
+    renderRadarList();
+    renderIntelFeed();
+    renderPinnedList();
+    renderDockWatchlist();
+  });
+}
+
+if (saveViewButton) {
+  saveViewButton.addEventListener("click", saveCurrentView);
+}
+
+if (opsNotes) {
+  opsNotes.addEventListener("input", (event) => {
+    localStorage.setItem(OPS_NOTES_KEY, event.target.value);
+  });
+}
+
+if (exportBrief) {
+  exportBrief.addEventListener("click", exportBriefNow);
+}
+
+
+if (document) {
+  document.addEventListener("click", (event) => {
+    const pinBtn = event.target.closest("[data-pin]");
+    if (pinBtn) {
+      togglePin(pinBtn.dataset.pin);
+      return;
+    }
+    const focusBtn = event.target.closest("[data-focus]");
+    if (focusBtn) {
+      focusEvent(focusBtn.dataset.focus);
+      return;
+    }
+    const applyBtn = event.target.closest("[data-view-apply]");
+    if (applyBtn) {
+      const view = state.savedViews.find((item) => item.id === applyBtn.dataset.viewApply);
+      if (view) applySavedView(view);
+      return;
+    }
+    const removeBtn = event.target.closest("[data-view-remove]");
+    if (removeBtn) {
+      deleteSavedView(removeBtn.dataset.viewRemove);
+    }
+  });
+}
+
 const savedMapStyle = localStorage.getItem("sw_map_style") || "osm";
 applyMapStyle(savedMapStyle);
 
 map.on("zoomend", updateMarkerScale);
 updateMarkerScale();
+initMapHeight();
+attachMapResizer();
+window.addEventListener("resize", () => {
+  if (document.body.classList.contains("map-expanded")) {
+    const bounds = getMapHeightBounds();
+    applyMapHeight(bounds.max, false);
+    return;
+  }
+  const stored = Number(localStorage.getItem(MAP_HEIGHT_STORAGE_KEY));
+  if (Number.isFinite(stored)) {
+    applyMapHeight(stored);
+  } else {
+    initMapHeight();
+  }
+});
 state.adminBypassMaintenance = localStorage.getItem("sw_admin_bypass") === "1";
 loadHistoryStore();
 
@@ -1556,6 +2124,39 @@ if (toggleFollow) {
       followLatestTarget();
     }
   });
+}
+
+const savedSound = localStorage.getItem("sw_sound_enabled") === "1";
+state.soundEnabled = savedSound;
+if (toggleSound) toggleSound.checked = savedSound;
+
+const savedTtl = Number(localStorage.getItem(MARKER_TTL_KEY));
+if (Number.isFinite(savedTtl) && savedTtl > 0) {
+  state.markerTtlMs = savedTtl;
+}
+if (ttlSelect) ttlSelect.value = String(state.markerTtlMs);
+
+try {
+  const rawPinned = JSON.parse(localStorage.getItem(PINNED_STORAGE_KEY) || "[]");
+  if (Array.isArray(rawPinned)) {
+    rawPinned.forEach((id) => state.pinnedIds.add(id));
+  }
+} catch {
+  state.pinnedIds = new Set();
+}
+
+try {
+  const rawViews = JSON.parse(localStorage.getItem(SAVED_VIEWS_KEY) || "[]");
+  if (Array.isArray(rawViews)) {
+    state.savedViews = rawViews;
+  }
+} catch {
+  state.savedViews = [];
+}
+renderSavedViews();
+
+if (opsNotes) {
+  opsNotes.value = localStorage.getItem(OPS_NOTES_KEY) || "";
 }
 
 refresh();

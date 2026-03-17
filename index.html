@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="sw-version" content="2.0.0 beta" />
-    <title>Skywatch UA — Моніторинг</title>
+    <meta name="sw-version" content="2.0.0" />
+    <title>Skywatch UA — Моніторинг 2.0</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -13,124 +13,204 @@
     />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
-  <body class="v2">
-    <header class="topbar">
-      <button class="mobile-menu" id="panel-toggle">☰</button>
-      <div class="brand">
-        <div class="brand-mark">SW</div>
-        <div class="brand-text">
-          <div class="brand-title">Skywatch UA</div>
-          <div class="brand-subtitle">OSINT Radar 2.0 • Моніторинг повітряних цілей з відкритих джерел</div>
+  <body class="v3">
+    <header class="topbar v3">
+      <div class="topbar-left">
+        <button class="icon-btn" id="panel-toggle" aria-label="Відкрити панель">
+          ☰
+        </button>
+        <div class="brand">
+          <div class="brand-mark">SW</div>
+          <div class="brand-text">
+            <div class="brand-title">Skywatch UA</div>
+            <div class="brand-subtitle">OSINT Radar 2.0 • Оперативний моніторинг повітряних цілей</div>
+          </div>
         </div>
       </div>
-      <div class="status">
-        <div class="status-item">Затримка даних: 2–5 хв</div>
-        <div class="status-item" id="visible-count">Цілі: —</div>
-        <div class="status-item" id="source-count">Джерела: —</div>
-        <div class="status-item" id="last-updated">Оновлення: —</div>
-        <a class="admin-btn ghost" href="/about.html">Про систему</a>
-        <button class="admin-btn" id="admin-open">Для адмінів</button>
+      <div class="topbar-status">
+        <div class="status-chip">Затримка: 2–5 хв</div>
+        <div class="status-chip" id="visible-count">Цілі: —</div>
+        <div class="status-chip" id="source-count">Джерела: —</div>
+        <div class="status-chip" id="last-updated">Оновлення: —</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="intel-toggle" aria-label="Відкрити інтел панель">
+          ◎
+        </button>
+        <button class="ghost-btn" id="export-brief">Експорт бриф</button>
+        <button class="ghost-btn" id="tool-settings">Налаштування</button>
+        <a class="ghost-btn" href="/about.html">Про систему</a>
+        <button class="primary-btn" id="admin-open">Для адмінів</button>
       </div>
     </header>
 
-    <main class="layout">
+    <main class="layout v3">
       <div class="panel-backdrop" id="panel-backdrop"></div>
-      <aside class="panel">
-        <section class="panel-section">
-          <h2>Фільтри</h2>
+
+      <aside class="sidebar left" data-side="left">
+
+        <section class="card">
+          <div class="card-title">Фільтри цілей</div>
           <div class="filter-group">
-            <div class="filter-title">Типи цілей</div>
+            <div class="filter-title">Типи</div>
             <div id="type-filters" class="filter-list"></div>
           </div>
           <div class="filter-group">
             <div class="filter-title">Джерела</div>
             <div id="source-filters" class="filter-list"></div>
           </div>
-          <div class="filter-group">
-            <label class="toggle">
-              <input type="checkbox" id="toggle-tests" checked />
-              <span>Показувати тестові сигнали</span>
-            </label>
-          </div>
         </section>
 
-        <section class="panel-section">
-          <h2>Легенда</h2>
-          <div class="legend">
-            <div class="legend-item">
-              <span class="legend-dot real"></span>
-              Реальні події
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot test"></span>
-              Тестові події
-            </div>
-            <div class="legend-item">
-              <span class="legend-shape shahed"></span>
-              Shahed
-            </div>
-            <div class="legend-item">
-              <span class="legend-shape missile"></span>
-              Missile
-            </div>
-            <div class="legend-item">
-              <span class="legend-shape kab"></span>
-              KAB
-            </div>
-            <div class="legend-item">
-              <span class="legend-shape airplane"></span>
-              Air
-            </div>
-            <div class="legend-item">
-              <span class="legend-shape recon"></span>
-              Recon
-            </div>
-          </div>
+        <section class="card">
+          <div class="card-title">Сигнали та швидкість</div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-tests" checked />
+            <span>Показувати тестові сигнали</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-refresh" />
+            <span>Пауза оновлень</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-history" checked />
+            <span>Історія 24г</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-follow" />
+            <span>Автофокус на новій цілі</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-sound" />
+            <span>Звук нових подій</span>
+          </label>
+          <label class="field">
+            <span>Режим оновлення</span>
+            <select id="refresh-mode-select">
+              <option value="12000">Стандарт (12 сек)</option>
+              <option value="5000">Частіше (5 сек)</option>
+              <option value="1000">Реальний час (1 сек)</option>
+              <option value="250">Екстра (250 мс)</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Видимість міток</span>
+            <select id="ttl-select">
+              <option value="300000">5 хв</option>
+              <option value="600000" selected>10 хв</option>
+              <option value="1200000">20 хв</option>
+              <option value="2400000">40 хв</option>
+            </select>
+          </label>
+          <button class="ghost-btn" id="fit-visible" type="button">Фокус на цілях</button>
         </section>
 
-        <section class="panel-section disclaimer">
+        <section class="card">
+          <div class="card-title">Збережені види</div>
+          <div class="inline-actions">
+            <button class="ghost-btn" id="save-view">Зберегти поточний</button>
+          </div>
+          <div id="saved-views" class="saved-views"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">Нотатки оператора</div>
+          <textarea id="ops-notes" rows="5" placeholder="Сюди можна фіксувати короткі висновки"></textarea>
+        </section>
+
+        <section class="card disclaimer">
           Дисклеймер: Дані з відкритих джерел можуть бути неточними. Не використовувати
           точні координати чи прогнози ударів.
         </section>
       </aside>
 
-      <section class="map-wrap">
-        <div class="maintenance-banner" id="maintenance-banner">
-          Технічні роботи. Частина функцій тимчасово недоступна.
-        </div>
-        <button class="tool-open" id="tool-open">Інструменти</button>
-        <button class="tool-settings" id="tool-settings">Налаштування</button>
-        <div class="tool-panel hidden" id="tool-panel">
-          <div class="tool-header">
-            <div class="tool-title">Інструменти</div>
-            <button class="tool-close" id="tool-close">✕</button>
+      <section class="stage v3">
+        <div class="stage-head">
+          <div>
+            <div class="stage-title">Оперативна карта</div>
+            <div class="stage-subtitle">Робоча зона трекінгу повітряних загроз та тривог</div>
           </div>
-          <div class="tool-controls">
-            <label class="toggle">
-              <input type="checkbox" id="toggle-refresh" />
-              <span>Пауза оновлень</span>
+          <div class="stage-actions">
+            <label class="field inline">
+              <span>Стиль карти</span>
+              <select id="map-style-select">
+                <option value="osm">Стандартна (OSM)</option>
+                <option value="carto-dark">Темна (CARTO)</option>
+                <option value="carto-light">Світла (CARTO)</option>
+                <option value="topo">Топографічна</option>
+                <option value="satellite">Супутникова</option>
+              </select>
             </label>
-            <label class="toggle">
-              <input type="checkbox" id="toggle-history" checked />
-              <span>Історія 24г</span>
+            <label class="field inline">
+              <span>Фокус області</span>
+              <select id="oblast-select">
+                <option value="">—</option>
+              </select>
             </label>
-            <label class="toggle">
-              <input type="checkbox" id="toggle-follow" />
-              <span>Автофокус на новій цілі</span>
-            </label>
-            <button class="tool-action" id="fit-visible" type="button">Фокус на цілях</button>
-          </div>
-          <div class="tool-tabs">
-            <button class="active" data-tab="radar">Радар загроз</button>
-            <button data-tab="alarms">Список тривог</button>
-          </div>
-          <div class="tool-content">
-            <div id="radar-list" class="tool-list"></div>
-            <div id="alarm-list" class="tool-list hidden"></div>
+            <div class="map-tools">
+              <div class="map-size">
+                <button class="ghost-btn map-size-btn" type="button" data-map-size="small">S</button>
+                <button class="ghost-btn map-size-btn" type="button" data-map-size="medium">M</button>
+                <button class="ghost-btn map-size-btn" type="button" data-map-size="large">L</button>
+              </div>
+              <button class="ghost-btn" type="button" id="map-expand">Розгорнути карту</button>
+            </div>
           </div>
         </div>
-        <div id="map"></div>
+        <div class="map-shell">
+          <div class="maintenance-banner" id="maintenance-banner">
+            Технічні роботи. Частина функцій тимчасово недоступна.
+          </div>
+          <div id="map"></div>
+        </div>
+        <div class="map-resizer" id="map-resizer" aria-hidden="true"></div>
+
+        <div class="dock">
+          <div class="dock-tabs">
+            <button class="active" data-dock="radar">Радар</button>
+            <button data-dock="alarms">Тривоги</button>
+            <button data-dock="watchlist">Закріплені</button>
+          </div>
+          <div class="dock-content">
+            <div id="radar-list" class="dock-list"></div>
+            <div id="alarm-list" class="dock-list hidden"></div>
+            <div id="watchlist-list" class="dock-list hidden"></div>
+          </div>
+        </div>
       </section>
+
+      <aside class="sidebar right" data-side="right">
+        <section class="card metrics">
+          <div class="card-title">Стан системи</div>
+          <div class="metric-grid">
+            <div class="metric">
+              <div class="metric-label">Активні</div>
+              <div class="metric-value" id="metric-active">—</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Тестові</div>
+              <div class="metric-value" id="metric-tests">—</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Середня точність</div>
+              <div class="metric-value" id="metric-confidence">—</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Джерел онлайн</div>
+              <div class="metric-value" id="metric-sources">—</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">Intel Feed</div>
+          <div id="intel-feed" class="feed"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">Закріплені мітки</div>
+          <div id="pinned-list" class="feed"></div>
+        </section>
+      </aside>
     </main>
 
     <div class="settings-modal" id="settings-modal">
@@ -140,27 +220,6 @@
           <button class="settings-close" id="settings-close">✕</button>
         </div>
         <div class="settings-body">
-          <div class="settings-group">
-            <label class="settings-label" for="map-style-select">Стиль карти</label>
-            <select id="map-style-select" class="settings-select">
-              <option value="osm">Стандартна (OSM)</option>
-              <option value="carto-dark">Темна (CARTO)</option>
-              <option value="carto-light">Світла (CARTO)</option>
-              <option value="topo">Топографічна</option>
-              <option value="satellite">Супутникова</option>
-            </select>
-          </div>
-
-          <div class="settings-group">
-            <label class="settings-label" for="refresh-mode-select">Режим оновлення карти</label>
-            <select id="refresh-mode-select" class="settings-select">
-              <option value="12000">Стандарт (12 сек)</option>
-              <option value="5000">Частіше (5 сек)</option>
-              <option value="1000">Реальний час (1 сек)</option>
-              <option value="250">Екстра (250 мс)</option>
-            </select>
-          </div>
-
           <div class="settings-group settings-version">
             <span>Версія сайту</span>
             <strong id="site-version">—</strong>
@@ -172,7 +231,7 @@
           </label>
           <label class="theme-option">
             <input type="radio" name="theme" value="light" />
-            Світла
+            Світла(Погана)
           </label>
           <label class="theme-option">
             <input type="radio" name="theme" value="skymap" />
@@ -299,7 +358,7 @@
         <div class="maintenance-text" id="maintenance-screen-text">
           Сервіс тимчасово недоступний. Спробуйте пізніше.
         </div>
-        <button class="admin-btn" id="maintenance-admin-open">Для адмінів</button>
+        <button class="primary-btn" id="maintenance-admin-open">Для адмінів</button>
       </div>
     </div>
 

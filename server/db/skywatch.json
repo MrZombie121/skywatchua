@@ -1,25 +1,50 @@
 {
   "settings": {
     "maintenance": "false",
-    "maintenance_until": ""
+    "maintenance_until": "",
+    "alarms_state": "[\"kyivska\",\"zakarpatska\",\"khersonska\",\"donetska\",\"mykolaivska\",\"kyiv\",\"zaporizka\",\"dniprovska\",\"chernihivska\",\"luhanska\"]",
+    "district_alarms_state": "[{\"id\":\"dniprovska:synelnykivskyi\",\"region_id\":\"dniprovska\",\"name\":\"Синельниківський район\",\"lat\":48.32,\"lng\":35.52},{\"id\":\"donetska:kramatorskyi\",\"region_id\":\"donetska\",\"name\":\"Краматорський район\",\"lat\":48.72,\"lng\":37.56},{\"id\":\"donetska:volnovaskyi\",\"region_id\":\"donetska\",\"name\":\"Волноваський район\",\"lat\":47.6,\"lng\":37.5},{\"id\":\"donetska:pokrovskyi\",\"region_id\":\"donetska\",\"name\":\"Покровський район\",\"lat\":48.28,\"lng\":37.18},{\"id\":\"kharkivska:izyumskyi\",\"region_id\":\"kharkivska\",\"name\":\"Ізюмський район\",\"lat\":49.21,\"lng\":37.28},{\"id\":\"kharkivska:kupianskyi\",\"region_id\":\"kharkivska\",\"name\":\"Куп'янський район\",\"lat\":49.72,\"lng\":37.62},{\"id\":\"kharkivska:chuhuivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Чугуївський район\",\"lat\":49.83,\"lng\":36.68},{\"id\":\"chernihivska:novhorod-siverskyi\",\"region_id\":\"chernihivska\",\"name\":\"Новгород-Сіверський район\",\"lat\":52,\"lng\":33.3},{\"id\":\"kharkivska:kharkivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Харківський район\",\"lat\":49.95,\"lng\":36.3},{\"id\":\"zaporizka:vasylivskyi\",\"region_id\":\"zaporizka\",\"name\":\"Василівський район\",\"lat\":47.45,\"lng\":35.28},{\"id\":\"zaporizka:polohivskyi\",\"region_id\":\"zaporizka\",\"name\":\"Пологівський район\",\"lat\":47.49,\"lng\":36.25},{\"id\":\"zaporizka:melitopolskyi\",\"region_id\":\"zaporizka\",\"name\":\"Мелітопольський район\",\"lat\":46.85,\"lng\":35.37},{\"id\":\"zaporizka:berdianskyi\",\"region_id\":\"zaporizka\",\"name\":\"Бердянський район\",\"lat\":46.77,\"lng\":36.79}]",
+    "alarms_updated_at": "1773736833724"
   },
   "admins": [
     {
-      "username": "admin26",
-      "password_hash": "bdfdfea5f14065058ef53a78f7c07c5b:bad9ee5ac9239fafd5e7e274b19cafc125fbb1dfb832830ad2be35f859fdab6ec64d80af70edbc0e8f4dbf85c557d0554c60c7c5173d678283596f20137b6bdd"
+      "username": "adminka",
+      "password_hash": "db057e47288ca57d49b1bb5467c957ad:261a663a435ff13892357a8d68c8737bbedea89401c2dedf317082223576e903cd7bd5ddcc2548d4f9f4762e9f8d699296102ddcfd45dae1f723e35b7ee55199"
     }
   ],
   "sessions": [
     {
-      "token": "94b7ce760e8972d8717146aa5bf63649bb0ac096795471d6",
-      "username": "admin26",
-      "expires_at": 1771177912795
+      "token": "5c49e2582b9f89085712c2df9e0627c01a825be7927e689e",
+      "username": "adminka",
+      "expires_at": 1774300892703
     },
     {
-      "token": "cdd028f4c5d3dc1d2a0560fab6f60b6e85b6d7692258301b",
-      "username": "admin26",
-      "expires_at": 1771182092142
+      "token": "9d2fb69c48723167d2d5fa0912c45e5312b4f9d20e752b54",
+      "username": "adminka",
+      "expires_at": 1774300894011
+    },
+    {
+      "token": "ee92ee5fe89c0f010fa6577c2362f6c092237b0bcbd81559",
+      "username": "adminka",
+      "expires_at": 1774300895448
     }
   ],
-  "test_events": []
+  "test_events": [
+    {
+      "id": "test-1773696113766-8p5x",
+      "message": "missile над Харьков напрям 180. тест",
+      "type": "missile",
+      "direction": 180,
+      "source": "admin",
+      "createdAt": 1773696113766
+    },
+    {
+      "id": "test-1773696137683-qffa",
+      "message": "missile над Харьков напрям 180. тест",
+      "type": "missile",
+      "direction": 180,
+      "source": "admin",
+      "createdAt": 1773696137683
+    }
+  ]
 }
