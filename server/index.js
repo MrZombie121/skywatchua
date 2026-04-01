@@ -16,7 +16,9 @@ import {
   setSetting,
   listTestEvents,
   addTestEvent,
-  clearTestEvents
+  clearTestEvents,
+  listAdminLocations,
+  upsertAdminLocationWithPoint
 } from "./db/index.js";
 
 const app = express();
@@ -490,6 +492,49 @@ app.post("/api/admin/test-events", requireAdmin, async (req, res) => {
 app.post("/api/admin/test-events/clear", requireAdmin, async (_req, res) => {
   await clearTestEvents();
   res.json({ ok: true });
+});
+
+app.get("/api/admin/locations", requireAdmin, async (_req, res) => {
+  const items = await listAdminLocations();
+  res.json({ ok: true, items });
+});
+
+app.post("/api/admin/locations", requireAdmin, async (req, res) => {
+  const { location_id, name, keys, lat, lng, point_lat, point_lng, point_types, region_id } = req.body || {};
+  if (!location_id && (!name || typeof name !== "string")) {
+    return res.status(400).json({ error: "location_name_required" });
+  }
+
+  const normalizedKeys = Array.isArray(keys)
+    ? keys
+    : String(keys || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  const normalizedPointTypes = Array.isArray(point_types)
+    ? point_types
+    : String(point_types || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  const hasLocationCoords = Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
+  if (!location_id && !hasLocationCoords) {
+    return res.status(400).json({ error: "location_coords_required" });
+  }
+
+  const item = await upsertAdminLocationWithPoint({
+    location_id,
+    name,
+    keys: normalizedKeys,
+    lat,
+    lng,
+    point_lat,
+    point_lng,
+    point_types: normalizedPointTypes,
+    region_id
+  });
+  res.json({ ok: true, item });
 });
 
 app.get("*", (_req, res) => {

@@ -693,9 +693,15 @@ textarea {
   display: flex;
 }
 
+.admin-modal {
+  padding: 24px 16px;
+  overflow-y: auto;
+  align-items: flex-start;
+}
+
 .settings-card,
 .admin-card {
-  width: min(440px, 92vw);
+  width: min(640px, 94vw);
   border-radius: 16px;
   border: 1px solid var(--line);
   background: var(--panel);
@@ -703,11 +709,20 @@ textarea {
   box-shadow: 0 28px 60px rgba(0, 0, 0, 0.55);
 }
 
+.admin-card {
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .settings-header,
 .admin-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
 }
 
 .settings-title,
@@ -732,6 +747,12 @@ textarea {
   margin-top: 12px;
   display: grid;
   gap: 10px;
+}
+
+.admin-body {
+  margin-top: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .settings-group,
@@ -804,6 +825,61 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-location-list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.admin-point-list {
+  display: grid;
+  gap: 8px;
+  max-height: 180px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.admin-location-item {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.admin-location-item strong,
+.admin-location-item span {
+  display: block;
+}
+
+.admin-point-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(6, 18, 27, 0.65);
+  color: var(--text);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .admin-modal {
+    padding: 12px;
+  }
+
+  .admin-card {
+    width: min(100%, 94vw);
+    max-height: calc(100vh - 24px);
+    padding: 14px;
+  }
 }
 
 .maintenance-screen {

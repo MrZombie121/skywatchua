@@ -2,31 +2,21 @@
   "settings": {
     "maintenance": "false",
     "maintenance_until": "",
-    "alarms_state": "[\"kyivska\",\"zakarpatska\",\"khersonska\",\"donetska\",\"mykolaivska\",\"kyiv\",\"zaporizka\",\"dniprovska\",\"chernihivska\",\"luhanska\"]",
-    "district_alarms_state": "[{\"id\":\"dniprovska:synelnykivskyi\",\"region_id\":\"dniprovska\",\"name\":\"Синельниківський район\",\"lat\":48.32,\"lng\":35.52},{\"id\":\"donetska:kramatorskyi\",\"region_id\":\"donetska\",\"name\":\"Краматорський район\",\"lat\":48.72,\"lng\":37.56},{\"id\":\"donetska:volnovaskyi\",\"region_id\":\"donetska\",\"name\":\"Волноваський район\",\"lat\":47.6,\"lng\":37.5},{\"id\":\"donetska:pokrovskyi\",\"region_id\":\"donetska\",\"name\":\"Покровський район\",\"lat\":48.28,\"lng\":37.18},{\"id\":\"kharkivska:izyumskyi\",\"region_id\":\"kharkivska\",\"name\":\"Ізюмський район\",\"lat\":49.21,\"lng\":37.28},{\"id\":\"kharkivska:kupianskyi\",\"region_id\":\"kharkivska\",\"name\":\"Куп'янський район\",\"lat\":49.72,\"lng\":37.62},{\"id\":\"kharkivska:chuhuivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Чугуївський район\",\"lat\":49.83,\"lng\":36.68},{\"id\":\"chernihivska:novhorod-siverskyi\",\"region_id\":\"chernihivska\",\"name\":\"Новгород-Сіверський район\",\"lat\":52,\"lng\":33.3},{\"id\":\"kharkivska:kharkivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Харківський район\",\"lat\":49.95,\"lng\":36.3},{\"id\":\"zaporizka:vasylivskyi\",\"region_id\":\"zaporizka\",\"name\":\"Василівський район\",\"lat\":47.45,\"lng\":35.28},{\"id\":\"zaporizka:polohivskyi\",\"region_id\":\"zaporizka\",\"name\":\"Пологівський район\",\"lat\":47.49,\"lng\":36.25},{\"id\":\"zaporizka:melitopolskyi\",\"region_id\":\"zaporizka\",\"name\":\"Мелітопольський район\",\"lat\":46.85,\"lng\":35.37},{\"id\":\"zaporizka:berdianskyi\",\"region_id\":\"zaporizka\",\"name\":\"Бердянський район\",\"lat\":46.77,\"lng\":36.79}]",
-    "alarms_updated_at": "1773736833724"
+    "alarms_state": "[\"zhytomyrska\",\"ternopilska\",\"ivano-frankivska\",\"donetska\",\"zaporizka\",\"kyiv\",\"sumyska\",\"khersonska\",\"dniprovska\",\"chernihivska\",\"kharkivska\",\"crimea\",\"luhanska\"]",
+    "district_alarms_state": "[{\"id\":\"dniprovska:synelnykivskyi\",\"region_id\":\"dniprovska\",\"name\":\"Синельниківський район\",\"lat\":48.32,\"lng\":35.52},{\"id\":\"donetska:kramatorskyi\",\"region_id\":\"donetska\",\"name\":\"Краматорський район\",\"lat\":48.72,\"lng\":37.56},{\"id\":\"kharkivska:kharkivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Харківський район\",\"lat\":49.95,\"lng\":36.3},{\"id\":\"kharkivska:izyumskyi\",\"region_id\":\"kharkivska\",\"name\":\"Ізюмський район\",\"lat\":49.21,\"lng\":37.28},{\"id\":\"kharkivska:chuhuivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Чугуївський район\",\"lat\":49.83,\"lng\":36.68},{\"id\":\"kharkivska:lozivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Лозівський район\",\"lat\":48.89,\"lng\":36.32},{\"id\":\"zaporizka:vasylivskyi\",\"region_id\":\"zaporizka\",\"name\":\"Василівський район\",\"lat\":47.45,\"lng\":35.28},{\"id\":\"zaporizka:melitopolskyi\",\"region_id\":\"zaporizka\",\"name\":\"Мелітопольський район\",\"lat\":46.85,\"lng\":35.37},{\"id\":\"zaporizka:berdianskyi\",\"region_id\":\"zaporizka\",\"name\":\"Бердянський район\",\"lat\":46.77,\"lng\":36.79},{\"id\":\"zaporizka:polohivskyi\",\"region_id\":\"zaporizka\",\"name\":\"Пологівський район\",\"lat\":47.49,\"lng\":36.25},{\"id\":\"kharkivska:kupianskyi\",\"region_id\":\"kharkivska\",\"name\":\"Куп'янський район\",\"lat\":49.72,\"lng\":37.62},{\"id\":\"sumyska:shostkynskyi\",\"region_id\":\"sumyska\",\"name\":\"Шосткинський район\",\"lat\":51.87,\"lng\":33.48},{\"id\":\"chernihivska:novhorod-siverskyi\",\"region_id\":\"chernihivska\",\"name\":\"Новгород-Сіверський район\",\"lat\":52,\"lng\":33.3}]",
+    "alarms_updated_at": "1775069947573"
   },
   "admins": [
     {
       "username": "adminka",
-      "password_hash": "db057e47288ca57d49b1bb5467c957ad:261a663a435ff13892357a8d68c8737bbedea89401c2dedf317082223576e903cd7bd5ddcc2548d4f9f4762e9f8d699296102ddcfd45dae1f723e35b7ee55199"
+      "password_hash": "fe4b1f09668d259d8deca5f92188ad1f:54917a8109cee831a08deffc3036cf407d005925ed6cf94c1322b0608d202c020b92d4de55b318a1d9ce26663a7b3f68a9a3e6bcd2c6af7721b6d609945775e2"
     }
   ],
   "sessions": [
     {
-      "token": "5c49e2582b9f89085712c2df9e0627c01a825be7927e689e",
+      "token": "34422415848399a17993b4b03649b5f4e24834ace01b52e7",
       "username": "adminka",
-      "expires_at": 1774300892703
-    },
-    {
-      "token": "9d2fb69c48723167d2d5fa0912c45e5312b4f9d20e752b54",
-      "username": "adminka",
-      "expires_at": 1774300894011
-    },
-    {
-      "token": "ee92ee5fe89c0f010fa6577c2362f6c092237b0bcbd81559",
-      "username": "adminka",
-      "expires_at": 1774300895448
+      "expires_at": 1775674757313
     }
   ],
   "test_events": [
@@ -45,6 +35,375 @@
       "direction": 180,
       "source": "admin",
       "createdAt": 1773696137683
+    }
+  ],
+  "admin_locations": [
+    {
+      "id": "uzyn",
+      "name": "Узин",
+      "keys": [
+        "узин",
+        "uzyn"
+      ],
+      "lat": 50.4527,
+      "lng": 30.5296,
+      "region_id": "kyivska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "balta",
+      "name": "Балта",
+      "keys": [
+        "балта",
+        "balta"
+      ],
+      "lat": 47.94,
+      "lng": 29.62,
+      "region_id": "odeska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "podilsk-db",
+      "name": "Подільськ",
+      "keys": [
+        "подільськ",
+        "подольск",
+        "podilsk"
+      ],
+      "lat": 47.75,
+      "lng": 29.53,
+      "region_id": "odeska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "pomichna",
+      "name": "Помічна",
+      "keys": [
+        "помічна",
+        "помошная",
+        "pomichna"
+      ],
+      "lat": 48.24,
+      "lng": 31.42,
+      "region_id": "kirovohradska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "apostolove",
+      "name": "Апостолове",
+      "keys": [
+        "апостолове",
+        "апостолово",
+        "apostolove"
+      ],
+      "lat": 47.66,
+      "lng": 33.71,
+      "region_id": "dniprovska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "snihurivka",
+      "name": "Снігурівка",
+      "keys": [
+        "снігурівка",
+        "снигиревка",
+        "snihurivka"
+      ],
+      "lat": 47.08,
+      "lng": 32.81,
+      "region_id": "mykolaivska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "liubotyn",
+      "name": "Люботин",
+      "keys": [
+        "люботин",
+        "liubotyn"
+      ],
+      "lat": 49.95,
+      "lng": 35.93,
+      "region_id": "kharkivska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "merefa",
+      "name": "Мерефа",
+      "keys": [
+        "мерефа",
+        "merefa"
+      ],
+      "lat": 49.82,
+      "lng": 36.05,
+      "region_id": "kharkivska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "vilniansk",
+      "name": "Вільнянськ",
+      "keys": [
+        "вільнянськ",
+        "вольнянск",
+        "vilniansk"
+      ],
+      "lat": 47.95,
+      "lng": 35.42,
+      "region_id": "zaporizka",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "bashtanka-db",
+      "name": "Баштанка",
+      "keys": [
+        "баштанка",
+        "bashtanka"
+      ],
+      "lat": 47.41,
+      "lng": 32.44,
+      "region_id": "mykolaivska",
+      "created_at": 1775069743284
+    },
+    {
+      "id": "київ",
+      "name": "Київ",
+      "keys": [
+        "київ",
+        "київа",
+        "києва."
+      ],
+      "lat": 50.4527,
+      "lng": 30.5296,
+      "region_id": "kyivska",
+      "created_at": 1775070241733
+    },
+    {
+      "id": "чорноморськ",
+      "name": "Чорноморськ",
+      "keys": [
+        "чорноморськ",
+        "чорноморська",
+        "чорноморськ."
+      ],
+      "lat": 46.3015,
+      "lng": 30.6561,
+      "region_id": "odesska",
+      "created_at": 1775070375894
+    }
+  ],
+  "admin_location_points": [
+    {
+      "id": "uzyn-p1",
+      "location_id": "uzyn",
+      "lat": 49.821,
+      "lng": 30.409,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "balta-p1",
+      "location_id": "balta",
+      "lat": 47.938,
+      "lng": 29.619,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "podilsk-db-p1",
+      "location_id": "podilsk-db",
+      "lat": 47.753,
+      "lng": 29.531,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "pomichna-p1",
+      "location_id": "pomichna",
+      "lat": 48.243,
+      "lng": 31.418,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "apostolove-p1",
+      "location_id": "apostolove",
+      "lat": 47.661,
+      "lng": 33.713,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "snihurivka-p1",
+      "location_id": "snihurivka",
+      "lat": 47.074,
+      "lng": 32.807,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "liubotyn-p1",
+      "location_id": "liubotyn",
+      "lat": 49.949,
+      "lng": 35.927,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "merefa-p1",
+      "location_id": "merefa",
+      "lat": 49.821,
+      "lng": 36.047,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "vilniansk-p1",
+      "location_id": "vilniansk",
+      "lat": 47.949,
+      "lng": 35.421,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "bashtanka-db-p1",
+      "location_id": "bashtanka-db",
+      "lat": 47.407,
+      "lng": 32.442,
+      "types": [
+        "shahed",
+        "missile"
+      ],
+      "created_at": 1775069743284
+    },
+    {
+      "id": "pt-uzyn-1775070175894-b6wi",
+      "location_id": "uzyn",
+      "lat": 50.6111,
+      "lng": 30.9073,
+      "types": [],
+      "created_at": 1775070175894
+    },
+    {
+      "id": "pt-київ-1775070241733-qxp2",
+      "location_id": "київ",
+      "lat": 50.2911,
+      "lng": 30.4953,
+      "types": [],
+      "created_at": 1775070241733
+    },
+    {
+      "id": "pt-київ-1775070242863-77f2",
+      "location_id": "київ",
+      "lat": 50.2911,
+      "lng": 30.4953,
+      "types": [],
+      "created_at": 1775070242863
+    },
+    {
+      "id": "pt-чорноморськ-1775070375894-xpzs",
+      "location_id": "чорноморськ",
+      "lat": 46.2825,
+      "lng": 30.6586,
+      "types": [],
+      "created_at": 1775070375894
+    },
+    {
+      "id": "pt-чорноморськ-1775070490078-an41",
+      "location_id": "чорноморськ",
+      "lat": 46.2931,
+      "lng": 30.6742,
+      "types": [],
+      "created_at": 1775070490078
+    },
+    {
+      "id": "pt-чорноморськ-1775070622732-ann0",
+      "location_id": "чорноморськ",
+      "lat": 46.1266,
+      "lng": 30.748,
+      "types": [],
+      "created_at": 1775070622732
+    },
+    {
+      "id": "pt-чорноморськ-1775070943807-guha",
+      "location_id": "чорноморськ",
+      "lat": 45.7828,
+      "lng": 32.2778,
+      "types": [],
+      "created_at": 1775070943807
+    },
+    {
+      "id": "pt-чорноморськ-1775072396227-78bc",
+      "location_id": "чорноморськ",
+      "lat": 46.3308,
+      "lng": 30.6642,
+      "types": [],
+      "created_at": 1775072396227
+    },
+    {
+      "id": "pt-чорноморськ-1775072397619-mq8g",
+      "location_id": "чорноморськ",
+      "lat": 46.3308,
+      "lng": 30.6642,
+      "types": [],
+      "created_at": 1775072397619
+    },
+    {
+      "id": "pt-чорноморськ-1775072397806-5yf7",
+      "location_id": "чорноморськ",
+      "lat": 46.3308,
+      "lng": 30.6642,
+      "types": [],
+      "created_at": 1775072397806
+    },
+    {
+      "id": "pt-чорноморськ-1775072397970-n1go",
+      "location_id": "чорноморськ",
+      "lat": 46.3308,
+      "lng": 30.6642,
+      "types": [],
+      "created_at": 1775072397970
+    },
+    {
+      "id": "pt-чорноморськ-1775072398154-h84s",
+      "location_id": "чорноморськ",
+      "lat": 46.3308,
+      "lng": 30.6642,
+      "types": [],
+      "created_at": 1775072398154
+    },
+    {
+      "id": "pt-чорноморськ-1775072398333-i4f3",
+      "location_id": "чорноморськ",
+      "lat": 46.3308,
+      "lng": 30.6642,
+      "types": [],
+      "created_at": 1775072398333
     }
   ]
 }

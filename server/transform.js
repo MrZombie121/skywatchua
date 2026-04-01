@@ -1,6 +1,8 @@
 ﻿import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { getAdminLocationsSync, getAdminLocationPointsSync } from "./db/index.js";
+
 const typeRules = [
   {
     type: "recon",
@@ -396,6 +398,7 @@ function isDowned(text) {
 
 function pickLocation(text) {
   const lower = normalizeText(text);
+  const allLocationHints = getAllLocationHints();
   const contextual = allLocationHints.filter((hint) => Array.isArray(hint.context) && hint.context.length > 0);
   for (const hint of contextual) {
     if (hint.keys.some((key) => containsWholeKey(lower, key)) && hint.context.some((ctx) => lower.includes(ctx))) {
@@ -496,7 +499,29 @@ function loadOverrideLocations() {
 }
 
 const overrideLocations = loadOverrideLocations();
-const allLocationHints = [...locationHints, ...overrideLocations];
+
+function getAdminLocationHints() {
+  return getAdminLocationsSync()
+    .filter((item) =>
+      item &&
+      Number.isFinite(Number(item.lat)) &&
+      Number.isFinite(Number(item.lng)) &&
+      Array.isArray(item.keys) &&
+      item.keys.length > 0
+    )
+    .map((item) => ({
+      id: String(item.id),
+      name: String(item.name || item.keys[0]),
+      keys: item.keys.map((key) => String(key).toLowerCase()),
+      lat: Number(item.lat),
+      lng: Number(item.lng),
+      region_id: item.region_id ? String(item.region_id) : null
+    }));
+}
+
+function getAllLocationHints() {
+  return [...locationHints, ...overrideLocations, ...getAdminLocationHints()];
+}
 
 function loadOverrideAlarmDistricts() {
   const raw = process.env.ALARM_DISTRICT_OVERRIDES || "";
@@ -608,6 +633,55 @@ function inferRegionIdFromCoords(lat, lng) {
   return bestDistance <= 260 ? bestId : null;
 }
 
+function getCustomPointsForLocation(locationId, type) {
+  if (!locationId) return [];
+  return getAdminLocationPointsSync()
+    .filter((item) => item && String(item.location_id) === String(locationId))
+    .filter((item) =>
+      !Array.isArray(item.types) ||
+      item.types.length === 0 ||
+      item.types.includes(type)
+    )
+    .map((item) => ({
+      lat: Number(item.lat),
+      lng: Number(item.lng),
+      location_id: String(item.location_id),
+      types: Array.isArray(item.types) ? item.types : []
+    }))
+    .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng));
+}
+
+function extractGroupCount(text, type) {
+  const lower = normalizeText(text);
+  const patternsByType = {
+    shahed: "(шахед|шахеди|шахедів|бпла|бпл|дрон|дрони|дронів|uav)",
+    missile: "(ракета|ракети|ракет|missile|missiles)"
+  };
+  const typePattern = patternsByType[type];
+  if (!typePattern) return null;
+
+  const rangeMatch = lower.match(new RegExp(`(?:група\\s*(?:із|з|из)?\\s*)?(\\d{1,2})\\s*[-–]\\s*(\\d{1,2})\\s*${typePattern}`, "u"));
+  if (rangeMatch) {
+    return {
+      min: Number(rangeMatch[1]),
+      max: Number(rangeMatch[2])
+    };
+  }
+
+  const exactMatch = lower.match(new RegExp(`(?:група\\s*(?:із|з|из)?\\s*)?(\\d{1,2})\\s*(?:x|шт)?\\s*${typePattern}`, "u"));
+  if (exactMatch) {
+    const value = Number(exactMatch[1]);
+    return { min: value, max: value };
+  }
+
+  return null;
+}
+
+function isMultiMarkerCount(countInfo) {
+  if (!countInfo) return false;
+  return Number.isFinite(countInfo.min) && Number.isFinite(countInfo.max) && countInfo.min >= 2 && countInfo.max <= 3;
+}
+
 export function parseMessageToEvent(text, meta = {}) {
   return parseMessageToEvents(text, meta)[0] || null;
 }
@@ -627,6 +701,7 @@ function extractCoords(text) {
 function extractLocationHits(text) {
   const lower = normalizeText(text);
   const hits = [];
+  const allLocationHints = getAllLocationHints();
   allLocationHints.forEach((hint) => {
     if (Array.isArray(hint.context) && hint.context.length > 0) {
       const hasContext = hint.context.some((ctx) => lower.includes(ctx));
@@ -647,6 +722,7 @@ function extractLocationHits(text) {
         lat: hint.lat,
         lng: hint.lng,
         exact: false,
+        location_id: hint.id || null,
         count: Number.isFinite(count) ? count : null,
         index: idx
       });
@@ -727,6 +803,7 @@ function angularDiffDeg(a, b) {
 }
 
 function pickSpawnPoint({
+  poolOverride,
   regionId,
   type,
   lat,
@@ -735,9 +812,17 @@ function pickSpawnPoint({
   preferredDirection,
   preferRouteApproach
 }) {
-  if (spawnPoints.length === 0) return null;
+  if ((!Array.isArray(poolOverride) || poolOverride.length === 0) && spawnPoints.length === 0) return null;
+  if (Array.isArray(poolOverride) && poolOverride.length > 0) {
+    const typedPool = poolOverride.filter(
+      (item) => !Array.isArray(item.types) || item.types.length === 0 || item.types.includes(type)
+    );
+    poolOverride = typedPool.length > 0 ? typedPool : poolOverride;
+  }
 
-  const byRegion = regionId
+  const byRegion = Array.isArray(poolOverride) && poolOverride.length > 0
+    ? poolOverride
+    : regionId
     ? spawnPoints.filter((item) => item.region_id === regionId)
     : [];
   let regionPool = byRegion.length > 0 ? byRegion : spawnPoints;
@@ -953,6 +1038,7 @@ export function parseMessageToEvents(text, meta = {}) {
     type = "shahed";
   }
   if (!type) return [];
+  const groupCount = extractGroupCount(baseText, type);
 
   const forceSea = type === "airplane" || forceSeaForAviation(mergedText);
   let direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(mergedText);
@@ -984,7 +1070,7 @@ export function parseMessageToEvents(text, meta = {}) {
   if (isTlk) {
     regionId = "kharkivska";
   }
-  const regionCenter = regionId ? regionCenters[regionId] : null;
+  const regionCenter = isTlk && regionId ? regionCenters[regionId] : null;
 
   if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !(isTlk && type === "shahed")) {
     return [];
@@ -1050,6 +1136,7 @@ export function parseMessageToEvents(text, meta = {}) {
     const resolvedRegionId = isTlk
       ? "kharkivska"
       : (
+        target.region_id ||
         resolveRegionId(label, label) ||
         resolveRegionId(text, label) ||
         inferRegionIdFromCoords(target.lat, target.lng) ||
@@ -1063,8 +1150,21 @@ export function parseMessageToEvents(text, meta = {}) {
         : (sea || forceSea)
           ? "sea_black"
           : resolvedRegionId;
-    const spawnCandidate = !target.exact
+    const customPointPool = !target.exact ? getCustomPointsForLocation(target.location_id, type) : [];
+    let spawnCandidate = customPointPool.length > 0
       ? pickSpawnPoint({
+        regionId: null,
+        type,
+        lat,
+        lng,
+        seedInput: idSeed,
+        preferredDirection: Number.isFinite(direction) && !sea && !forceSea ? direction : null,
+        preferRouteApproach: hasRouteGuidance && !sea && !forceSea,
+        poolOverride: customPointPool
+      })
+      : null;
+    if (!spawnCandidate && !target.exact) {
+      spawnCandidate = pickSpawnPoint({
         regionId: spawnRegionId,
         type,
         lat,
@@ -1072,8 +1172,8 @@ export function parseMessageToEvents(text, meta = {}) {
         seedInput: idSeed,
         preferredDirection: Number.isFinite(direction) && !sea && !forceSea ? direction : null,
         preferRouteApproach: hasRouteGuidance && !sea && !forceSea
-      })
-      : null;
+      });
+    }
     if (spawnCandidate) {
       lat = spawnCandidate.lat;
       lng = spawnCandidate.lng;
@@ -1085,7 +1185,12 @@ export function parseMessageToEvents(text, meta = {}) {
       ((sea || forceSea) || (locationHits.length > 0 && meta.allow_bearing_from_base !== true))
       ? bearingDeg(lat, lng, targetLat, targetLng)
       : null;
-    const countText = target.count && target.count > 1 ? ` К-сть: ${target.count}.` : "";
+    const effectiveCount = target.count && target.count > 0 ? { min: target.count, max: target.count } : groupCount;
+    const countText = effectiveCount && effectiveCount.max > 1
+      ? effectiveCount.min === effectiveCount.max
+        ? ` К-сть: ${effectiveCount.max}.`
+        : ` К-сть: ${effectiveCount.min}-${effectiveCount.max}.`
+      : "";
     const jitteredLat = target.exact || spawnCandidate ? lat : addJitter(lat, seed);
     const jitteredLng = target.exact || spawnCandidate ? lng : addJitter(lng, seed + 7);
     const finalDirection = Number.isFinite(direction)
@@ -1093,6 +1198,9 @@ export function parseMessageToEvents(text, meta = {}) {
       : Number.isFinite(fallbackDirection)
         ? fallbackDirection
         : deterministicDirection(idSeed);
+    const markerVariant = isMultiMarkerCount(effectiveCount) && (type === "shahed" || type === "missile")
+      ? `${type}-multi`
+      : null;
     const confidence = computeConfidenceScore({
       hasExactCoords: Boolean(target.exact),
       hasLocation: locationHits.length > 0 || Boolean(regionCenter),
@@ -1112,6 +1220,9 @@ export function parseMessageToEvents(text, meta = {}) {
       comment: `Джерело: ${meta.source || "tg"}. Локація: ${label}.${countText}${(sea || forceSea) && targetLabel ? ` Ціль: ${targetLabel}.` : ""}`,
       is_test: isTest,
       confidence,
+      marker_variant: markerVariant,
+      group_count_min: effectiveCount?.min || null,
+      group_count_max: effectiveCount?.max || null,
       region_id: resolvedRegionId,
       raw_text: meta.raw_text || text
     };

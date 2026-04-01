@@ -4,17 +4,185 @@ import crypto from "node:crypto";
 
 const dbPath = process.env.DB_PATH || "./server/db/skywatch.json";
 const adapter = new JSONFile(dbPath);
-const db = new Low(adapter, { settings: {}, admins: [], sessions: [], test_events: [] });
+const defaultData = {
+  settings: {},
+  admins: [],
+  sessions: [],
+  test_events: [],
+  admin_locations: [],
+  admin_location_points: []
+};
+const db = new Low(adapter, defaultData);
 let tursoClient = null;
 let tursoSettingsReady = false;
 
+const defaultAdminLocations = [
+  { id: "uzyn", name: "Узин", keys: ["узин", "uzyn"], lat: 49.82, lng: 30.41, region_id: "kyivska" },
+  { id: "balta", name: "Балта", keys: ["балта", "balta"], lat: 47.94, lng: 29.62, region_id: "odeska" },
+  { id: "podilsk-db", name: "Подільськ", keys: ["подільськ", "подольск", "podilsk"], lat: 47.75, lng: 29.53, region_id: "odeska" },
+  { id: "pomichna", name: "Помічна", keys: ["помічна", "помошная", "pomichna"], lat: 48.24, lng: 31.42, region_id: "kirovohradska" },
+  { id: "apostolove", name: "Апостолове", keys: ["апостолове", "апостолово", "apostolove"], lat: 47.66, lng: 33.71, region_id: "dniprovska" },
+  { id: "snihurivka", name: "Снігурівка", keys: ["снігурівка", "снигиревка", "snihurivka"], lat: 47.08, lng: 32.81, region_id: "mykolaivska" },
+  { id: "liubotyn", name: "Люботин", keys: ["люботин", "liubotyn"], lat: 49.95, lng: 35.93, region_id: "kharkivska" },
+  { id: "merefa", name: "Мерефа", keys: ["мерефа", "merefa"], lat: 49.82, lng: 36.05, region_id: "kharkivska" },
+  { id: "vilniansk", name: "Вільнянськ", keys: ["вільнянськ", "вольнянск", "vilniansk"], lat: 47.95, lng: 35.42, region_id: "zaporizka" },
+  { id: "bashtanka-db", name: "Баштанка", keys: ["баштанка", "bashtanka"], lat: 47.41, lng: 32.44, region_id: "mykolaivska" }
+];
+
+const defaultAdminLocationPoints = [
+  { id: "uzyn-p1", location_id: "uzyn", lat: 49.821, lng: 30.409, types: ["shahed", "missile"] },
+  { id: "balta-p1", location_id: "balta", lat: 47.938, lng: 29.619, types: ["shahed", "missile"] },
+  { id: "podilsk-db-p1", location_id: "podilsk-db", lat: 47.753, lng: 29.531, types: ["shahed", "missile"] },
+  { id: "pomichna-p1", location_id: "pomichna", lat: 48.243, lng: 31.418, types: ["shahed", "missile"] },
+  { id: "apostolove-p1", location_id: "apostolove", lat: 47.661, lng: 33.713, types: ["shahed", "missile"] },
+  { id: "snihurivka-p1", location_id: "snihurivka", lat: 47.074, lng: 32.807, types: ["shahed", "missile"] },
+  { id: "liubotyn-p1", location_id: "liubotyn", lat: 49.949, lng: 35.927, types: ["shahed", "missile"] },
+  { id: "merefa-p1", location_id: "merefa", lat: 49.821, lng: 36.047, types: ["shahed", "missile"] },
+  { id: "vilniansk-p1", location_id: "vilniansk", lat: 47.949, lng: 35.421, types: ["shahed", "missile"] },
+  { id: "bashtanka-db-p1", location_id: "bashtanka-db", lat: 47.407, lng: 32.442, types: ["shahed", "missile"] }
+];
+
 async function init() {
   await db.read();
-  db.data ||= { settings: {}, admins: [], sessions: [], test_events: [] };
+  db.data ||= { ...defaultData };
   if (!Array.isArray(db.data.test_events)) {
     db.data.test_events = [];
   }
+  if (!Array.isArray(db.data.admin_locations)) {
+    db.data.admin_locations = [];
+  }
+  if (!Array.isArray(db.data.admin_location_points)) {
+    db.data.admin_location_points = [];
+  }
+  seedAdminLocations();
   await db.write();
+}
+
+function normalizeKeyList(values) {
+  return Array.from(new Set(
+    (Array.isArray(values) ? values : [])
+      .map((item) => String(item || "").trim().toLowerCase())
+      .filter(Boolean)
+  ));
+}
+
+function slugify(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || `loc-${Date.now()}`;
+}
+
+function seedAdminLocations() {
+  const existingLocationIds = new Set(db.data.admin_locations.map((item) => String(item.id)));
+  defaultAdminLocations.forEach((location) => {
+    if (!existingLocationIds.has(location.id)) {
+      db.data.admin_locations.push({
+        ...location,
+        created_at: Date.now()
+      });
+      existingLocationIds.add(location.id);
+    }
+  });
+
+  const existingPointIds = new Set(db.data.admin_location_points.map((item) => String(item.id)));
+  defaultAdminLocationPoints.forEach((point) => {
+    if (!existingPointIds.has(point.id)) {
+      db.data.admin_location_points.push({
+        ...point,
+        created_at: Date.now()
+      });
+      existingPointIds.add(point.id);
+    }
+  });
+}
+
+async function writeAdminLocationCache(locations, points) {
+  await db.read();
+  db.data.admin_locations = Array.isArray(locations) ? locations.map((item) => ({ ...item })) : [];
+  db.data.admin_location_points = Array.isArray(points) ? points.map((item) => ({ ...item })) : [];
+  await db.write();
+}
+
+async function loadAdminLocationsFromTurso() {
+  if (!tursoClient) return;
+  const locationResult = await tursoClient.execute(`
+    SELECT id, name, keys_json, lat, lng, region_id, created_at
+    FROM admin_locations
+    ORDER BY created_at ASC
+  `);
+  const pointResult = await tursoClient.execute(`
+    SELECT id, location_id, lat, lng, types_json, created_at
+    FROM admin_location_points
+    ORDER BY created_at ASC
+  `);
+
+  const locations = (locationResult.rows || []).map((row) => ({
+    id: String(row.id),
+    name: String(row.name),
+    keys: normalizeKeyList(JSON.parse(String(row.keys_json || "[]"))),
+    lat: Number(row.lat),
+    lng: Number(row.lng),
+    region_id: row.region_id ? String(row.region_id) : null,
+    created_at: Number(row.created_at || 0)
+  }));
+  const points = (pointResult.rows || []).map((row) => ({
+    id: String(row.id),
+    location_id: String(row.location_id),
+    lat: Number(row.lat),
+    lng: Number(row.lng),
+    types: normalizeKeyList(JSON.parse(String(row.types_json || "[]"))),
+    created_at: Number(row.created_at || 0)
+  }));
+
+  await writeAdminLocationCache(locations, points);
+}
+
+async function syncAdminLocationsToTurso() {
+  if (!tursoClient) return;
+  await db.read();
+  for (const location of db.data.admin_locations || []) {
+    await tursoClient.execute({
+      sql: `
+        INSERT INTO admin_locations(id, name, keys_json, lat, lng, region_id, created_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          name = excluded.name,
+          keys_json = excluded.keys_json,
+          lat = excluded.lat,
+          lng = excluded.lng,
+          region_id = excluded.region_id
+      `,
+      args: [
+        String(location.id),
+        String(location.name || ""),
+        JSON.stringify(normalizeKeyList(location.keys || [])),
+        Number(location.lat),
+        Number(location.lng),
+        location.region_id ? String(location.region_id) : null,
+        Number(location.created_at || Date.now())
+      ]
+    });
+  }
+
+  for (const point of db.data.admin_location_points || []) {
+    await tursoClient.execute({
+      sql: `
+        INSERT INTO admin_location_points(id, location_id, lat, lng, types_json, created_at)
+        VALUES(?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO NOTHING
+      `,
+      args: [
+        String(point.id),
+        String(point.location_id),
+        Number(point.lat),
+        Number(point.lng),
+        JSON.stringify(normalizeKeyList(point.types || [])),
+        Number(point.created_at || Date.now())
+      ]
+    });
+  }
 }
 
 async function initTursoSettings() {
@@ -31,6 +199,27 @@ async function initTursoSettings() {
         value TEXT NOT NULL
       )
     `);
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS admin_locations (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        keys_json TEXT NOT NULL,
+        lat REAL NOT NULL,
+        lng REAL NOT NULL,
+        region_id TEXT,
+        created_at INTEGER NOT NULL
+      )
+    `);
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS admin_location_points (
+        id TEXT PRIMARY KEY,
+        location_id TEXT NOT NULL,
+        lat REAL NOT NULL,
+        lng REAL NOT NULL,
+        types_json TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
 
     const countResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM settings");
     const settingsCount = Number(countResult.rows?.[0]?.count || 0);
@@ -43,6 +232,14 @@ async function initTursoSettings() {
           args: [String(key), String(value ?? "")]
         });
       }
+    }
+
+    const locationCountResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM admin_locations");
+    const locationCount = Number(locationCountResult.rows?.[0]?.count || 0);
+    if (locationCount === 0) {
+      await syncAdminLocationsToTurso();
+    } else {
+      await loadAdminLocationsFromTurso();
     }
 
     tursoSettingsReady = true;
@@ -173,6 +370,111 @@ async function clearTestEvents() {
   await db.write();
 }
 
+function getAdminLocationsSync() {
+  return Array.isArray(db.data?.admin_locations)
+    ? db.data.admin_locations.map((item) => ({ ...item }))
+    : [];
+}
+
+function getAdminLocationPointsSync() {
+  return Array.isArray(db.data?.admin_location_points)
+    ? db.data.admin_location_points.map((item) => ({ ...item }))
+    : [];
+}
+
+async function listAdminLocations() {
+  if (tursoSettingsReady && tursoClient) {
+    try {
+      await loadAdminLocationsFromTurso();
+    } catch (error) {
+      console.warn("Turso admin locations read failed, fallback to lowdb:", error?.message || error);
+    }
+  }
+  await db.read();
+  const locations = getAdminLocationsSync();
+  const points = getAdminLocationPointsSync();
+  return locations.map((location) => ({
+    ...location,
+    points: points.filter((point) => point.location_id === location.id)
+  }));
+}
+
+async function upsertAdminLocationWithPoint(payload = {}) {
+  await db.read();
+  if (!Array.isArray(db.data.admin_locations)) {
+    db.data.admin_locations = [];
+  }
+  if (!Array.isArray(db.data.admin_location_points)) {
+    db.data.admin_location_points = [];
+  }
+
+  const now = Date.now();
+  const explicitId = String(payload.location_id || "").trim();
+  const name = String(payload.name || "").trim();
+  const lat = Number(payload.lat);
+  const lng = Number(payload.lng);
+  const pointLat = Number(payload.point_lat);
+  const pointLng = Number(payload.point_lng);
+  const regionId = String(payload.region_id || "").trim() || null;
+  const submittedKeys = normalizeKeyList(payload.keys || []);
+
+  let location = null;
+  if (explicitId) {
+    location = db.data.admin_locations.find((item) => item.id === explicitId) || null;
+  }
+  if (!location && name) {
+    location = db.data.admin_locations.find((item) => String(item.name).toLowerCase() === name.toLowerCase()) || null;
+  }
+
+  if (!location) {
+    location = {
+      id: explicitId || slugify(name),
+      name,
+      keys: normalizeKeyList([name, ...submittedKeys]),
+      lat,
+      lng,
+      region_id: regionId,
+      created_at: now
+    };
+    db.data.admin_locations.push(location);
+  } else {
+    location.name = name || location.name;
+    location.lat = Number.isFinite(lat) ? lat : location.lat;
+    location.lng = Number.isFinite(lng) ? lng : location.lng;
+    location.region_id = regionId || location.region_id || null;
+    location.keys = normalizeKeyList([...(location.keys || []), location.name, ...submittedKeys]);
+  }
+
+  if (Number.isFinite(pointLat) && Number.isFinite(pointLng)) {
+    db.data.admin_location_points.push({
+      id: `pt-${location.id}-${now}-${Math.random().toString(36).slice(2, 6)}`,
+      location_id: location.id,
+      lat: pointLat,
+      lng: pointLng,
+      types: normalizeKeyList(payload.point_types || []),
+      created_at: now
+    });
+  }
+
+  const resultItem = {
+    ...location,
+    points: db.data.admin_location_points
+      .filter((point) => point.location_id === location.id)
+      .map((point) => ({ ...point }))
+  };
+
+  await db.write();
+  if (tursoSettingsReady && tursoClient) {
+    try {
+      await syncAdminLocationsToTurso();
+      await loadAdminLocationsFromTurso();
+    } catch (error) {
+      console.warn("Turso admin locations write failed, fallback to lowdb:", error?.message || error);
+    }
+  }
+  return resultItem;
+}
+
 await init();
 await initTursoSettings();
 await ensureAdmin();
@@ -187,5 +489,9 @@ export {
   setSetting,
   listTestEvents,
   addTestEvent,
-  clearTestEvents
+  clearTestEvents,
+  listAdminLocations,
+  upsertAdminLocationWithPoint,
+  getAdminLocationsSync,
+  getAdminLocationPointsSync
 };

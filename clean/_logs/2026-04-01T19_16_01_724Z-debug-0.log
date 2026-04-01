@@ -5,9 +5,9 @@
 4 silly config load:file:H:\skywatchuaair\1.0\.npmrc
 5 silly config load:file:C:\Users\User\.npmrc
 6 silly config load:file:C:\Users\User\AppData\Roaming\npm\etc\npmrc
-7 verbose title npm run dev:client
-8 verbose argv "run" "dev:client"
-9 verbose logfile logs-max:10 dir:H:\skywatchuaair\1.0\clean\_logs\2026-03-17T07_49_23_746Z-
-10 verbose logfile H:\skywatchuaair\1.0\clean\_logs\2026-03-17T07_49_23_746Z-debug-0.log
+7 verbose title npm run dev:server
+8 verbose argv "run" "dev:server"
+9 verbose logfile logs-max:10 dir:H:\skywatchuaair\1.0\clean\_logs\2026-04-01T19_16_01_724Z-
+10 verbose logfile H:\skywatchuaair\1.0\clean\_logs\2026-04-01T19_16_01_724Z-debug-0.log
 11 silly logfile start cleaning logs, removing 1 files
 12 silly logfile done cleaning log files

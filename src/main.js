@@ -105,6 +105,8 @@ const state = {
   autoFollow: false,
   showHistory: true,
   refreshIntervalMs: 12000,
+  adminLocations: [],
+  adminMapPickMode: null,
   pinnedIds: new Set(),
   savedViews: [],
   soundEnabled: false,
@@ -141,6 +143,22 @@ const testDirection = document.getElementById("test-direction");
 const testNote = document.getElementById("test-note");
 const testAdd = document.getElementById("test-add");
 const testClear = document.getElementById("test-clear");
+const adminLocationSelect = document.getElementById("admin-location-select");
+const adminLocationName = document.getElementById("admin-location-name");
+const adminLocationKeys = document.getElementById("admin-location-keys");
+const adminLocationLat = document.getElementById("admin-location-lat");
+const adminLocationLng = document.getElementById("admin-location-lng");
+const adminLocationRegion = document.getElementById("admin-location-region");
+const adminPointLat = document.getElementById("admin-point-lat");
+const adminPointLng = document.getElementById("admin-point-lng");
+const adminPointTypes = document.getElementById("admin-point-types");
+const adminPickCityCenter = document.getElementById("admin-pick-city-center");
+const adminPickSpawnPoint = document.getElementById("admin-pick-spawn-point");
+const adminPointAddAnother = document.getElementById("admin-point-add-another");
+const adminPickStatus = document.getElementById("admin-pick-status");
+const adminPointList = document.getElementById("admin-point-list");
+const adminLocationSave = document.getElementById("admin-location-save");
+const adminLocationList = document.getElementById("admin-location-list");
 const adminLogout = document.getElementById("admin-logout");
 const radarList = document.getElementById("radar-list");
 const alarmList = document.getElementById("alarm-list");
@@ -287,6 +305,7 @@ function normalizeEvent(raw, sourceId) {
   return {
     id: rawId,
     type,
+    marker_variant: raw.marker_variant || null,
     lat: Number(raw.lat ?? raw.latitude ?? raw.location?.lat ?? 0),
     lng: Number(raw.lng ?? raw.longitude ?? raw.location?.lng ?? 0),
     direction,
@@ -297,6 +316,8 @@ function normalizeEvent(raw, sourceId) {
     is_test: Boolean(raw.is_test ?? raw.isTest ?? false),
     raw_text: raw.raw_text || raw.message || "",
     confidence: Number(raw.confidence ?? 0.5),
+    group_count_min: Number(raw.group_count_min ?? 0),
+    group_count_max: Number(raw.group_count_max ?? 0),
     evidence_count: Number(raw.evidence_count ?? 1),
     evidence_sources: Array.isArray(raw.evidence_sources) ? raw.evidence_sources : []
   };
@@ -615,13 +636,16 @@ function makeMarkerIcon(event) {
   const typeClass = state.types.has(event.type) ? event.type : "shahed";
   const iconMap = {
     shahed: "/ico/shahed.png",
+    "shahed-multi": "/ico/shahed-multi.png",
     missile: "/ico/missle.png",
+    "missile-multi": "/ico/missle-multi.png",
     kab: "/ico/kab.png",
     airplane: "/ico/airplane.png",
     recon: "/ico/bplaviewer.png",
     other: "/ico/shahed.png"
   };
-  const iconUrl = iconMap[typeClass] || iconMap.other;
+  const iconKey = event.marker_variant && iconMap[event.marker_variant] ? event.marker_variant : typeClass;
+  const iconUrl = iconMap[iconKey] || iconMap.other;
   const freshness = freshnessState(event);
   const spawnedAt = markerSpawnAt.get(event.id) || 0;
   const spawnClass = Date.now() - spawnedAt <= SPAWN_ANIMATION_MS ? "spawn" : "";
@@ -1415,6 +1439,125 @@ function closeAdminModal() {
   adminModal.classList.remove("active");
 }
 
+function setAdminPickStatus(message) {
+  if (adminPickStatus) {
+    adminPickStatus.textContent = message;
+  }
+}
+
+function beginAdminMapPick(mode) {
+  if (mode === "spawn-point" && !adminLocationSelect?.value && !adminLocationName?.value.trim()) {
+    alert("Спочатку вибери або створи місто.");
+    return;
+  }
+  state.adminMapPickMode = mode;
+  closeAdminModal();
+  const label = mode === "city-center" ? "центр міста" : "спавн-точку";
+  setAdminPickStatus(`Режим вибору: клікни по карті, щоб поставити ${label}.`);
+}
+
+function renderAdminLocations() {
+  if (!adminLocationList) return;
+  adminLocationList.innerHTML = "";
+  (state.adminLocations || []).forEach((location) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "admin-location-item";
+    const pointCount = Array.isArray(location.points) ? location.points.length : 0;
+    item.innerHTML = `
+      <strong>${location.name}</strong>
+      <span>${Number(location.lat).toFixed(4)}, ${Number(location.lng).toFixed(4)}</span>
+      <span>Точок: ${pointCount}</span>
+    `;
+    item.addEventListener("click", () => {
+      if (adminLocationSelect) adminLocationSelect.value = location.id;
+      if (adminLocationName) adminLocationName.value = location.name || "";
+      if (adminLocationKeys) adminLocationKeys.value = Array.isArray(location.keys) ? location.keys.join(", ") : "";
+      if (adminLocationLat) adminLocationLat.value = location.lat ?? "";
+      if (adminLocationLng) adminLocationLng.value = location.lng ?? "";
+      if (adminLocationRegion) adminLocationRegion.value = location.region_id || "";
+    });
+    adminLocationList.appendChild(item);
+  });
+}
+
+function renderAdminPoints(location) {
+  if (!adminPointList) return;
+  adminPointList.innerHTML = "";
+  const points = Array.isArray(location?.points) ? location.points : [];
+  if (points.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "admin-point-item";
+    empty.textContent = "Для цього міста ще немає спавн-точок.";
+    adminPointList.appendChild(empty);
+    return;
+  }
+
+  points.forEach((point, index) => {
+    const item = document.createElement("div");
+    item.className = "admin-point-item";
+    const types = Array.isArray(point.types) && point.types.length > 0 ? point.types.join(", ") : "all";
+    item.textContent = `${index + 1}. ${Number(point.lat).toFixed(4)}, ${Number(point.lng).toFixed(4)} | ${types}`;
+    adminPointList.appendChild(item);
+  });
+}
+
+function syncAdminLocationForm(selectedId = "") {
+  const selected = (state.adminLocations || []).find((item) => item.id === selectedId);
+  if (!selected) {
+    if (adminLocationName) adminLocationName.value = "";
+    if (adminLocationKeys) adminLocationKeys.value = "";
+    if (adminLocationLat) adminLocationLat.value = "";
+    if (adminLocationLng) adminLocationLng.value = "";
+    if (adminLocationRegion) adminLocationRegion.value = "";
+    renderAdminPoints(null);
+    return null;
+  }
+  if (adminLocationName) adminLocationName.value = selected.name || "";
+  if (adminLocationKeys) adminLocationKeys.value = Array.isArray(selected.keys) ? selected.keys.join(", ") : "";
+  if (adminLocationLat) adminLocationLat.value = selected.lat ?? "";
+  if (adminLocationLng) adminLocationLng.value = selected.lng ?? "";
+  if (adminLocationRegion) adminLocationRegion.value = selected.region_id || "";
+  renderAdminPoints(selected);
+  return selected;
+}
+
+function populateAdminLocationSelect() {
+  if (!adminLocationSelect) return;
+  adminLocationSelect.innerHTML = '<option value="">Нове місто</option>';
+  (state.adminLocations || []).forEach((location) => {
+    const option = document.createElement("option");
+    option.value = location.id;
+    option.textContent = `${location.name} (${Array.isArray(location.points) ? location.points.length : 0} т.)`;
+    adminLocationSelect.appendChild(option);
+  });
+}
+
+async function loadAdminLocations(preferredId = "") {
+  const response = await fetch("/api/admin/locations", { method: "GET", cache: "no-store" });
+  if (!response.ok) return;
+  const data = await response.json();
+  state.adminLocations = Array.isArray(data.items) ? data.items : [];
+  populateAdminLocationSelect();
+  renderAdminLocations();
+  if (adminLocationSelect && preferredId) {
+    adminLocationSelect.value = preferredId;
+  }
+  syncAdminLocationForm(adminLocationSelect?.value || preferredId || "");
+}
+
+function upsertAdminLocationState(item) {
+  if (!item || !item.id) return;
+  const items = Array.isArray(state.adminLocations) ? [...state.adminLocations] : [];
+  const index = items.findIndex((location) => location.id === item.id);
+  if (index === -1) {
+    items.push(item);
+  } else {
+    items[index] = item;
+  }
+  state.adminLocations = items;
+}
+
 async function loadAdminStatus() {
   const response = await fetch("/api/admin/status", { method: "GET" });
   if (!response.ok) {
@@ -1423,7 +1566,10 @@ async function loadAdminStatus() {
     adminStatus.textContent = "Гість";
     maintenanceUntil.textContent = "—";
     state.adminBypassMaintenance = false;
+    state.adminLocations = [];
     localStorage.removeItem("sw_admin_bypass");
+    populateAdminLocationSelect();
+    renderAdminLocations();
     return;
   }
   const data = await response.json();
@@ -1436,6 +1582,7 @@ async function loadAdminStatus() {
     : "—";
   state.adminBypassMaintenance = true;
   localStorage.setItem("sw_admin_bypass", "1");
+  await loadAdminLocations();
 }
 
 async function loginAdmin(payload) {
@@ -1588,6 +1735,80 @@ if (testClear) {
   });
 }
 
+if (adminLocationSelect) {
+  adminLocationSelect.addEventListener("change", () => {
+    syncAdminLocationForm(adminLocationSelect.value);
+  });
+}
+
+if (adminLocationSave) {
+  adminLocationSave.addEventListener("click", async () => {
+    const payload = {
+      location_id: adminLocationSelect?.value || "",
+      name: adminLocationName?.value.trim() || "",
+      keys: adminLocationKeys?.value.trim() || "",
+      lat: adminLocationLat?.value ? Number(adminLocationLat.value) : null,
+      lng: adminLocationLng?.value ? Number(adminLocationLng.value) : null,
+      region_id: adminLocationRegion?.value.trim() || "",
+      point_lat: adminPointLat?.value ? Number(adminPointLat.value) : null,
+      point_lng: adminPointLng?.value ? Number(adminPointLng.value) : null,
+      point_types: adminPointTypes?.value.trim() || ""
+    };
+    const response = await fetch("/api/admin/locations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      alert("Не вдалося зберегти місто або точку.");
+      return;
+    }
+    const saved = await response.json();
+    if (adminPointLat) adminPointLat.value = "";
+    if (adminPointLng) adminPointLng.value = "";
+    if (adminPointTypes) adminPointTypes.value = "";
+    const preferredId = saved?.item?.id || adminLocationSelect?.value || "";
+    if (saved?.item) {
+      upsertAdminLocationState(saved.item);
+      populateAdminLocationSelect();
+      if (adminLocationSelect && preferredId) {
+        adminLocationSelect.value = preferredId;
+      }
+      renderAdminLocations();
+      syncAdminLocationForm(preferredId);
+    }
+    setAdminPickStatus("Місто/точку збережено. Можна додати ще одну спавн-точку.");
+    window.setTimeout(() => {
+      loadAdminLocations(preferredId).catch(() => {});
+    }, 1800);
+  });
+}
+
+if (adminPickCityCenter) {
+  adminPickCityCenter.addEventListener("click", () => {
+    beginAdminMapPick("city-center");
+  });
+}
+
+if (adminPickSpawnPoint) {
+  adminPickSpawnPoint.addEventListener("click", () => {
+    beginAdminMapPick("spawn-point");
+  });
+}
+
+if (adminPointAddAnother) {
+  adminPointAddAnother.addEventListener("click", () => {
+    if (!adminLocationSelect?.value) {
+      alert("Вибери існуюче місто, щоб додати ще одну точку.");
+      return;
+    }
+    if (adminPointLat) adminPointLat.value = "";
+    if (adminPointLng) adminPointLng.value = "";
+    setAdminPickStatus("Додавання нової спавн-точки для вибраного міста.");
+    beginAdminMapPick("spawn-point");
+  });
+}
+
 if (adminLogout) {
   adminLogout.addEventListener("click", async () => {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -1596,7 +1817,10 @@ if (adminLogout) {
     adminStatus.textContent = "Гість";
     maintenanceUntil.textContent = "—";
     state.adminBypassMaintenance = false;
+    state.adminLocations = [];
     localStorage.removeItem("sw_admin_bypass");
+    populateAdminLocationSelect();
+    renderAdminLocations();
   });
 }
 
@@ -1983,6 +2207,25 @@ function fitToVisibleTargets() {
     maxZoom: 9
   });
 }
+
+map.on("click", (event) => {
+  if (!state.adminMapPickMode) return;
+  const lat = Number(event.latlng.lat.toFixed(4));
+  const lng = Number(event.latlng.lng.toFixed(4));
+
+  if (state.adminMapPickMode === "city-center") {
+    if (adminLocationLat) adminLocationLat.value = String(lat);
+    if (adminLocationLng) adminLocationLng.value = String(lng);
+    setAdminPickStatus(`Центр міста вибрано: ${lat}, ${lng}`);
+  } else if (state.adminMapPickMode === "spawn-point") {
+    if (adminPointLat) adminPointLat.value = String(lat);
+    if (adminPointLng) adminPointLng.value = String(lng);
+    setAdminPickStatus(`Спавн-точку вибрано: ${lat}, ${lng}`);
+  }
+
+  state.adminMapPickMode = null;
+  openAdminModal();
+});
 
 if (fitVisible) {
   fitVisible.addEventListener("click", fitToVisibleTargets);
