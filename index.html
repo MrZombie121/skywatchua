@@ -350,14 +350,14 @@
             <button type="button" class="ghost" id="maintenance-show">Показати тех роботи</button>
             <div class="admin-schedule">
               <div class="admin-row">
-                <span>Тестова мітка</span>
+                <span>Ручна мітка</span>
                 <span class="muted">(узагальнено)</span>
               </div>
               <label>
                 Тип
                 <select id="test-type">
-                  <option value="shahed">Shahed</option>
-                  <option value="missile">Missile</option>
+                  <option value="shahed">Шахед</option>
+                  <option value="missile">Ракета</option>
                   <option value="kab">KAB</option>
                   <option value="other">Інші</option>
                 </select>
@@ -365,6 +365,14 @@
               <label>
                 Місто/регіон
                 <input type="text" id="test-city" placeholder="Київ" />
+              </label>
+              <label>
+                Кількість у групі
+                <input type="number" min="1" max="99" step="1" id="test-group-count" placeholder="1" />
+              </label>
+              <label class="toggle">
+                <input type="checkbox" id="test-is-test" checked />
+                <span>Позначити як тестову мітку</span>
               </label>
               <label class="toggle">
                 <input type="checkbox" id="test-sea" />
@@ -378,8 +386,8 @@
                 Коментар
                 <input type="text" id="test-note" placeholder="Демо сигнал" />
               </label>
-              <button type="button" id="test-add">Додати тестову мітку</button>
-              <button type="button" class="ghost" id="test-clear">Очистити тестові мітки</button>
+              <button type="button" id="test-add">Додати ручну мітку</button>
+              <button type="button" class="ghost" id="test-clear">Очистити ручні мітки</button>
             </div>
             <div class="admin-schedule">
               <div class="admin-row">

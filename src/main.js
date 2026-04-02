@@ -149,6 +149,8 @@ const maintenanceClear = document.getElementById("maintenance-clear");
 const maintenanceShow = document.getElementById("maintenance-show");
 const testType = document.getElementById("test-type");
 const testCity = document.getElementById("test-city");
+const testGroupCount = document.getElementById("test-group-count");
+const testIsTest = document.getElementById("test-is-test");
 const testSea = document.getElementById("test-sea");
 const testDirection = document.getElementById("test-direction");
 const testNote = document.getElementById("test-note");
@@ -229,11 +231,11 @@ const mapResizer = document.getElementById("map-resizer");
 const dock = document.querySelector(".dock");
 
 const typeLabels = {
-  shahed: "Shahed",
-  missile: "Missile",
+  shahed: "Шахед",
+  missile: "Ракета",
   kab: "KAB",
-  airplane: "Air",
-  recon: "Recon"
+  airplane: "Літак",
+  recon: "Розвідка"
 };
 const iconRotationOffset = 0;
 const ADM1_GEOJSON_URL = "/data/ukr-adm1.geojson";
@@ -347,6 +349,20 @@ function normalizeEvent(raw, sourceId) {
     evidence_count: Number(raw.evidence_count ?? 1),
     evidence_sources: Array.isArray(raw.evidence_sources) ? raw.evidence_sources : []
   };
+}
+
+function isMultiGroupEvent(event) {
+  const min = Number(event.group_count_min ?? 0);
+  const max = Number(event.group_count_max ?? 0);
+  return Math.max(min, max) >= 2;
+}
+
+function resolveMarkerVariant(event) {
+  if (event.marker_variant) return event.marker_variant;
+  if ((event.type === "shahed" || event.type === "missile") && isMultiGroupEvent(event)) {
+    return `${event.type}-multi`;
+  }
+  return null;
 }
 
 async function fetchSource(source) {
@@ -670,7 +686,8 @@ function makeMarkerIcon(event) {
     recon: "/ico/bplaviewer.png",
     other: "/ico/shahed.png"
   };
-  const iconKey = event.marker_variant && iconMap[event.marker_variant] ? event.marker_variant : typeClass;
+  const markerVariant = resolveMarkerVariant(event);
+  const iconKey = markerVariant && iconMap[markerVariant] ? markerVariant : typeClass;
   const iconUrl = iconMap[iconKey] || iconMap.other;
   const freshness = freshnessState(event);
   const spawnedAt = markerSpawnAt.get(event.id) || 0;
@@ -988,7 +1005,7 @@ function buildPopup(event, distanceKm) {
   const userDistanceKm = distanceToUserKm(event);
   const eta = etaRangeForDistance(userDistanceKm);
   const approachLine = Number.isFinite(userDistanceKm)
-    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Примерное время подлёта: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span>`
+    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Орієнтовний час підльоту: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span>`
     : "";
   const targetLine =
     event.target_label && Number.isFinite(event.target_lat) && Number.isFinite(event.target_lng)
@@ -996,14 +1013,19 @@ function buildPopup(event, distanceKm) {
       : "";
   const evidenceCount = Number.isFinite(event.evidence_count) ? Math.max(1, event.evidence_count) : 1;
   const evidenceLine = `<br /><span class="popup-meta">Підтверджень: ${evidenceCount}</span>`;
+  const groupCount = Math.max(Number(event.group_count_min ?? 0), Number(event.group_count_max ?? 0));
+  const groupLine = groupCount >= 2
+    ? `<br /><span class="popup-meta">Кількість у групі: ${Number(event.group_count_min) === Number(event.group_count_max) ? groupCount : `${event.group_count_min}-${event.group_count_max}`}</span>`
+    : "";
   const evidenceSources = Array.isArray(event.evidence_sources) && event.evidence_sources.length > 0
     ? `<br /><span class="popup-meta">Джерела: ${event.evidence_sources.join(", ")}</span>`
     : "";
   const pinnedLabel = state.pinnedIds.has(event.id) ? "Відкріпити" : "Закріпити";
+  const typeLabel = typeLabels[event.type] || event.type.toUpperCase();
   return `
       <div class="popup" data-event-id="${event.id}">
         <div class="popup-head">
-          <strong class="popup-title">${event.type.toUpperCase()}</strong>
+          <strong class="popup-title">${typeLabel}</strong>
           <span class="popup-status ${freshness.popupClass}">${freshness.label}</span>
         </div>
         <div class="popup-grid">
@@ -1018,6 +1040,7 @@ function buildPopup(event, distanceKm) {
         ${targetLine}
         ${approachLine}
         ${confidenceLine}
+        ${groupLine}
         ${evidenceLine}
         ${evidenceSources}
         ${distanceLine}
@@ -2133,15 +2156,18 @@ if (maintenanceShow) {
 
 if (testAdd) {
   testAdd.addEventListener("click", async () => {
+    const groupCount = testGroupCount?.value ? Number(testGroupCount.value) : 1;
     const payload = {
       type: testType.value,
       city: testCity.value.trim(),
+      group_count: Number.isFinite(groupCount) && groupCount >= 1 ? Math.round(groupCount) : 1,
+      is_test: testIsTest ? testIsTest.checked : true,
       sea: testSea.checked,
       direction: testDirection.value ? Number(testDirection.value) : null,
       note: testNote.value.trim()
     };
     if (!payload.city) {
-      alert("Вкажіть місто/регіон для тестової мітки.");
+      alert("Вкажіть місто або регіон для ручної мітки.");
       return;
     }
     const response = await fetch("/api/admin/test-events", {
@@ -2150,10 +2176,11 @@ if (testAdd) {
       body: JSON.stringify(payload)
     });
     if (!response.ok) {
-      alert("Не вдалося додати тестову мітку.");
+      alert("Не вдалося додати ручну мітку.");
       return;
     }
     testNote.value = "";
+    if (testGroupCount) testGroupCount.value = "1";
     refresh();
   });
 }
@@ -2162,7 +2189,7 @@ if (testClear) {
   testClear.addEventListener("click", async () => {
     const response = await fetch("/api/admin/test-events/clear", { method: "POST" });
     if (!response.ok) {
-      alert("Не вдалося очистити тестові мітки.");
+      alert("Не вдалося очистити ручні мітки.");
       return;
     }
     refresh();

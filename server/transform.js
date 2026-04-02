@@ -693,6 +693,12 @@ function extractGroupCount(text, type) {
     };
   }
 
+  const plusMatch = lower.match(new RegExp(`(?:група\\s*(?:із|з|из)?\\s*)?(\\d{1,2})\\s*\\+\\s*${typePattern}`, "u"));
+  if (plusMatch) {
+    const value = Number(plusMatch[1]);
+    return { min: value, max: value };
+  }
+
   const exactMatch = lower.match(new RegExp(`(?:група\\s*(?:із|з|из)?\\s*)?(\\d{1,2})\\s*(?:x|шт)?\\s*${typePattern}`, "u"));
   if (exactMatch) {
     const value = Number(exactMatch[1]);
@@ -704,7 +710,7 @@ function extractGroupCount(text, type) {
 
 function isMultiMarkerCount(countInfo) {
   if (!countInfo) return false;
-  return Number.isFinite(countInfo.min) && Number.isFinite(countInfo.max) && countInfo.min >= 2 && countInfo.max <= 3;
+  return Number.isFinite(countInfo.min) && Number.isFinite(countInfo.max) && Math.max(countInfo.min, countInfo.max) >= 2;
 }
 
 export function parseMessageToEvent(text, meta = {}) {
@@ -1109,7 +1115,10 @@ export function parseMessageToEvents(text, meta = {}) {
     type = "shahed";
   }
   if (!type) return [];
-  const groupCount = extractGroupCount(baseText, type);
+  const metaGroupCount = Number(meta.group_count);
+  const groupCount = Number.isFinite(metaGroupCount) && metaGroupCount >= 1
+    ? { min: metaGroupCount, max: metaGroupCount }
+    : extractGroupCount(baseText, type);
 
   const forceSea = type === "airplane" || forceSeaForAviation(mergedText);
   let direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(mergedText);

@@ -329,7 +329,8 @@ async function sendEvents(_req, res) {
             timestamp: item.createdAt,
             type: item.type,
             direction: item.direction,
-            is_test: true
+            is_test: typeof item.is_test === "boolean" ? item.is_test : true,
+            group_count: item.group_count
           })
         )
         .filter(Boolean);
@@ -467,22 +468,37 @@ app.post("/api/admin/maintenance/schedule", requireAdmin, async (req, res) => {
 });
 
 app.post("/api/admin/test-events", requireAdmin, async (req, res) => {
-  const { type, city, sea, direction, note } = req.body || {};
+  const { type, city, sea, direction, note, is_test, group_count } = req.body || {};
   if (!city || typeof city !== "string") {
     return res.status(400).json({ error: "city_required" });
   }
 
+  const normalizedType = String(type || "other").trim().toLowerCase();
+  const normalizedGroupCount = Number.isFinite(Number(group_count))
+    ? Math.max(1, Math.min(99, Math.round(Number(group_count))))
+    : 1;
+  const isTest = typeof is_test === "boolean" ? is_test : true;
   const directionText = Number.isFinite(direction)
     ? ` напрям ${Math.round(direction)}`
     : "";
   const seaText = sea ? "море в напрямку" : "над";
-  const message = `${type || "other"} ${seaText} ${city}${directionText}. тест ${note || ""}`.trim();
+  const countPrefix = normalizedGroupCount >= 2
+    ? normalizedType === "shahed"
+      ? `група із ${normalizedGroupCount} шахедів `
+      : normalizedType === "missile"
+        ? `група із ${normalizedGroupCount} ракет `
+        : `${normalizedGroupCount} `
+    : "";
+  const testText = isTest ? " тест" : "";
+  const message = `${countPrefix}${normalizedType} ${seaText} ${city}${directionText}.${testText} ${note || ""}`.trim();
 
   await addTestEvent({
     id: `test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     message,
-    type: type || "other",
+    type: normalizedType,
     direction: Number.isFinite(direction) ? direction : null,
+    is_test: isTest,
+    group_count: normalizedGroupCount,
     source: "admin",
     createdAt: Date.now()
   });
