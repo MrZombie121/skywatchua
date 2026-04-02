@@ -19,9 +19,24 @@ const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
 const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 2));
 const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 4000));
 const clientStartTimeoutMs = Math.max(1000, Number(process.env.TG_CLIENT_START_TIMEOUT_MS || 8000));
+const disabledChannels = new Set();
 
 let client = null;
 let clientReady = false;
+
+function normalizeChannelKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function isPermanentChannelError(error) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return (
+    message.includes("username_invalid") ||
+    message.includes("no user has") ||
+    message.includes("no channel has") ||
+    message.includes("resolveusername")
+  );
+}
 
 function withTimeout(promise, timeoutMs, label) {
   let timer = null;
@@ -197,6 +212,9 @@ export async function loadTelegramEvents() {
   const allMessages = [];
 
   async function readChannel(channel) {
+    if (disabledChannels.has(normalizeChannelKey(channel))) {
+      return { channel, ordered: [] };
+    }
     try {
       const messages = await withTimeout(
         tgClient.getMessages(channel, { limit }),
@@ -205,6 +223,11 @@ export async function loadTelegramEvents() {
       );
       return { channel, ordered: [...messages].filter(Boolean).reverse() };
     } catch (error) {
+      if (isPermanentChannelError(error)) {
+        disabledChannels.add(normalizeChannelKey(channel));
+        console.warn("Disabled invalid Telegram channel", channel, error?.message || error);
+        return { channel, ordered: [] };
+      }
       console.warn("Failed to read channel", channel, error?.message || error);
       return { channel, ordered: [] };
     }

@@ -1004,11 +1004,8 @@ function buildPopup(event, distanceKm) {
     : "";
   const userDistanceKm = distanceToUserKm(event);
   const eta = etaRangeForDistance(userDistanceKm);
-  const approachArrivalLine = Number.isFinite(userDistanceKm) && eta
-    ? `<br /><span class="popup-meta">РџСЂРёР±СѓС‚С‚СЏ (Kyiv): ${eta.fastAt} - ${eta.slowAt}</span>`
-    : "";
   const approachLine = Number.isFinite(userDistanceKm)
-    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Орієнтовний час підльоту: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span>`
+    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Орієнтовний час підльоту: ${eta ? `${eta.fast} - ${eta.slow} (${eta.fastAt} - ${eta.slowAt} Kyiv)` : "—"}</span>`
     : "";
   const targetLine =
     event.target_label && Number.isFinite(event.target_lat) && Number.isFinite(event.target_lng)
@@ -1042,7 +1039,6 @@ function buildPopup(event, distanceKm) {
         ${event.comment ? `<br />Коментар: ${event.comment}` : ""}
         ${targetLine}
         ${approachLine}
-        ${approachArrivalLine}
         ${confidenceLine}
         ${groupLine}
         ${evidenceLine}
