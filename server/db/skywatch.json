@@ -8,8 +8,8 @@
   },
   "admins": [
     {
-      "username": "admin26",
-      "password_hash": "3f439bfc9cf1924803cccaa132a942dd:04e11a28bb9b1ca3903349c0518cefa6aa4fcc50f8e00d99685b3f9e1d60dc17031394228fde55b62e031bea072c40d3291b71195bed8322be206e95a8b7d3b1"
+      "username": "adminka",
+      "password_hash": "89099bbc07b968c13f77d443f885d061:49c135d58b3da66645504f219e90a4aa71db1f6533fb7bf17cefd37d0b0f381ca3ced1b97caf4a850b5ce822446e12873ced16f80f13300f2392d11d3fcd813a"
     }
   ],
   "sessions": [
@@ -48,6 +48,8 @@
       "lat": 50.4527,
       "lng": 30.5296,
       "region_id": "kyivska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -60,6 +62,8 @@
       "lat": 47.94,
       "lng": 29.62,
       "region_id": "odeska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -73,6 +77,8 @@
       "lat": 47.75,
       "lng": 29.53,
       "region_id": "odeska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -86,6 +92,8 @@
       "lat": 48.24,
       "lng": 31.42,
       "region_id": "kirovohradska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -99,6 +107,8 @@
       "lat": 47.66,
       "lng": 33.71,
       "region_id": "dniprovska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -112,6 +122,8 @@
       "lat": 47.08,
       "lng": 32.81,
       "region_id": "mykolaivska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -124,6 +136,8 @@
       "lat": 49.95,
       "lng": 35.93,
       "region_id": "kharkivska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -136,6 +150,8 @@
       "lat": 49.82,
       "lng": 36.05,
       "region_id": "kharkivska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -149,6 +165,8 @@
       "lat": 47.95,
       "lng": 35.42,
       "region_id": "zaporizka",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -161,6 +179,8 @@
       "lat": 47.41,
       "lng": 32.44,
       "region_id": "mykolaivska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775069743284
     },
     {
@@ -174,6 +194,8 @@
       "lat": 50.4527,
       "lng": 30.5296,
       "region_id": "kyivska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775070241733
     },
     {
@@ -187,7 +209,86 @@
       "lat": 46.3015,
       "lng": 30.6561,
       "region_id": "odesska",
+      "location_type": "city",
+      "parent_location_id": null,
       "created_at": 1775070375894
+    },
+    {
+      "id": "південне",
+      "name": "Південне",
+      "keys": [
+        "південне",
+        "южик",
+        "южне",
+        "южное"
+      ],
+      "lat": 46.6215,
+      "lng": 31.1001,
+      "region_id": "odeska",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775111689361
+    },
+    {
+      "id": "одеса",
+      "name": "Одеса",
+      "keys": [
+        "одеса",
+        "одесса",
+        "одесу",
+        "одессу"
+      ],
+      "lat": 46.4736,
+      "lng": 30.738,
+      "region_id": "odeska",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775113495740
+    },
+    {
+      "id": "київський",
+      "name": "Київський",
+      "keys": [
+        "київський",
+        "киевський",
+        "киевського",
+        "київського"
+      ],
+      "lat": 46.4199,
+      "lng": 30.7391,
+      "region_id": "odeska",
+      "location_type": "district",
+      "parent_location_id": "одеса",
+      "created_at": 1775113995645
+    },
+    {
+      "id": "чорноморське",
+      "name": "Чорноморське",
+      "keys": [
+        "чорноморське",
+        "чорноморське."
+      ],
+      "lat": 46.5848,
+      "lng": 30.9332,
+      "region_id": "odeska",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775115358135
+    },
+    {
+      "id": "приморський-район",
+      "name": "Приморський район",
+      "keys": [
+        "приморський район",
+        "приморський",
+        "приморського."
+      ],
+      "lat": 46.475,
+      "lng": 30.7459,
+      "region_id": "odeska",
+      "location_type": "district",
+      "parent_location_id": "одеса",
+      "created_at": 1775117594440
     }
   ],
   "admin_location_points": [
@@ -404,6 +505,254 @@
       "lng": 30.6642,
       "types": [],
       "created_at": 1775072398333
+    },
+    {
+      "id": "pt-південне-1775111689361-7w3a",
+      "location_id": "південне",
+      "lat": 46.6032,
+      "lng": 31.1064,
+      "types": [],
+      "created_at": 1775111689361
+    },
+    {
+      "id": "pt-південне-1775111722456-xuva",
+      "location_id": "південне",
+      "lat": 46.5442,
+      "lng": 31.1215,
+      "types": [],
+      "created_at": 1775111722456
+    },
+    {
+      "id": "pt-південне-1775111726460-ynd1",
+      "location_id": "південне",
+      "lat": 46.5442,
+      "lng": 31.1215,
+      "types": [],
+      "created_at": 1775111726460
+    },
+    {
+      "id": "pt-південне-1775111779530-1zeg",
+      "location_id": "південне",
+      "lat": 46.7728,
+      "lng": 31.0721,
+      "types": [],
+      "created_at": 1775111779530
+    },
+    {
+      "id": "pt-південне-1775111788661-5x6v",
+      "location_id": "південне",
+      "lat": 46.6013,
+      "lng": 31.3358,
+      "types": [],
+      "created_at": 1775111788661
+    },
+    {
+      "id": "pt-південне-1775111795566-rtey",
+      "location_id": "південне",
+      "lat": 46.5683,
+      "lng": 31.1874,
+      "types": [],
+      "created_at": 1775111795566
+    },
+    {
+      "id": "pt-південне-1775111800301-2q51",
+      "location_id": "південне",
+      "lat": 46.7003,
+      "lng": 31.1627,
+      "types": [],
+      "created_at": 1775111800301
+    },
+    {
+      "id": "pt-південне-1775111805156-dy6o",
+      "location_id": "південне",
+      "lat": 46.8912,
+      "lng": 31.0432,
+      "types": [],
+      "created_at": 1775111805156
+    },
+    {
+      "id": "pt-південне-1775111811656-az42",
+      "location_id": "південне",
+      "lat": 46.6334,
+      "lng": 30.9045,
+      "types": [],
+      "created_at": 1775111811656
+    },
+    {
+      "id": "pt-одеса-1775113495740-q6g1",
+      "location_id": "одеса",
+      "lat": 46.479,
+      "lng": 30.7892,
+      "types": [],
+      "created_at": 1775113495740
+    },
+    {
+      "id": "pt-одеса-1775113514839-sw4c",
+      "location_id": "одеса",
+      "lat": 0,
+      "lng": 0,
+      "types": [],
+      "created_at": 1775113514839
+    },
+    {
+      "id": "pt-одеса-1775113541933-vdwc",
+      "location_id": "одеса",
+      "lat": 46.3773,
+      "lng": 30.8743,
+      "types": [],
+      "created_at": 1775113541933
+    },
+    {
+      "id": "pt-одеса-1775113542236-r1uv",
+      "location_id": "одеса",
+      "lat": 46.3773,
+      "lng": 30.8743,
+      "types": [],
+      "created_at": 1775113542236
+    },
+    {
+      "id": "pt-одеса-1775113553633-kzpe",
+      "location_id": "одеса",
+      "lat": 46.4984,
+      "lng": 30.8908,
+      "types": [],
+      "created_at": 1775113553633
+    },
+    {
+      "id": "pt-київський-1775113995645-zlbo",
+      "location_id": "київський",
+      "lat": 46.4426,
+      "lng": 30.8335,
+      "types": [],
+      "created_at": 1775113995645
+    },
+    {
+      "id": "pt-київський-1775114013533-fpna",
+      "location_id": "київський",
+      "lat": 46.4788,
+      "lng": 30.8379,
+      "types": [],
+      "created_at": 1775114013533
+    },
+    {
+      "id": "pt-чорноморське-1775115358135-v6ll",
+      "location_id": "чорноморське",
+      "lat": 46.5478,
+      "lng": 30.9578,
+      "types": [],
+      "created_at": 1775115358135
+    },
+    {
+      "id": "pt-чорноморське-1775115364937-bt5a",
+      "location_id": "чорноморське",
+      "lat": 46.5704,
+      "lng": 31.0192,
+      "types": [],
+      "created_at": 1775115364937
+    },
+    {
+      "id": "pt-чорноморське-1775115369343-c913",
+      "location_id": "чорноморське",
+      "lat": 46.5589,
+      "lng": 30.9004,
+      "types": [],
+      "created_at": 1775115369343
+    },
+    {
+      "id": "pt-чорноморське-1775115374437-y74n",
+      "location_id": "чорноморське",
+      "lat": 46.5348,
+      "lng": 30.9602,
+      "types": [],
+      "created_at": 1775115374437
+    },
+    {
+      "id": "pt-чорноморське-1775115378458-onit",
+      "location_id": "чорноморське",
+      "lat": 46.6466,
+      "lng": 31.0453,
+      "types": [],
+      "created_at": 1775115378458
+    },
+    {
+      "id": "pt-чорноморське-1775115398837-5v67",
+      "location_id": "чорноморське",
+      "lat": 46.6108,
+      "lng": 30.8208,
+      "types": [],
+      "created_at": 1775115398837
+    },
+    {
+      "id": "pt-чорноморське-1775115403579-9sxp",
+      "location_id": "чорноморське",
+      "lat": 46.6937,
+      "lng": 31.3007,
+      "types": [],
+      "created_at": 1775115403579
+    },
+    {
+      "id": "pt-приморський-район-1775117594440-6gh7",
+      "location_id": "приморський-район",
+      "lat": 46.482,
+      "lng": 30.8554,
+      "types": [],
+      "created_at": 1775117594440
+    },
+    {
+      "id": "pt-приморський-район-1775117621034-3p92",
+      "location_id": "приморський-район",
+      "lat": 46.5154,
+      "lng": 30.853,
+      "types": [],
+      "created_at": 1775117621034
+    },
+    {
+      "id": "pt-приморський-район-1775117621737-2x2o",
+      "location_id": "приморський-район",
+      "lat": 46.5154,
+      "lng": 30.853,
+      "types": [],
+      "created_at": 1775117621737
+    },
+    {
+      "id": "pt-приморський-район-1775117643904-vf0m",
+      "location_id": "приморський-район",
+      "lat": 46.4729,
+      "lng": 31.1861,
+      "types": [],
+      "created_at": 1775117643904
+    },
+    {
+      "id": "pt-приморський-район-1775117654965-6qpg",
+      "location_id": "приморський-район",
+      "lat": 0,
+      "lng": 0,
+      "types": [],
+      "created_at": 1775117654965
+    },
+    {
+      "id": "pt-приморський-район-1775117661137-z5sh",
+      "location_id": "приморський-район",
+      "lat": 46.4345,
+      "lng": 30.7473,
+      "types": [],
+      "created_at": 1775117661137
+    },
+    {
+      "id": "pt-приморський-район-1775117679735-jvbq",
+      "location_id": "приморський-район",
+      "lat": 46.4951,
+      "lng": 30.7198,
+      "types": [],
+      "created_at": 1775117679735
+    },
+    {
+      "id": "pt-приморський-район-1775117683899-zey9",
+      "location_id": "приморський-район",
+      "lat": 46.4686,
+      "lng": 30.646,
+      "types": [],
+      "created_at": 1775117683899
     }
   ]
 }
