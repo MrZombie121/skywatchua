@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Калібрування мапи</title>
+    <title>Map Calibration</title>
     <style>
       body {
         margin: 0;
@@ -51,7 +51,7 @@
   </head>
   <body>
     <div class="wrap">
-      <h1>Калібрування мапи</h1>
+      <h1>Калібрування карти</h1>
       <div class="row">
         <label>
           Файл шаблону:
@@ -60,7 +60,7 @@
         <button id="clear">Очистити</button>
       </div>
       <canvas id="canvas"></canvas>
-      <div class="log" id="log">Клікни по мапі, щоб отримати координати x,y.</div>
+      <div class="log" id="log">Клікни по карті, щоб отримати x,y.</div>
     </div>
     <script>
       const fileInput = document.getElementById("file");
@@ -82,7 +82,7 @@
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
             points.length = 0;
-            log.textContent = `Розмір: ${img.width}x${img.height}\nКлікни по мапі.`;
+            log.textContent = `Размер: ${img.width}x${img.height}\nКликни по карте.`;
           };
           img.src = reader.result;
         };
@@ -93,7 +93,7 @@
         if (!img) return;
         ctx.drawImage(img, 0, 0);
         points.length = 0;
-        log.textContent = "Очищено. Клікни по мапі.";
+        log.textContent = "Очищено. Кликни по карте.";
       });
 
       canvas.addEventListener("click", (e) => {
@@ -111,7 +111,7 @@
         log.textContent =
           `Точки:\n` +
           points.map((p, i) => `${i + 1}. x=${p.x}, y=${p.y}`).join("\n") +
-          "\n\nСкопіюй координати й зістав їх із містами для MAP_CALIBRATION_POINTS.";
+          "\n\nСкопируй координаты и сопоставь с городами.";
       });
     </script>
   </body>
