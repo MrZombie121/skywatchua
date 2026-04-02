@@ -1023,6 +1023,44 @@ function extractGuidedTargets(text, locationHits) {
     .map(({ __score, ...hit }) => hit);
 }
 
+function extractTransitTargets(text, locationHits) {
+  if (!Array.isArray(locationHits) || locationHits.length < 2) return [];
+  const lower = normalizeText(text);
+  const directionCueRegex =
+    /(в направлении|у напрямку|в бік|в сторону|по направлению|курс(?:ом)? на|рух(?:ається)? на|йде на|летить на|до)\s+/g;
+  const transitCueRegex = /(через|повз|біля|поблизу|над|в районі|в р-ні|в р-не)\s+/g;
+  const out = [];
+
+  locationHits.forEach((destination) => {
+    const beforeDestination = lower.slice(Math.max(0, destination.index - 40), destination.index);
+    if (!directionCueRegex.test(beforeDestination)) return;
+
+    let spawn = null;
+    for (const candidate of locationHits) {
+      if (candidate.index >= destination.index) break;
+      const between = lower.slice(candidate.index, destination.index);
+      if (!transitCueRegex.test(between)) continue;
+      spawn = candidate;
+    }
+    if (!spawn) return;
+
+    out.push({
+      ...destination,
+      spawn_label: spawn.label,
+      spawn_lat: spawn.lat,
+      spawn_lng: spawn.lng,
+      spawn_location_id: spawn.location_id || null
+    });
+  });
+
+  const unique = new Map();
+  out.forEach((item) => {
+    const key = `${item.spawn_label || ""}->${item.label}`;
+    if (!unique.has(key)) unique.set(key, item);
+  });
+  return Array.from(unique.values()).slice(0, 3);
+}
+
 function shouldInferTrackFromSea({ sea, forceSea, locationHits, mergedText, regionCenter }) {
   if (sea && locationHits.length > 0) return true;
   if (forceSea && (locationHits.length > 0 || regionCenter)) return true;

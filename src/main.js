@@ -59,6 +59,7 @@ const districtAlarmLayer = L.layerGroup().addTo(map);
 const trackLayer = L.layerGroup().addTo(map);
 const shahedTrailLayer = L.layerGroup().addTo(map);
 const historyLayer = L.layerGroup().addTo(map);
+const userLayer = L.layerGroup().addTo(map);
 let oblastGeoLayer = null;
 let oblastGeoReady = false;
 const markerById = new Map();
@@ -70,9 +71,16 @@ let driftTimer = null;
 let maintenanceTimer = null;
 let refreshTimer = null;
 let markerAgingTimer = null;
+let geoWatchId = null;
 let activeTrackId = null;
 let activeTrackLine = null;
 let lastSoundAt = 0;
+let userMarker = null;
+let userAccuracyCircle = null;
+let radarMap = null;
+let radarTileLayer = null;
+let radarUserLayer = null;
+let radarTargetLayer = null;
 
 const DEFAULT_MARKER_TTL_MS = 10 * 60 * 1000;
 const STALE_WARN_MS = 5 * 60 * 1000;
@@ -110,7 +118,10 @@ const state = {
   pinnedIds: new Set(),
   savedViews: [],
   soundEnabled: false,
-  markerTtlMs: DEFAULT_MARKER_TTL_MS
+  markerTtlMs: DEFAULT_MARKER_TTL_MS,
+  userLocation: null,
+  radarRadiusKm: 100,
+  dangerRadiusKm: 25
 };
 
 const typeContainer = document.getElementById("type-filters");
@@ -196,9 +207,18 @@ const metricActive = document.getElementById("metric-active");
 const metricTests = document.getElementById("metric-tests");
 const metricConfidence = document.getElementById("metric-confidence");
 const metricSources = document.getElementById("metric-sources");
+const localAlert = document.getElementById("local-alert");
 const mapExpand = document.getElementById("map-expand");
 const mapSizeButtons = document.querySelectorAll("[data-map-size]");
 const oblastSelect = document.getElementById("oblast-select");
+const geoToggle = document.getElementById("geo-toggle");
+const radarOpen = document.getElementById("radar-open");
+const radarModal = document.getElementById("radar-modal");
+const radarClose = document.getElementById("radar-close");
+const radarMapNode = document.getElementById("radar-map");
+const dangerRadiusSelect = document.getElementById("danger-radius-select");
+const geoStatus = document.getElementById("geo-status");
+const radarSummary = document.getElementById("radar-summary");
 const leftSidebar = document.querySelector(".sidebar.left");
 const rightSidebar = document.querySelector(".sidebar.right");
 const dockTabs = document.querySelectorAll(".dock-tabs button");
@@ -965,6 +985,11 @@ function buildPopup(event, distanceKm) {
   const confidenceLine = Number.isFinite(event.confidence)
     ? `<br /><span class="popup-meta">Точність: ${Math.round(event.confidence * 100)}%</span>`
     : "";
+  const userDistanceKm = distanceToUserKm(event);
+  const eta = etaRangeForDistance(userDistanceKm);
+  const approachLine = Number.isFinite(userDistanceKm)
+    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Примерное время подлёта: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span>`
+    : "";
   const targetLine =
     event.target_label && Number.isFinite(event.target_lat) && Number.isFinite(event.target_lng)
       ? `<br /><span class="popup-meta">Центр цілі: ${event.target_label}</span>`
@@ -991,6 +1016,7 @@ function buildPopup(event, distanceKm) {
         </div>
         ${event.comment ? `<br />Коментар: ${event.comment}` : ""}
         ${targetLine}
+        ${approachLine}
         ${confidenceLine}
         ${evidenceLine}
         ${evidenceSources}
@@ -1070,27 +1096,333 @@ function riskScore(event) {
   return Math.min(1, confidence * 0.7 + Math.min(1, evidence / 5) * 0.3);
 }
 
+function getUserLatLng() {
+  const lat = Number(state.userLocation?.lat);
+  const lng = Number(state.userLocation?.lng);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+}
+
+function distanceToUserKm(event) {
+  const user = getUserLatLng();
+  if (!user || !Number.isFinite(event?.lat) || !Number.isFinite(event?.lng)) return null;
+  return haversineKm([event.lat, event.lng], user);
+}
+
+function formatEtaFromHours(hours) {
+  const totalMinutes = Math.max(1, Math.round(hours * 60));
+  const hh = Math.floor(totalMinutes / 60);
+  const mm = totalMinutes % 60;
+  if (hh <= 0) return `${mm} хв`;
+  return `${hh} год ${mm.toString().padStart(2, "0")} хв`;
+}
+
+function etaRangeForDistance(distanceKm) {
+  if (!Number.isFinite(distanceKm) || distanceKm <= 0) return null;
+  const fastHours = distanceKm / 185;
+  const slowHours = distanceKm / 150;
+  return {
+    fast: formatEtaFromHours(fastHours),
+    slow: formatEtaFromHours(slowHours)
+  };
+}
+
+function nearbyVisibleEvents() {
+  const radius = 100;
+  return [...getVisibleEvents()]
+    .map((event) => ({ event, distanceKm: distanceToUserKm(event) }))
+    .filter((item) => Number.isFinite(item.distanceKm) && item.distanceKm <= radius)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
+}
+
+function updateGeoStatus() {
+  const active = Boolean(getUserLatLng());
+  if (geoToggle) {
+    geoToggle.textContent = active ? "Вимкнути геолокацію" : "Увімкнути геолокацію";
+  }
+  if (geoStatus) {
+    geoStatus.textContent = active
+      ? `Позиція активна${Number.isFinite(state.userLocation?.accuracy) ? ` · ±${Math.round(state.userLocation.accuracy)} м` : ""}`
+      : "Геолокація вимкнена";
+  }
+}
+
+function renderUserLocation() {
+  userLayer.clearLayers();
+  userMarker = null;
+  userAccuracyCircle = null;
+  const user = getUserLatLng();
+  if (!user) {
+    updateGeoStatus();
+    return;
+  }
+  const accuracy = Number(state.userLocation?.accuracy);
+  userAccuracyCircle = L.circle(user, {
+    radius: Number.isFinite(accuracy) ? accuracy : 120,
+    color: "#35d6ff",
+    weight: 1,
+    fillColor: "#35d6ff",
+    fillOpacity: 0.08
+  }).addTo(userLayer);
+  userMarker = L.circleMarker(user, {
+    radius: 6,
+    color: "#35d6ff",
+    weight: 2,
+    fillColor: "#35d6ff",
+    fillOpacity: 0.9
+  }).addTo(userLayer);
+  userMarker.bindTooltip("Ви", { direction: "top", offset: [0, -4] });
+  updateGeoStatus();
+}
+
+function renderLocalAlert() {
+  if (!localAlert) return;
+  localAlert.innerHTML = "";
+  const user = getUserLatLng();
+  if (!user) {
+    localAlert.innerHTML = '<div class="feed-item">Увімкніть геолокацію, щоб бачити локальний ризик.</div>';
+    return;
+  }
+  const radius = Number(state.dangerRadiusKm) || 25;
+  const nearby = nearbyVisibleEvents();
+  const critical = nearby.filter((item) => item.distanceKm <= radius);
+  const nearest = nearby[0] || null;
+  const rows = [];
+  rows.push(`<div class="feed-item"><div class="meta">Критична зона</div><div>${critical.length} цілей у радіусі ${radius} км</div></div>`);
+  if (nearest) {
+    const eta = etaRangeForDistance(nearest.distanceKm);
+    rows.push(`<div class="feed-item"><div class="meta">Найближча ціль</div><div>${nearest.event.raw_text || nearest.event.comment || nearest.event.type}</div><div class="meta">${nearest.distanceKm.toFixed(1)} км${eta ? ` · ${eta.fast} - ${eta.slow}` : ""}</div></div>`);
+  }
+  localAlert.innerHTML = rows.join("");
+}
+
+function isRadarModalOpen() {
+  return Boolean(radarModal?.classList.contains("active"));
+}
+
+function ensureRadarMap() {
+  if (!radarMapNode || radarMap || !isRadarModalOpen()) return;
+  radarMap = L.map(radarMapNode, {
+    zoomControl: false,
+    attributionControl: true,
+    zoomSnap: 0.25,
+    zoomDelta: 0.25,
+    dragging: false,
+    touchZoom: false,
+    doubleClickZoom: false,
+    scrollWheelZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    tap: false
+  }).setView([49.0, 31.0], 9);
+  radarTileLayer = L.tileLayer(mapStyleCatalog["carto-dark"].url, mapStyleCatalog["carto-dark"].options).addTo(radarMap);
+  radarUserLayer = L.layerGroup().addTo(radarMap);
+  radarTargetLayer = L.layerGroup().addTo(radarMap);
+}
+
+function refreshRadarLayout() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      ensureRadarMap();
+      if (!radarMap) return;
+      radarMap.invalidateSize();
+      renderRadarCanvas();
+    });
+  });
+}
+
+function unlockRadarViewport() {
+  if (!radarMap) return;
+  radarMap.setMinZoom(3);
+  radarMap.setMaxZoom(18);
+  radarMap.setMaxBounds(null);
+}
+
+function getRadarLockedZoom(centerLat, radiusKm) {
+  if (!radarMap) return 8;
+  const size = radarMap.getSize();
+  const usablePixels = Math.max(120, Math.min(size.x, size.y) - 32);
+  const diameterMeters = radiusKm * 2000 * 1.08;
+  const metersPerPixelAtZoom0 = 156543.03392 * Math.cos((centerLat * Math.PI) / 180);
+  const rawZoom = Math.log2((metersPerPixelAtZoom0 * usablePixels) / diameterMeters);
+  return Math.max(8, Math.min(11, Math.round(rawZoom * 4) / 4));
+}
+
+function buildRadarBounds(centerLat, centerLng, radiusKm) {
+  const latDelta = radiusKm / 111.32;
+  const lngDelta = radiusKm / (111.32 * Math.max(Math.cos((centerLat * Math.PI) / 180), 0.2));
+  return L.latLngBounds(
+    [centerLat - latDelta, centerLng - lngDelta],
+    [centerLat + latDelta, centerLng + lngDelta]
+  );
+}
+
+function lockRadarViewport(centerLat, centerLng, radiusKm = 100) {
+  if (!radarMap) return;
+  unlockRadarViewport();
+  radarMap.invalidateSize();
+  if (Number.isFinite(centerLat) && Number.isFinite(centerLng)) {
+    const bounds = buildRadarBounds(centerLat, centerLng, radiusKm);
+    const lockedZoom = getRadarLockedZoom(centerLat, radiusKm);
+    radarMap.setView([centerLat, centerLng], lockedZoom, { animate: false });
+    radarMap.setMinZoom(lockedZoom);
+    radarMap.setMaxZoom(lockedZoom);
+    radarMap.setMaxBounds(bounds.pad(0.06));
+    radarMap.panInsideBounds(bounds.pad(0.06), { animate: false });
+    return;
+  }
+  radarMap.setView([49.0, 31.0], 6, { animate: false });
+  const lockedZoom = radarMap.getZoom();
+  radarMap.setMinZoom(lockedZoom);
+  radarMap.setMaxZoom(lockedZoom);
+}
+
+function syncRadarMapStyle() {
+  if (!radarMap) return;
+  if (radarTileLayer) {
+    radarMap.removeLayer(radarTileLayer);
+  }
+  const styleKey = mapStyleSelect?.value || "carto-dark";
+  const style = mapStyleCatalog[styleKey] || mapStyleCatalog["carto-dark"];
+  radarTileLayer = L.tileLayer(style.url, style.options).addTo(radarMap);
+}
+
+function renderRadarCanvas() {
+  const radarRadiusKm = 100;
+  const user = getUserLatLng();
+  const nearby = user ? nearbyVisibleEvents() : [];
+  if (radarSummary) {
+    radarSummary.innerHTML = user
+      ? `<span>Цілей у радіусі: ${nearby.length}</span><span>Радіус: ${radarRadiusKm} км</span>`
+      : `<span>Немає геолокації</span><span>Радіус: ${radarRadiusKm} км</span>`;
+  }
+  if (!isRadarModalOpen() && !radarMap) {
+    return;
+  }
+  ensureRadarMap();
+  if (!radarMap || !radarUserLayer || !radarTargetLayer) return;
+  syncRadarMapStyle();
+  radarUserLayer.clearLayers();
+  radarTargetLayer.clearLayers();
+
+  if (!user) {
+    lockRadarViewport();
+    return;
+  }
+
+  const userLatLng = [user[0], user[1]];
+  L.circle(userLatLng, {
+    radius: radarRadiusKm * 1000,
+    color: "#35d6ff",
+    weight: 2,
+    fillColor: "#35d6ff",
+    fillOpacity: 0.06,
+    opacity: 0.9
+  }).addTo(radarUserLayer);
+  const ringMeters = (radarRadiusKm * 1000) / 4;
+  for (let i = 1; i <= 4; i += 1) {
+    L.circle(userLatLng, {
+      radius: ringMeters * i,
+      color: "#1e6f93",
+      weight: i === 4 ? 1.4 : 1,
+      fill: false,
+      opacity: 0.8
+    }).addTo(radarUserLayer);
+  }
+  L.circleMarker(userLatLng, {
+    radius: 6,
+    color: "#35d6ff",
+    weight: 2,
+    fillColor: "#35d6ff",
+    fillOpacity: 0.95
+  }).bindTooltip("Ви", { direction: "top", offset: [0, -4] }).addTo(radarUserLayer);
+
+  nearby.forEach(({ event, distanceKm }) => {
+    const eta = etaRangeForDistance(distanceKm);
+    const hot = distanceKm <= (Number(state.dangerRadiusKm) || 25);
+    L.circleMarker([event.lat, event.lng], {
+      radius: hot ? 7 : 5,
+      color: hot ? "#ff4d42" : "#ffb326",
+      weight: 2,
+      fillColor: hot ? "#ff4d42" : "#ffb326",
+      fillOpacity: 0.9
+    }).bindTooltip(
+      `${event.type.toUpperCase()} · ${distanceKm.toFixed(1)} км${eta ? ` · ${eta.fast}-${eta.slow}` : ""}`,
+      { direction: "top", offset: [0, -2] }
+    ).addTo(radarTargetLayer);
+  });
+
+  lockRadarViewport(user[0], user[1], radarRadiusKm);
+}
+
+function handleGeoSuccess(position) {
+  state.userLocation = {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude,
+    accuracy: position.coords.accuracy
+  };
+  renderUserLocation();
+  renderRadarList();
+  renderIntelFeed();
+  renderLocalAlert();
+  renderRadarCanvas();
+}
+
+function stopGeolocation() {
+  if (geoWatchId != null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(geoWatchId);
+  }
+  geoWatchId = null;
+  state.userLocation = null;
+  renderUserLocation();
+  renderRadarList();
+  renderIntelFeed();
+  renderLocalAlert();
+  renderRadarCanvas();
+}
+
+function startGeolocation() {
+  if (!navigator.geolocation) {
+    alert("Геолокація не підтримується цим браузером.");
+    return;
+  }
+  if (geoWatchId != null) return;
+  geoWatchId = navigator.geolocation.watchPosition(
+    handleGeoSuccess,
+    () => {
+      stopGeolocation();
+      alert("Не вдалося отримати геолокацію.");
+    },
+    { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
+  );
+}
+
 function renderRadarList() {
   if (!radarList) return;
   radarList.innerHTML = "";
-  const items = [...getVisibleEvents()]
-    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    .slice(0, 14);
+  const items = getUserLatLng()
+    ? nearbyVisibleEvents().slice(0, 14)
+    : [...getVisibleEvents()]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 14)
+      .map((event) => ({ event, distanceKm: null }));
   if (items.length === 0) {
-    radarList.innerHTML = "<div class=\"feed-item\">Немає активних повідомлень.</div>";
+    radarList.innerHTML = getUserLatLng()
+      ? "<div class=\"feed-item\">У вибраному радіусі цілей немає.</div>"
+      : "<div class=\"feed-item\">Увімкніть геолокацію для локального радара.</div>";
     return;
   }
-  items.forEach((event) => {
+  items.forEach(({ event, distanceKm }) => {
     const text = event.raw_text || event.comment || `${event.type} ${event.source}`;
     const age = formatAge(eventAgeMs(event));
     const status = freshnessState(event).label;
     const isPinned = state.pinnedIds.has(event.id);
+    const eta = etaRangeForDistance(distanceKm);
     const row = document.createElement("div");
     row.className = "feed-item";
     row.innerHTML = `
       <div class="meta">${formatTime(event.timestamp)} · ${event.source} · ${age}</div>
       <div>${text}</div>
-      <div class="meta">${status}</div>
+      <div class="meta">${status}${Number.isFinite(distanceKm) ? ` · ${distanceKm.toFixed(1)} км${eta ? ` · ${eta.fast} - ${eta.slow}` : ""}` : ""}</div>
       <div class="actions">
         <button class="ghost-btn" data-focus="${event.id}">Фокус</button>
         <button class="ghost-btn" data-pin="${event.id}">${isPinned ? "Відкріпити" : "Закріпити"}</button>
@@ -1153,7 +1485,7 @@ function renderIntelFeed() {
   intelFeed.innerHTML = "";
   const items = [...getVisibleEvents()]
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    .slice(0, 10);
+    .slice(0, 20);
   if (items.length === 0) {
     intelFeed.innerHTML = "<div class=\"feed-item\">Intel порожній.</div>";
     return;
@@ -1458,9 +1790,11 @@ async function refresh() {
     renderRadarList();
     renderAlarmList();
     renderIntelFeed();
+    renderLocalAlert();
     renderPinnedList();
     renderDockWatchlist();
     renderMetrics();
+    renderRadarCanvas();
     await renderAlarmMap();
     if (!state.maintenance && state.autoFollow) {
       followLatestTarget();
@@ -2196,6 +2530,38 @@ if (toolSettings && settingsModal && settingsClose) {
   });
 }
 
+if (geoToggle) {
+  geoToggle.addEventListener("click", () => {
+    if (getUserLatLng()) {
+      stopGeolocation();
+    } else {
+      startGeolocation();
+    }
+  });
+}
+
+if (radarOpen && radarModal && radarClose) {
+  radarOpen.addEventListener("click", () => {
+    radarModal.classList.add("active");
+    ensureRadarMap();
+    refreshRadarLayout();
+  });
+  radarClose.addEventListener("click", () => {
+    radarModal.classList.remove("active");
+  });
+  radarModal.addEventListener("click", (event) => {
+    if (event.target === radarModal) radarModal.classList.remove("active");
+  });
+}
+
+if (dangerRadiusSelect) {
+  dangerRadiusSelect.addEventListener("change", (event) => {
+    state.dangerRadiusKm = Number(event.target.value) || 25;
+    renderLocalAlert();
+    renderRadarCanvas();
+  });
+}
+
 if (themeOptions) {
   themeOptions.forEach((option) => {
     option.addEventListener("change", () => {
@@ -2427,6 +2793,7 @@ window.addEventListener("resize", () => {
   } else {
     initMapHeight();
   }
+  renderRadarCanvas();
 });
 state.adminBypassMaintenance = localStorage.getItem("sw_admin_bypass") === "1";
 loadHistoryStore();
@@ -2467,6 +2834,12 @@ if (toggleHistory) {
 
 const savedRefreshInterval = localStorage.getItem("sw_refresh_interval") || "12000";
 applyRefreshInterval(savedRefreshInterval, false);
+
+state.dangerRadiusKm = Number(dangerRadiusSelect?.value || 25) || 25;
+if (dangerRadiusSelect) dangerRadiusSelect.value = String(state.dangerRadiusKm);
+updateGeoStatus();
+renderLocalAlert();
+renderRadarCanvas();
 
 const savedFollow = localStorage.getItem("sw_auto_follow") === "1";
 state.autoFollow = savedFollow;

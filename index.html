@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="sw-version" content="2.0.1" />
+    <meta name="sw-version" content="2.0.2" />
     <title>Skywatch UA — Моніторинг 2.0</title>
     <link
       rel="stylesheet"
@@ -131,6 +131,17 @@
           </div>
           <div class="stage-actions">
             <label class="field inline">
+              <span>Критична зона</span>
+              <select id="danger-radius-select">
+                <option value="15">15 км</option>
+                <option value="25" selected>25 км</option>
+                <option value="35">35 км</option>
+                <option value="50">50 км</option>
+              </select>
+            </label>
+            <button class="ghost-btn" type="button" id="geo-toggle">Увімкнути геолокацію</button>
+            <button class="ghost-btn" type="button" id="radar-open">Відкрити радар</button>
+            <label class="field inline">
               <span>Стиль карти</span>
               <select id="map-style-select">
                 <option value="osm">Стандартна (OSM)</option>
@@ -202,6 +213,11 @@
         </section>
 
         <section class="card">
+          <div class="card-title">Локальна Небезпека</div>
+          <div id="local-alert" class="feed"></div>
+        </section>
+
+        <section class="card">
           <div class="card-title">Intel Feed</div>
           <div id="intel-feed" class="feed"></div>
         </section>
@@ -256,6 +272,25 @@
               <input type="color" id="theme-panel" value="#101722" />
             </label>
             <button type="button" id="theme-apply">Застосувати</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-modal" id="radar-modal">
+      <div class="settings-card radar-card">
+        <div class="settings-header">
+          <div class="settings-title">Локальний Радар</div>
+          <button class="settings-close" id="radar-close">✕</button>
+        </div>
+        <div class="settings-body">
+          <div id="radar-map"></div>
+          <div class="radar-overlay radar-overlay-modal">
+            <div class="radar-head">
+              <strong>Радар навколо вас</strong>
+              <span id="geo-status">Геолокація вимкнена</span>
+            </div>
+            <div id="radar-summary" class="radar-summary"></div>
           </div>
         </div>
       </div>

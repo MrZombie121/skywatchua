@@ -424,6 +424,52 @@ textarea {
   min-height: 0;
 }
 
+#radar-map {
+  width: 100%;
+  height: 520px;
+  display: block;
+  border-radius: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, rgba(53, 214, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, #06111a 0%, #071824 100%);
+}
+
+.radar-overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.radar-overlay-modal {
+  margin-top: 12px;
+}
+
+.radar-card {
+  width: min(780px, 94vw);
+}
+
+.radar-head,
+.radar-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.radar-head strong,
+.radar-summary span {
+  border-radius: 999px;
+  border: 1px solid rgba(53, 214, 255, 0.2);
+  background: rgba(5, 17, 26, 0.72);
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
 .map-resizer {
   height: 10px;
   border-radius: 999px;

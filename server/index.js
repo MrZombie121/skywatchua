@@ -133,6 +133,7 @@ function deduplicateEvents(events) {
     for (const cluster of clusters) {
       if (cluster.type !== event.type) continue;
       if (cluster.is_test !== Boolean(event.is_test)) continue;
+      if (cluster.items.some((item) => String(item.source || "") === String(event.source || ""))) continue;
       if (Math.abs(cluster.centerTs - ts) > windowMs) continue;
       const distance = haversineKm(
         { lat: cluster.centerLat, lng: cluster.centerLng },
