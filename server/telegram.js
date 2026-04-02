@@ -28,12 +28,25 @@ const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
 const channelConcurrency = Math.max(1, Number(runtime.telegramChannelConcurrency || 6));
+const channelTimeoutMs = Math.max(1000, Number(runtime.telegramChannelTimeoutMs || 5000));
 
 let client;
 let clientReady = false;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const tmpDir = path.resolve(__dirname, "tmp");
+
+function withTimeout(promise, timeoutMs, label) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`${label} timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
 
 function normalizeText(text) {
   return String(text || "")
@@ -153,19 +166,34 @@ async function getClient() {
   if (!apiId || !apiHash) return null;
   if (clientReady) return client;
 
-  client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
-    connectionRetries: 3
-  });
+  if (!client) {
+    client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
+      connectionRetries: 3
+    });
+  }
 
-  await client.start({
-    phoneNumber: async () => process.env.TG_PHONE || "",
-    password: async () => process.env.TG_PASSWORD || "",
-    phoneCode: async () => process.env.TG_CODE || "",
-    onError: (err) => console.error("Telegram auth error", err)
-  });
-
-  clientReady = true;
-  return client;
+  try {
+    await withTimeout(
+      client.start({
+        phoneNumber: async () => process.env.TG_PHONE || "",
+        password: async () => process.env.TG_PASSWORD || "",
+        phoneCode: async () => process.env.TG_CODE || "",
+        onError: (err) => console.error("Telegram auth error", err)
+      }),
+      channelTimeoutMs,
+      "telegram start"
+    );
+    clientReady = true;
+    return client;
+  } catch (error) {
+    clientReady = false;
+    console.warn("Telegram client start failed", error?.message || error);
+    try {
+      await client?.disconnect();
+    } catch {}
+    client = null;
+    return null;
+  }
 }
 
 export async function loadTelegramEvents() {
@@ -187,7 +215,11 @@ export async function loadTelegramEvents() {
   const allMessages = [];
   async function readChannel(channel) {
     try {
-      const messages = await tgClient.getMessages(channel, { limit });
+      const messages = await withTimeout(
+        tgClient.getMessages(channel, { limit }),
+        channelTimeoutMs,
+        `telegram channel ${channel}`
+      );
       return { channel, ordered: [...messages].filter(Boolean).reverse() };
     } catch (error) {
       console.warn("Failed to read channel", channel, error?.message || error);

@@ -55,6 +55,7 @@ function parseSourceWeights(raw) {
 }
 
 const sourceWeights = parseSourceWeights(process.env.TG_SOURCE_WEIGHTS || "");
+const telegramFetchTimeoutMs = Math.max(1000, Number(runtime.telegramFetchTimeoutMs || 12000));
 
 const state = {
   lastFetch: 0,
@@ -80,6 +81,18 @@ function logProcessEvent(label, extra = {}) {
     last_fetch_age_ms: state.lastFetch ? Date.now() - state.lastFetch : null,
     ...memorySnapshot(),
     ...extra
+  });
+}
+
+function withTimeout(promise, timeoutMs, label) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`${label} timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
   });
 }
 
@@ -332,7 +345,12 @@ async function sendEvents(_req, res) {
   }
 
   async function fetchFreshEvents() {
-    const tgPayload = await loadTelegramEvents();
+    let tgPayload = { events: [], alarms: [], district_alarms: [], alarms_updated: false };
+    try {
+      tgPayload = await withTimeout(loadTelegramEvents(), telegramFetchTimeoutMs, "telegram fetch");
+    } catch (error) {
+      console.warn("Telegram fetch degraded", error?.message || error);
+    }
     let alarmState = tgPayload.alarms || [];
     let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
     alarmState = applyForcedAlarms(alarmState);
