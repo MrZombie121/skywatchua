@@ -510,6 +510,17 @@ function formatTime(value) {
   });
 }
 
+function formatClockTimeKyiv(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleTimeString("uk-UA", {
+    timeZone: "Europe/Kyiv",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+
 function eventTimestampMs(event) {
   const ts = new Date(event.timestamp).getTime();
   return Number.isFinite(ts) ? ts : Date.now();
@@ -1005,7 +1016,7 @@ function buildPopup(event, distanceKm) {
   const userDistanceKm = distanceToUserKm(event);
   const eta = etaRangeForDistance(userDistanceKm);
   const approachLine = Number.isFinite(userDistanceKm)
-    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Орієнтовний час підльоту: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span>`
+    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Орієнтовний час підльоту: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span><br /><span class="popup-meta">Можливий час прильоту: ${eta ? `${eta.arrivalFast} - ${eta.arrivalSlow}` : "—"} (за Києвом)</span>`
     : "";
   const targetLine =
     event.target_label && Number.isFinite(event.target_lat) && Number.isFinite(event.target_lng)
@@ -1143,9 +1154,12 @@ function etaRangeForDistance(distanceKm) {
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) return null;
   const fastHours = distanceKm / 185;
   const slowHours = distanceKm / 150;
+  const now = Date.now();
   return {
     fast: formatEtaFromHours(fastHours),
-    slow: formatEtaFromHours(slowHours)
+    slow: formatEtaFromHours(slowHours),
+    arrivalFast: formatClockTimeKyiv(now + fastHours * 60 * 60 * 1000),
+    arrivalSlow: formatClockTimeKyiv(now + slowHours * 60 * 60 * 1000)
   };
 }
 

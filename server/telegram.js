@@ -86,6 +86,7 @@ function isTrackGoneMessage(text) {
 function preferredRegionIdForChannel(channel) {
   const lower = String(channel || "").toLowerCase().replace(/^@/, "");
   if (lower.includes("xydessa_live") || lower.includes("pivdenmedia")) return "odeska";
+  if (lower.includes("tlknewsua") || lower.includes("tlknews")) return "kharkivska";
   if (lower.includes("kyivoperat")) return "kyiv";
   if (lower.includes("dneproperatyv")) return "dniprovska";
   if (lower.includes("dnipro_alerts")) return "dniprovska";

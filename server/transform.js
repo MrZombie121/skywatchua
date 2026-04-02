@@ -1238,7 +1238,9 @@ export function parseMessageToEvents(text, meta = {}) {
         regionId
       );
     const spawnRegionId =
-      sea?.name && sea.name.toLowerCase().includes("азов")
+      isTlk
+        ? "kharkivska"
+        : sea?.name && sea.name.toLowerCase().includes("азов")
         ? "sea_azov"
         : (sea || forceSea)
           ? "sea_black"
