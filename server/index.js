@@ -56,11 +56,19 @@ function parseSourceWeights(raw) {
 
 const sourceWeights = parseSourceWeights(process.env.TG_SOURCE_WEIGHTS || "");
 const telegramFetchTimeoutMs = Math.max(1000, Number(runtime.telegramFetchTimeoutMs || 12000));
+const telegramFailureThreshold = Math.max(1, Number(runtime.telegramFailureThreshold || 3));
+const telegramCooldownMs = Math.max(1000, Number(runtime.telegramCooldownMs || 180000));
 
 const state = {
   lastFetch: 0,
   cache: [],
-  inFlight: null
+  inFlight: null,
+  telegram: {
+    cachedPayload: { events: [], alarms: [], district_alarms: [], alarms_updated: false },
+    lastSuccessAt: 0,
+    lastFailureAt: 0,
+    consecutiveFailures: 0
+  }
 };
 const startedAt = Date.now();
 
@@ -94,6 +102,38 @@ function withTimeout(promise, timeoutMs, label) {
   return Promise.race([promise, timeout]).finally(() => {
     if (timer) clearTimeout(timer);
   });
+}
+
+function shouldSkipTelegramFetch(now = Date.now()) {
+  return (
+    state.telegram.consecutiveFailures >= telegramFailureThreshold &&
+    now - state.telegram.lastFailureAt < telegramCooldownMs
+  );
+}
+
+async function getTelegramPayload(now = Date.now()) {
+  if (shouldSkipTelegramFetch(now)) {
+    console.warn("Telegram fetch skipped during cooldown", {
+      consecutive_failures: state.telegram.consecutiveFailures,
+      cooldown_ms_left: Math.max(0, telegramCooldownMs - (now - state.telegram.lastFailureAt))
+    });
+    return state.telegram.cachedPayload;
+  }
+
+  try {
+    const payload = await withTimeout(loadTelegramEvents(), telegramFetchTimeoutMs, "telegram fetch");
+    state.telegram.cachedPayload = payload;
+    state.telegram.lastSuccessAt = now;
+    state.telegram.consecutiveFailures = 0;
+    return payload;
+  } catch (error) {
+    state.telegram.lastFailureAt = now;
+    state.telegram.consecutiveFailures += 1;
+    console.warn("Telegram fetch degraded", error?.message || error, {
+      consecutive_failures: state.telegram.consecutiveFailures
+    });
+    return state.telegram.cachedPayload;
+  }
 }
 
 async function loadPersistedEventCache() {
@@ -345,12 +385,7 @@ async function sendEvents(_req, res) {
   }
 
   async function fetchFreshEvents() {
-    let tgPayload = { events: [], alarms: [], district_alarms: [], alarms_updated: false };
-    try {
-      tgPayload = await withTimeout(loadTelegramEvents(), telegramFetchTimeoutMs, "telegram fetch");
-    } catch (error) {
-      console.warn("Telegram fetch degraded", error?.message || error);
-    }
+    const tgPayload = await getTelegramPayload();
     let alarmState = tgPayload.alarms || [];
     let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
     alarmState = applyForcedAlarms(alarmState);

@@ -93,6 +93,7 @@ const PINNED_STORAGE_KEY = "sw_pinned_v2";
 const SAVED_VIEWS_KEY = "sw_saved_views_v2";
 const OPS_NOTES_KEY = "sw_ops_notes_v2";
 const MARKER_TTL_KEY = "sw_marker_ttl_ms";
+const SNAPSHOT_STORAGE_KEY = "sw_boot_snapshot_v1";
 const SOUND_COOLDOWN_MS = 4000;
 const MAP_HEIGHT_STORAGE_KEY = "sw_map_height_v1";
 const MAP_MIN_HEIGHT = 360;
@@ -443,6 +444,49 @@ function updateFilterSets(events) {
 
   if (state.selectedSources.size === 0) {
     state.selectedSources = new Set(state.sources);
+  }
+}
+
+function saveBootSnapshot() {
+  try {
+    const payload = {
+      saved_at: Date.now(),
+      events: state.events,
+      alarms: state.alarms,
+      districtAlarms: state.districtAlarms,
+      maintenance: state.maintenance,
+      maintenanceUntil: state.maintenanceUntil
+    };
+    localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+function loadBootSnapshot() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed?.events) || parsed.events.length === 0) return false;
+    state.events = parsed.events.map((event) => normalizeEvent(event, event.source || "snapshot"));
+    state.alarms = Array.isArray(parsed.alarms) ? parsed.alarms : [];
+    state.districtAlarms = Array.isArray(parsed.districtAlarms) ? parsed.districtAlarms : [];
+    state.maintenance = Boolean(parsed.maintenance);
+    state.maintenanceUntil = parsed.maintenanceUntil || null;
+    updateFilterSets(state.events);
+    renderFilterControls();
+    renderMarkers();
+    renderRadarList();
+    renderAlarmList();
+    renderIntelFeed();
+    renderLocalAlert();
+    renderPinnedList();
+    renderDockWatchlist();
+    renderMetrics();
+    renderRadarCanvas();
+    renderAlarmMap().catch(() => {});
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -1851,7 +1895,10 @@ async function refresh() {
     renderDockWatchlist();
     renderMetrics();
     renderRadarCanvas();
-    await renderAlarmMap();
+    renderAlarmMap().catch((error) => {
+      console.warn("Failed to render alarm map", error);
+    });
+    saveBootSnapshot();
     if (!state.maintenance && state.autoFollow) {
       followLatestTarget();
     }
@@ -2956,5 +3003,6 @@ if (opsNotes) {
   opsNotes.value = localStorage.getItem(OPS_NOTES_KEY) || "";
 }
 
+loadBootSnapshot();
 refresh();
 startMarkerAgingTicker();
