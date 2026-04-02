@@ -44,7 +44,7 @@ function normalizeText(text) {
 
 function isTurnMessage(text) {
   const lower = normalizeText(text);
-  return [
+  if ([
     "свернув",
     "свернул",
     "повернув",
@@ -53,7 +53,19 @@ function isTurnMessage(text) {
     "изменил курс",
     "курс на",
     "в сторону"
-  ].some((key) => lower.includes(key));
+  ].some((key) => lower.includes(key))) {
+    return true;
+  }
+
+  if (/\b\d{1,3}\s*км\s*(?:до|від|от)\s*берега\b/u.test(lower)) {
+    return true;
+  }
+
+  if (lower.includes("до берега") || lower.includes("від берега") || lower.includes("от берега")) {
+    return true;
+  }
+
+  return /\bтузл[а-яіїє']*\b/u.test(lower);
 }
 
 function preferredRegionIdForChannel(channel) {
@@ -64,6 +76,13 @@ function preferredRegionIdForChannel(channel) {
   if (lower.includes("dnipro_alerts")) return "dniprovska";
   if (lower.includes("onemaster_kr")) return "dniprovska";
   if (lower.includes("chernigivoperative")) return "chernihivska";
+  return null;
+}
+
+function extractBaseLabel(event) {
+  const comment = String(event?.comment || "");
+  const match = comment.match(/Локація:\s*([^.;]+?)(?:[.;]|$)/u);
+  if (match?.[1]) return match[1].trim();
   return null;
 }
 
@@ -271,6 +290,7 @@ export async function loadTelegramEvents() {
         has_reply: replyContext.hasReply,
         base_lat: baseEvent?.lat,
         base_lng: baseEvent?.lng,
+        base_label: extractBaseLabel(baseEvent),
         allow_bearing_from_base: turnSignal,
         track_key: rootKey
       };

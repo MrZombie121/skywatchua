@@ -1067,6 +1067,10 @@ export function parseMessageToEvents(text, meta = {}) {
   const isTest = typeof meta.is_test === "boolean"
     ? meta.is_test
     : normalizeText(mergedText).includes("тест") || normalizeText(mergedText).includes("test");
+  const hasBasePoint =
+    meta.allow_bearing_from_base === true &&
+    Number.isFinite(Number(meta.base_lat)) &&
+    Number.isFinite(Number(meta.base_lng));
 
   let regionId = resolveRegionId(text, "");
   if (!regionId && (sourceLower.includes("xydessa_live") || sourceLower.includes("pivdenmedia"))) {
@@ -1080,7 +1084,7 @@ export function parseMessageToEvents(text, meta = {}) {
   }
   const regionCenter = isTlk && regionId ? regionCenters[regionId] : null;
 
-  if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !(isTlk && type === "shahed")) {
+  if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !hasBasePoint && !(isTlk && type === "shahed")) {
     return [];
   }
 
@@ -1090,6 +1094,13 @@ export function parseMessageToEvents(text, meta = {}) {
     ? locationHits.slice(0, 3)
     : regionCenter
       ? [{ lat: regionCenter.lat, lng: regionCenter.lng, label: regionCenter.name, exact: false }]
+      : hasBasePoint
+        ? [{
+          lat: Number(meta.base_lat),
+          lng: Number(meta.base_lng),
+          label: String(meta.base_label || "Попередня точка"),
+          exact: false
+        }]
       : [{ lat: seaAnchor.lat, lng: seaAnchor.lng, label: sea ? sea.name : "Чорне море", exact: false }];
 
   if (isTlk) {
@@ -1102,7 +1113,9 @@ export function parseMessageToEvents(text, meta = {}) {
     });
     targets = filteredTargets.length > 0
       ? filteredTargets
-      : [{ lat: kharkivCenter.lat, lng: kharkivCenter.lng, label: `${kharkivCenter.name} (загально)`, exact: false }];
+      : locationHits.length > 0
+        ? targets
+        : [{ lat: kharkivCenter.lat, lng: kharkivCenter.lng, label: `${kharkivCenter.name} (загально)`, exact: false }];
   }
 
   return targets.map((target, index) => {
@@ -1113,7 +1126,7 @@ export function parseMessageToEvents(text, meta = {}) {
     let lng = target.lng;
     let label = target.label;
 
-    if (isTlk) {
+    if (isTlk && locationHits.length === 0) {
       const center = regionCenters.kharkivska;
       lat = center.lat;
       lng = center.lng;
