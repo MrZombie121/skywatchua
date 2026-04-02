@@ -500,7 +500,7 @@ app.get("/api/admin/locations", requireAdmin, async (_req, res) => {
 });
 
 app.post("/api/admin/locations", requireAdmin, async (req, res) => {
-  const { location_id, name, keys, lat, lng, point_lat, point_lng, point_types, region_id } = req.body || {};
+  const { location_id, name, keys, lat, lng, point_lat, point_lng, point_types, region_id, location_type, parent_location_id } = req.body || {};
   if (!location_id && (!name || typeof name !== "string")) {
     return res.status(400).json({ error: "location_name_required" });
   }
@@ -532,7 +532,9 @@ app.post("/api/admin/locations", requireAdmin, async (req, res) => {
     point_lat,
     point_lng,
     point_types: normalizedPointTypes,
-    region_id
+    region_id,
+    location_type,
+    parent_location_id
   });
   res.json({ ok: true, item });
 });

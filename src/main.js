@@ -145,6 +145,8 @@ const testAdd = document.getElementById("test-add");
 const testClear = document.getElementById("test-clear");
 const adminLocationSelect = document.getElementById("admin-location-select");
 const adminLocationName = document.getElementById("admin-location-name");
+const adminLocationType = document.getElementById("admin-location-type");
+const adminLocationParent = document.getElementById("admin-location-parent");
 const adminLocationKeys = document.getElementById("admin-location-keys");
 const adminLocationLat = document.getElementById("admin-location-lat");
 const adminLocationLng = document.getElementById("admin-location-lng");
@@ -318,6 +320,10 @@ function normalizeEvent(raw, sourceId) {
     confidence: Number(raw.confidence ?? 0.5),
     group_count_min: Number(raw.group_count_min ?? 0),
     group_count_max: Number(raw.group_count_max ?? 0),
+    target_lat: Number(raw.target_lat ?? raw.target?.lat ?? NaN),
+    target_lng: Number(raw.target_lng ?? raw.target?.lng ?? NaN),
+    target_label: raw.target_label ?? raw.target?.label ?? "",
+    target_location_id: raw.target_location_id ?? raw.target?.location_id ?? "",
     evidence_count: Number(raw.evidence_count ?? 1),
     evidence_sources: Array.isArray(raw.evidence_sources) ? raw.evidence_sources : []
   };
@@ -694,6 +700,7 @@ function startDrift() {
   if (driftTimer || driftById.size === 0) return;
   const speedMps = 1.4;
   const maxDistanceKm = 5;
+  const arrivalThresholdKm = 0.2;
   let lastFrame = performance.now();
   const animate = (now) => {
     const dt = Math.min(0.05, (now - lastFrame) / 1000);
@@ -703,15 +710,37 @@ function startDrift() {
     const nowMs = Date.now();
     driftById.forEach((item) => {
       if (item.spawnUntil && nowMs < item.spawnUntil) return;
-      if (item.distanceKm >= maxDistanceKm) return;
       const stepKm = (speedMps * dt * zoomFactor) / 1000;
-      item.distanceKm = Math.min(maxDistanceKm, item.distanceKm + stepKm);
-      const distanceKm = item.distanceKm;
-      const distanceDegLat = distanceKm / 111;
-      const rad = (item.direction * Math.PI) / 180;
-      const lat = item.baseLat + distanceDegLat * Math.cos(rad);
-      const lng =
-        item.baseLng + (distanceDegLat * Math.sin(rad)) / Math.cos((item.baseLat * Math.PI) / 180);
+      let lat = item.baseLat;
+      let lng = item.baseLng;
+      if (Number.isFinite(item.targetLat) && Number.isFinite(item.targetLng) && item.reachedTarget !== true) {
+        const remainingKm = haversineKm([item.baseLat, item.baseLng], [item.targetLat, item.targetLng]);
+        if (remainingKm <= arrivalThresholdKm) {
+          lat = item.targetLat;
+          lng = item.targetLng;
+          item.baseLat = lat;
+          item.baseLng = lng;
+          item.reachedTarget = true;
+        } else {
+          const nextStepKm = Math.min(stepKm, remainingKm);
+          const ratio = nextStepKm / remainingKm;
+          lat = item.baseLat + (item.targetLat - item.baseLat) * ratio;
+          lng = item.baseLng + (item.targetLng - item.baseLng) * ratio;
+          item.direction = bearingBetween([item.baseLat, item.baseLng], [item.targetLat, item.targetLng]);
+          item.baseLat = lat;
+          item.baseLng = lng;
+          item.distanceKm += nextStepKm;
+        }
+      } else {
+        if (item.distanceKm >= maxDistanceKm) return;
+        item.distanceKm = Math.min(maxDistanceKm, item.distanceKm + stepKm);
+        const distanceKm = item.distanceKm;
+        const distanceDegLat = distanceKm / 111;
+        const rad = (item.direction * Math.PI) / 180;
+        lat = item.baseLat + distanceDegLat * Math.cos(rad);
+        lng =
+          item.baseLng + (distanceDegLat * Math.sin(rad)) / Math.cos((item.baseLat * Math.PI) / 180);
+      }
       item.marker.setLatLng([lat, lng], { animate: true });
       const el = item.marker.getElement();
       if (el) {
@@ -849,6 +878,9 @@ function renderMarkers() {
           baseLng: event.lng,
           direction: directionOrDefault(event.direction, event.fallbackDirection),
           distanceKm: 0,
+          targetLat: Number.isFinite(event.target_lat) ? event.target_lat : null,
+          targetLng: Number.isFinite(event.target_lng) ? event.target_lng : null,
+          reachedTarget: false,
           track: [],
           trailLine: null,
           spawnUntil: Date.now()
@@ -870,6 +902,9 @@ function renderMarkers() {
           drift.baseLng = event.lng;
           drift.distanceKm = 0;
         }
+        drift.targetLat = Number.isFinite(event.target_lat) ? event.target_lat : null;
+        drift.targetLng = Number.isFinite(event.target_lng) ? event.target_lng : null;
+        drift.reachedTarget = false;
       }
       if (drift && Number.isFinite(event.direction)) {
         drift.direction = directionOrDefault(event.direction, drift.direction);
@@ -899,6 +934,9 @@ function renderMarkers() {
       baseLng: event.lng,
       direction: directionOrDefault(event.direction, event.fallbackDirection),
       distanceKm: 0,
+      targetLat: Number.isFinite(event.target_lat) ? event.target_lat : null,
+      targetLng: Number.isFinite(event.target_lng) ? event.target_lng : null,
+      reachedTarget: false,
       track: [[event.lat, event.lng]],
       trailLine: null,
       spawnUntil: Date.now() + SPAWN_ANIMATION_MS
@@ -927,6 +965,10 @@ function buildPopup(event, distanceKm) {
   const confidenceLine = Number.isFinite(event.confidence)
     ? `<br /><span class="popup-meta">Точність: ${Math.round(event.confidence * 100)}%</span>`
     : "";
+  const targetLine =
+    event.target_label && Number.isFinite(event.target_lat) && Number.isFinite(event.target_lng)
+      ? `<br /><span class="popup-meta">Центр цілі: ${event.target_label}</span>`
+      : "";
   const evidenceCount = Number.isFinite(event.evidence_count) ? Math.max(1, event.evidence_count) : 1;
   const evidenceLine = `<br /><span class="popup-meta">Підтверджень: ${evidenceCount}</span>`;
   const evidenceSources = Array.isArray(event.evidence_sources) && event.evidence_sources.length > 0
@@ -948,6 +990,7 @@ function buildPopup(event, distanceKm) {
           <span>Тестовий: ${event.is_test ? "так" : "ні"}</span>
         </div>
         ${event.comment ? `<br />Коментар: ${event.comment}` : ""}
+        ${targetLine}
         ${confidenceLine}
         ${evidenceLine}
         ${evidenceSources}
@@ -970,6 +1013,19 @@ function haversineKm(a, b) {
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function bearingBetween(a, b) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const toDeg = (rad) => (rad * 180) / Math.PI;
+  const lat1 = toRad(a[0]);
+  const lat2 = toRad(b[0]);
+  const dLng = toRad(b[1] - a[1]);
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x =
+    Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return ((toDeg(Math.atan2(y, x)) % 360) + 360) % 360;
 }
 
 function trackDistanceKm(track) {
@@ -1451,33 +1507,57 @@ function setAdminPickStatus(message) {
   }
 }
 
+function getAdminCityLocations() {
+  return (state.adminLocations || [])
+    .filter((item) => (item.location_type || "city") === "city")
+    .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "uk"));
+}
+
+function populateAdminParentSelect(selectedId = "") {
+  if (!adminLocationParent) return;
+  adminLocationParent.innerHTML = '<option value="">Без прив\'язки</option>';
+  getAdminCityLocations().forEach((location) => {
+    const option = document.createElement("option");
+    option.value = location.id;
+    option.textContent = location.name;
+    adminLocationParent.appendChild(option);
+  });
+  adminLocationParent.value = selectedId || "";
+}
+
 function beginAdminMapPick(mode) {
   if (mode === "spawn-point" && !adminLocationSelect?.value && !adminLocationName?.value.trim()) {
-    alert("Спочатку вибери або створи місто.");
+    alert("Спочатку вибери або створи локацію / район.");
     return;
   }
   state.adminMapPickMode = mode;
   closeAdminModal();
-  const label = mode === "city-center" ? "центр міста" : "спавн-точку";
+  const label = mode === "city-center" ? "центр локації / району" : "спавн-точку";
   setAdminPickStatus(`Режим вибору: клікни по карті, щоб поставити ${label}.`);
 }
 
 function renderAdminLocations() {
   if (!adminLocationList) return;
   adminLocationList.innerHTML = "";
+  const byId = new Map((state.adminLocations || []).map((item) => [item.id, item]));
   (state.adminLocations || []).forEach((location) => {
     const item = document.createElement("button");
     item.type = "button";
     item.className = "admin-location-item";
     const pointCount = Array.isArray(location.points) ? location.points.length : 0;
+    const typeLabel = (location.location_type || "city") === "district" ? "Район" : "Місто";
+    const parent = location.parent_location_id ? byId.get(location.parent_location_id) : null;
     item.innerHTML = `
       <strong>${location.name}</strong>
+      <span>${typeLabel}${parent ? ` · ${parent.name}` : ""}</span>
       <span>${Number(location.lat).toFixed(4)}, ${Number(location.lng).toFixed(4)}</span>
       <span>Точок: ${pointCount}</span>
     `;
     item.addEventListener("click", () => {
       if (adminLocationSelect) adminLocationSelect.value = location.id;
       if (adminLocationName) adminLocationName.value = location.name || "";
+      if (adminLocationType) adminLocationType.value = location.location_type || "city";
+      populateAdminParentSelect(location.parent_location_id || "");
       if (adminLocationKeys) adminLocationKeys.value = Array.isArray(location.keys) ? location.keys.join(", ") : "";
       if (adminLocationLat) adminLocationLat.value = location.lat ?? "";
       if (adminLocationLng) adminLocationLng.value = location.lng ?? "";
@@ -1494,7 +1574,7 @@ function renderAdminPoints(location) {
   if (points.length === 0) {
     const empty = document.createElement("div");
     empty.className = "admin-point-item";
-    empty.textContent = "Для цього міста ще немає спавн-точок.";
+    empty.textContent = "Для цієї локації ще немає спавн-точок.";
     adminPointList.appendChild(empty);
     return;
   }
@@ -1512,6 +1592,9 @@ function syncAdminLocationForm(selectedId = "") {
   const selected = (state.adminLocations || []).find((item) => item.id === selectedId);
   if (!selected) {
     if (adminLocationName) adminLocationName.value = "";
+    if (adminLocationType) adminLocationType.value = "city";
+    populateAdminParentSelect("");
+    if (adminLocationParent) adminLocationParent.disabled = true;
     if (adminLocationKeys) adminLocationKeys.value = "";
     if (adminLocationLat) adminLocationLat.value = "";
     if (adminLocationLng) adminLocationLng.value = "";
@@ -1520,6 +1603,9 @@ function syncAdminLocationForm(selectedId = "") {
     return null;
   }
   if (adminLocationName) adminLocationName.value = selected.name || "";
+  if (adminLocationType) adminLocationType.value = selected.location_type || "city";
+  populateAdminParentSelect(selected.parent_location_id || "");
+  if (adminLocationParent) adminLocationParent.disabled = (selected.location_type || "city") !== "district";
   if (adminLocationKeys) adminLocationKeys.value = Array.isArray(selected.keys) ? selected.keys.join(", ") : "";
   if (adminLocationLat) adminLocationLat.value = selected.lat ?? "";
   if (adminLocationLng) adminLocationLng.value = selected.lng ?? "";
@@ -1530,11 +1616,18 @@ function syncAdminLocationForm(selectedId = "") {
 
 function populateAdminLocationSelect() {
   if (!adminLocationSelect) return;
-  adminLocationSelect.innerHTML = '<option value="">Нове місто</option>';
-  (state.adminLocations || []).forEach((location) => {
+  adminLocationSelect.innerHTML = '<option value="">Нова локація / район</option>';
+  const ordered = [...(state.adminLocations || [])].sort((a, b) => {
+    const typeA = a.location_type || "city";
+    const typeB = b.location_type || "city";
+    if (typeA !== typeB) return typeA === "city" ? -1 : 1;
+    return String(a.name || "").localeCompare(String(b.name || ""), "uk");
+  });
+  ordered.forEach((location) => {
     const option = document.createElement("option");
     option.value = location.id;
-    option.textContent = `${location.name} (${Array.isArray(location.points) ? location.points.length : 0} т.)`;
+    const label = (location.location_type || "city") === "district" ? "район" : "місто";
+    option.textContent = `${location.name} · ${label} (${Array.isArray(location.points) ? location.points.length : 0} т.)`;
     adminLocationSelect.appendChild(option);
   });
 }
@@ -1545,6 +1638,7 @@ async function loadAdminLocations(preferredId = "") {
   const data = await response.json();
   state.adminLocations = Array.isArray(data.items) ? data.items : [];
   populateAdminLocationSelect();
+  populateAdminParentSelect();
   renderAdminLocations();
   if (adminLocationSelect && preferredId) {
     adminLocationSelect.value = preferredId;
@@ -1747,11 +1841,23 @@ if (adminLocationSelect) {
   });
 }
 
+if (adminLocationType) {
+  adminLocationType.addEventListener("change", () => {
+    const isDistrict = adminLocationType.value === "district";
+    if (adminLocationParent) {
+      adminLocationParent.disabled = !isDistrict;
+      if (!isDistrict) adminLocationParent.value = "";
+    }
+  });
+}
+
 if (adminLocationSave) {
   adminLocationSave.addEventListener("click", async () => {
     const payload = {
       location_id: adminLocationSelect?.value || "",
       name: adminLocationName?.value.trim() || "",
+      location_type: adminLocationType?.value || "city",
+      parent_location_id: adminLocationType?.value === "district" ? (adminLocationParent?.value || "") : "",
       keys: adminLocationKeys?.value.trim() || "",
       lat: adminLocationLat?.value ? Number(adminLocationLat.value) : null,
       lng: adminLocationLng?.value ? Number(adminLocationLng.value) : null,
@@ -1766,7 +1872,7 @@ if (adminLocationSave) {
       body: JSON.stringify(payload)
     });
     if (!response.ok) {
-      alert("Не вдалося зберегти місто або точку.");
+      alert("Не вдалося зберегти локацію або точку.");
       return;
     }
     const saved = await response.json();
@@ -1783,7 +1889,7 @@ if (adminLocationSave) {
       renderAdminLocations();
       syncAdminLocationForm(preferredId);
     }
-    setAdminPickStatus("Місто/точку збережено. Можна додати ще одну спавн-точку.");
+    setAdminPickStatus("Локацію/точку збережено. Можна додати ще одну спавн-точку.");
     window.setTimeout(() => {
       loadAdminLocations(preferredId).catch(() => {});
     }, 1800);
@@ -1805,12 +1911,12 @@ if (adminPickSpawnPoint) {
 if (adminPointAddAnother) {
   adminPointAddAnother.addEventListener("click", () => {
     if (!adminLocationSelect?.value) {
-      alert("Вибери існуюче місто, щоб додати ще одну точку.");
+      alert("Вибери існуючу локацію / район, щоб додати ще одну точку.");
       return;
     }
     if (adminPointLat) adminPointLat.value = "";
     if (adminPointLng) adminPointLng.value = "";
-    setAdminPickStatus("Додавання нової спавн-точки для вибраного міста.");
+    setAdminPickStatus("Додавання нової спавн-точки для вибраної локації / району.");
     beginAdminMapPick("spawn-point");
   });
 }

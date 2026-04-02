@@ -391,7 +391,7 @@ function extractAlarmSignals(text) {
 
 function isDowned(text) {
   const lower = normalizeText(text);
-  return ["збит", "сбит", "знищ", "уничтож", "downed"].some((keyword) =>
+  return ["збит", "сбит", "знищ", "уничтож", "downed", "пропал", "пропали", "зник", "зникли", "исчез", "исчезли"].some((keyword) =>
     lower.includes(keyword)
   );
 }
@@ -635,7 +635,9 @@ function inferRegionIdFromCoords(lat, lng) {
 
 function getCustomPointsForLocation(locationId, type) {
   if (!locationId) return [];
-  return getAdminLocationPointsSync()
+  const location = getAdminLocationsSync()
+    .find((item) => item && String(item.id) === String(locationId));
+  const points = getAdminLocationPointsSync()
     .filter((item) => item && String(item.location_id) === String(locationId))
     .filter((item) =>
       !Array.isArray(item.types) ||
@@ -649,6 +651,29 @@ function getCustomPointsForLocation(locationId, type) {
       types: Array.isArray(item.types) ? item.types : []
     }))
     .filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng));
+
+  const unique = [];
+  const seen = new Set();
+  points.forEach((point) => {
+    const key = `${point.lat.toFixed(4)}:${point.lng.toFixed(4)}:${(point.types || []).join(",")}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    unique.push(point);
+  });
+
+  if (!Number.isFinite(Number(location?.lat)) || !Number.isFinite(Number(location?.lng))) {
+    return unique;
+  }
+
+  const center = { lat: Number(location.lat), lng: Number(location.lng) };
+  const withDistance = unique.map((point) => ({
+    ...point,
+    __distanceKm: haversineKm(center, point)
+  }));
+  const nearby = withDistance.filter((point) => point.__distanceKm <= 12);
+  const local = withDistance.filter((point) => point.__distanceKm <= 30);
+  const scoped = nearby.length > 0 ? nearby : (local.length > 0 ? local : withDistance);
+  return scoped.map(({ __distanceKm, ...point }) => point);
 }
 
 function extractGroupCount(text, type) {
@@ -1199,6 +1224,11 @@ export function parseMessageToEvents(text, meta = {}) {
       lat = spawnCandidate.lat;
       lng = spawnCandidate.lng;
     }
+    const shouldTrackToTarget =
+      !target.exact &&
+      Number.isFinite(targetLat) &&
+      Number.isFinite(targetLng) &&
+      (hasRouteGuidance || meta.allow_bearing_from_base === true || sea || forceSea);
     const fallbackDirection = !Number.isFinite(direction) &&
       Number.isFinite(targetLat) &&
       Number.isFinite(targetLng) &&
@@ -1214,7 +1244,9 @@ export function parseMessageToEvents(text, meta = {}) {
       : "";
     const jitteredLat = target.exact || spawnCandidate ? lat : addJitter(lat, seed);
     const jitteredLng = target.exact || spawnCandidate ? lng : addJitter(lng, seed + 7);
-    const finalDirection = Number.isFinite(direction)
+    const finalDirection = shouldTrackToTarget
+      ? bearingDeg(jitteredLat, jitteredLng, targetLat, targetLng)
+      : Number.isFinite(direction)
       ? direction
       : Number.isFinite(fallbackDirection)
         ? fallbackDirection
@@ -1244,6 +1276,10 @@ export function parseMessageToEvents(text, meta = {}) {
       marker_variant: markerVariant,
       group_count_min: effectiveCount?.min || null,
       group_count_max: effectiveCount?.max || null,
+      target_lat: shouldTrackToTarget ? Number(targetLat.toFixed(4)) : null,
+      target_lng: shouldTrackToTarget ? Number(targetLng.toFixed(4)) : null,
+      target_label: shouldTrackToTarget ? targetLabel : null,
+      target_location_id: shouldTrackToTarget ? (target.location_id || null) : null,
       region_id: resolvedRegionId,
       raw_text: meta.raw_text || text
     };

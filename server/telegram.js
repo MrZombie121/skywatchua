@@ -68,6 +68,19 @@ function isTurnMessage(text) {
   return /\bтузл[а-яіїє']*\b/u.test(lower);
 }
 
+function isTrackGoneMessage(text) {
+  const lower = normalizeText(text);
+  return [
+    "пропал",
+    "пропали",
+    "зник",
+    "зникли",
+    "исчез",
+    "исчезли",
+    "lost contact"
+  ].some((key) => lower.includes(key));
+}
+
 function preferredRegionIdForChannel(channel) {
   const lower = String(channel || "").toLowerCase().replace(/^@/, "");
   if (lower.includes("xydessa_live") || lower.includes("pivdenmedia")) return "odeska";
@@ -294,6 +307,24 @@ export async function loadTelegramEvents() {
         allow_bearing_from_base: turnSignal,
         track_key: rootKey
       };
+
+      if (isTrackGoneMessage(msg.message)) {
+        const prefix = `${rootKey}-`;
+        for (let i = events.length - 1; i >= 0; i -= 1) {
+          if (String(events[i]?.id || "").startsWith(prefix)) {
+            events.splice(i, 1);
+          }
+        }
+        if (lastTrackKey === rootKey) {
+          lastTrackKey = null;
+          lastTrackEvent = null;
+        }
+        if (regionPreference && lastTrackByRegion.get(regionPreference) === rootKey) {
+          lastTrackByRegion.delete(regionPreference);
+          lastTrackEventByRegion.delete(regionPreference);
+        }
+        continue;
+      }
 
       const eventsFromMsg = parseMessageToEvents(msg.message, parseMeta);
 

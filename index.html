@@ -348,30 +348,43 @@
             </div>
             <div class="admin-schedule">
               <div class="admin-row">
-                <span>Міста та точки</span>
+                <span>Локації, райони та точки</span>
                 <span class="muted">Turso / libsql</span>
               </div>
               <label>
-                Існуюче місто
+                Існуюча локація / район
                 <select id="admin-location-select">
-                  <option value="">Нове місто</option>
+                  <option value="">Нова локація / район</option>
                 </select>
               </label>
               <label>
-                Назва міста
-                <input type="text" id="admin-location-name" placeholder="Первомайськ" />
+                Назва локації / району
+                <input type="text" id="admin-location-name" placeholder="Чорноморськ / Дарницький район" />
+              </label>
+              <label>
+                Тип локації
+                <select id="admin-location-type">
+                  <option value="city">Місто</option>
+                  <option value="district">Район міста</option>
+                </select>
+              </label>
+              <label>
+                Батьківське велике місто
+                <select id="admin-location-parent">
+                  <option value="">Без прив'язки</option>
+                </select>
               </label>
               <label>
                 Ключі пошуку
                 <input type="text" id="admin-location-keys" placeholder="первомайськ, первомайск, pervomaisk" />
               </label>
               <label>
-                Центр міста lat
+                Центр локації / району lat
                 <input type="number" step="0.0001" id="admin-location-lat" placeholder="48.04" />
               </label>
               <button type="button" class="ghost" id="admin-pick-city-center">Взяти центр з карти</button>
               <label>
-                Центр міста lng
+                Центр локації / району lng
                 <input type="number" step="0.0001" id="admin-location-lng" placeholder="30.85" />
               </label>
               <label>
@@ -393,11 +406,11 @@
               </label>
               <div class="admin-row">
                 <button type="button" class="ghost" id="admin-point-add-another">Додати ще одну точку</button>
-                <span class="muted">Для вибраного міста</span>
+                <span class="muted">Для вибраної локації / району</span>
               </div>
               <div class="muted" id="admin-pick-status">Кнопки вище дозволяють вибрати координати кліком по карті.</div>
               <div class="admin-point-list" id="admin-point-list"></div>
-              <button type="button" id="admin-location-save">Зберегти місто і точку</button>
+              <button type="button" id="admin-location-save">Зберегти локацію і точку</button>
               <div class="admin-location-list" id="admin-location-list"></div>
             </div>
             <button class="admin-logout" id="admin-logout">Вийти</button>

@@ -18,6 +18,11 @@ let tursoSettingsReady = false;
 
 const defaultAdminLocations = [
   { id: "uzyn", name: "Узин", keys: ["узин", "uzyn"], lat: 49.82, lng: 30.41, region_id: "kyivska" },
+  { id: "kyiv-city", name: "Київ", keys: ["київ", "киев", "kyiv", "kiev"], lat: 50.4501, lng: 30.5234, region_id: "kyiv", location_type: "city", parent_location_id: null },
+  { id: "odesa-city", name: "Одеса", keys: ["одеса", "одесса", "odesa", "odessa"], lat: 46.4825, lng: 30.7233, region_id: "odeska", location_type: "city", parent_location_id: null },
+  { id: "kharkiv-city", name: "Харків", keys: ["харків", "харьков", "kharkiv", "kharkov"], lat: 49.9935, lng: 36.2304, region_id: "kharkivska", location_type: "city", parent_location_id: null },
+  { id: "dnipro-city", name: "Дніпро", keys: ["дніпро", "днепр", "dnipro", "dnepr"], lat: 48.4647, lng: 35.0462, region_id: "dniprovska", location_type: "city", parent_location_id: null },
+  { id: "lviv-city", name: "Львів", keys: ["львів", "львов", "lviv"], lat: 49.8397, lng: 24.0297, region_id: "lvivska", location_type: "city", parent_location_id: null },
   { id: "balta", name: "Балта", keys: ["балта", "balta"], lat: 47.94, lng: 29.62, region_id: "odeska" },
   { id: "podilsk-db", name: "Подільськ", keys: ["подільськ", "подольск", "podilsk"], lat: 47.75, lng: 29.53, region_id: "odeska" },
   { id: "pomichna", name: "Помічна", keys: ["помічна", "помошная", "pomichna"], lat: 48.24, lng: 31.42, region_id: "kirovohradska" },
@@ -66,6 +71,10 @@ function normalizeKeyList(values) {
   ));
 }
 
+function normalizeLocationType(value) {
+  return String(value || "").trim().toLowerCase() === "district" ? "district" : "city";
+}
+
 function slugify(value) {
   return String(value || "")
     .toLowerCase()
@@ -80,6 +89,8 @@ function seedAdminLocations() {
     if (!existingLocationIds.has(location.id)) {
       db.data.admin_locations.push({
         ...location,
+        location_type: normalizeLocationType(location.location_type),
+        parent_location_id: location.parent_location_id ? String(location.parent_location_id) : null,
         created_at: Date.now()
       });
       existingLocationIds.add(location.id);
@@ -108,7 +119,7 @@ async function writeAdminLocationCache(locations, points) {
 async function loadAdminLocationsFromTurso() {
   if (!tursoClient) return;
   const locationResult = await tursoClient.execute(`
-    SELECT id, name, keys_json, lat, lng, region_id, created_at
+    SELECT id, name, keys_json, lat, lng, region_id, location_type, parent_location_id, created_at
     FROM admin_locations
     ORDER BY created_at ASC
   `);
@@ -125,6 +136,8 @@ async function loadAdminLocationsFromTurso() {
     lat: Number(row.lat),
     lng: Number(row.lng),
     region_id: row.region_id ? String(row.region_id) : null,
+    location_type: normalizeLocationType(row.location_type),
+    parent_location_id: row.parent_location_id ? String(row.parent_location_id) : null,
     created_at: Number(row.created_at || 0)
   }));
   const points = (pointResult.rows || []).map((row) => ({
@@ -145,14 +158,16 @@ async function syncAdminLocationsToTurso() {
   for (const location of db.data.admin_locations || []) {
     await tursoClient.execute({
       sql: `
-        INSERT INTO admin_locations(id, name, keys_json, lat, lng, region_id, created_at)
-        VALUES(?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO admin_locations(id, name, keys_json, lat, lng, region_id, location_type, parent_location_id, created_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           keys_json = excluded.keys_json,
           lat = excluded.lat,
           lng = excluded.lng,
-          region_id = excluded.region_id
+          region_id = excluded.region_id,
+          location_type = excluded.location_type,
+          parent_location_id = excluded.parent_location_id
       `,
       args: [
         String(location.id),
@@ -161,6 +176,8 @@ async function syncAdminLocationsToTurso() {
         Number(location.lat),
         Number(location.lng),
         location.region_id ? String(location.region_id) : null,
+        normalizeLocationType(location.location_type),
+        location.parent_location_id ? String(location.parent_location_id) : null,
         Number(location.created_at || Date.now())
       ]
     });
@@ -207,9 +224,13 @@ async function initTursoSettings() {
         lat REAL NOT NULL,
         lng REAL NOT NULL,
         region_id TEXT,
+        location_type TEXT NOT NULL DEFAULT 'city',
+        parent_location_id TEXT,
         created_at INTEGER NOT NULL
       )
     `);
+    await tursoClient.execute("ALTER TABLE admin_locations ADD COLUMN location_type TEXT NOT NULL DEFAULT 'city'").catch(() => {});
+    await tursoClient.execute("ALTER TABLE admin_locations ADD COLUMN parent_location_id TEXT").catch(() => {});
     await tursoClient.execute(`
       CREATE TABLE IF NOT EXISTS admin_location_points (
         id TEXT PRIMARY KEY,
@@ -372,7 +393,11 @@ async function clearTestEvents() {
 
 function getAdminLocationsSync() {
   return Array.isArray(db.data?.admin_locations)
-    ? db.data.admin_locations.map((item) => ({ ...item }))
+    ? db.data.admin_locations.map((item) => ({
+      ...item,
+      location_type: normalizeLocationType(item.location_type),
+      parent_location_id: item.parent_location_id ? String(item.parent_location_id) : null
+    }))
     : [];
 }
 
@@ -416,6 +441,8 @@ async function upsertAdminLocationWithPoint(payload = {}) {
   const pointLat = Number(payload.point_lat);
   const pointLng = Number(payload.point_lng);
   const regionId = String(payload.region_id || "").trim() || null;
+  const locationType = normalizeLocationType(payload.location_type);
+  const parentLocationId = String(payload.parent_location_id || "").trim() || null;
   const submittedKeys = normalizeKeyList(payload.keys || []);
 
   let location = null;
@@ -434,6 +461,8 @@ async function upsertAdminLocationWithPoint(payload = {}) {
       lat,
       lng,
       region_id: regionId,
+      location_type: locationType,
+      parent_location_id: locationType === "district" ? parentLocationId : null,
       created_at: now
     };
     db.data.admin_locations.push(location);
@@ -442,6 +471,8 @@ async function upsertAdminLocationWithPoint(payload = {}) {
     location.lat = Number.isFinite(lat) ? lat : location.lat;
     location.lng = Number.isFinite(lng) ? lng : location.lng;
     location.region_id = regionId || location.region_id || null;
+    location.location_type = locationType || location.location_type || "city";
+    location.parent_location_id = location.location_type === "district" ? parentLocationId : null;
     location.keys = normalizeKeyList([...(location.keys || []), location.name, ...submittedKeys]);
   }
 
