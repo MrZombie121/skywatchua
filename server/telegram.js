@@ -16,9 +16,22 @@ const testChannels = new Set(
 const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
+const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 2));
+const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 4000));
+const clientStartTimeoutMs = Math.max(1000, Number(process.env.TG_CLIENT_START_TIMEOUT_MS || 8000));
 
-let client;
+let client = null;
 let clientReady = false;
+
+function withTimeout(promise, timeoutMs, label) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timeout after ${timeoutMs}ms`)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
 
 function normalizeText(text) {
   return String(text || "")
@@ -128,28 +141,46 @@ function refineEventsByConsensus(events) {
     const all = [current, ...peers];
     current.lat = Number((all.reduce((sum, item) => sum + Number(item.lat || 0), 0) / all.length).toFixed(4));
     current.lng = Number((all.reduce((sum, item) => sum + Number(item.lng || 0), 0) / all.length).toFixed(4));
-    // Do not infer heading from neighboring signals to avoid unsolicited course changes.
   }
   return refined;
 }
 
+async function disconnectClient() {
+  try {
+    await client?.disconnect();
+  } catch {}
+  client = null;
+  clientReady = false;
+}
+
 async function getClient() {
   if (!apiId || !apiHash) return null;
-  if (clientReady) return client;
+  if (clientReady && client) return client;
 
-  client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
-    connectionRetries: 3
-  });
+  if (!client) {
+    client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
+      connectionRetries: 2
+    });
+  }
 
-  await client.start({
-    phoneNumber: async () => process.env.TG_PHONE || "",
-    password: async () => process.env.TG_PASSWORD || "",
-    phoneCode: async () => process.env.TG_CODE || "",
-    onError: (err) => console.error("Telegram auth error", err)
-  });
-
-  clientReady = true;
-  return client;
+  try {
+    await withTimeout(
+      client.start({
+        phoneNumber: async () => process.env.TG_PHONE || "",
+        password: async () => process.env.TG_PASSWORD || "",
+        phoneCode: async () => process.env.TG_CODE || "",
+        onError: (err) => console.error("Telegram auth error", err)
+      }),
+      clientStartTimeoutMs,
+      "telegram start"
+    );
+    clientReady = true;
+    return client;
+  } catch (error) {
+    console.warn("Telegram client start failed", error?.message || error);
+    await disconnectClient();
+    return null;
+  }
 }
 
 export async function loadTelegramEvents() {
@@ -162,21 +193,36 @@ export async function loadTelegramEvents() {
   const alarmSet = new Set();
   const districtAlarmMap = new Map();
   let alarmsUpdated = false;
-
   const channelMessages = new Map();
   const allMessages = [];
-  for (const channel of channels) {
+
+  async function readChannel(channel) {
     try {
-      const messages = await tgClient.getMessages(channel, { limit });
-      const ordered = [...messages].filter(Boolean).reverse();
-      channelMessages.set(channel, ordered);
-      ordered.forEach((msg) => {
-        allMessages.push({ channel, msg });
-      });
-      for (const msg of ordered) {
-        if (!msg.message) continue;
-        const signal = extractAlarmSignals(msg.message);
-        if (signal) {
+      const messages = await withTimeout(
+        tgClient.getMessages(channel, { limit }),
+        channelTimeoutMs,
+        `telegram channel ${channel}`
+      );
+      return { channel, ordered: [...messages].filter(Boolean).reverse() };
+    } catch (error) {
+      console.warn("Failed to read channel", channel, error?.message || error);
+      return { channel, ordered: [] };
+    }
+  }
+
+  try {
+    for (let start = 0; start < channels.length; start += channelConcurrency) {
+      const batch = channels.slice(start, start + channelConcurrency);
+      const results = await Promise.all(batch.map(readChannel));
+      for (const { channel, ordered } of results) {
+        channelMessages.set(channel, ordered);
+        ordered.forEach((msg) => {
+          allMessages.push({ channel, msg });
+        });
+        for (const msg of ordered) {
+          if (!msg.message) continue;
+          const signal = extractAlarmSignals(msg.message);
+          if (!signal) continue;
           alarmsUpdated = true;
           signal.regions.forEach((region) => {
             if (signal.status === "off") {
@@ -194,58 +240,54 @@ export async function loadTelegramEvents() {
           });
         }
       }
-    } catch (error) {
-      console.warn("Failed to read channel", channel, error?.message || error);
     }
-  }
 
-  allMessages.sort((a, b) => (a.msg.date || 0) - (b.msg.date || 0));
+    allMessages.sort((a, b) => (a.msg.date || 0) - (b.msg.date || 0));
 
-  function findReplyContext(channel, msg) {
-    const replyTo = msg.replyTo || {};
-    const replyId = replyTo.replyToMsgId;
-    if (!replyId) {
+    function findReplyContext(channel, msg) {
+      const replyTo = msg.replyTo || {};
+      const replyId = replyTo.replyToMsgId;
+      if (!replyId) {
+        return {
+          hasReply: false,
+          rootKey: `${channel}:${msg.id}`,
+          parentText: null,
+          baseEvent: null
+        };
+      }
+
+      const sameChannel = channelMessages.get(channel) || [];
+      const parent = sameChannel.find((item) => item.id === replyId);
+      const root = replyTo.replyToTopId || replyId;
+      let baseEvent = null;
+      if (parent?.message) {
+        const parentEvents = parseMessageToEvents(parent.message, {
+          source: channel,
+          timestamp: parent.date * 1000,
+          raw_text: parent.message
+        });
+        if (parentEvents.length) {
+          baseEvent = parentEvents[0];
+        }
+      }
       return {
-        hasReply: false,
-        rootKey: `${channel}:${msg.id}`,
-        parentText: null,
-        baseEvent: null
+        hasReply: true,
+        rootKey: `${channel}:${root}`,
+        parentText: parent?.message || null,
+        baseEvent
       };
     }
 
-    const sameChannel = channelMessages.get(channel) || [];
-    const parent = sameChannel.find((item) => item.id === replyId);
-    const root = replyTo.replyToTopId || replyId;
-    let baseEvent = null;
-    if (parent?.message) {
-      const parentEvents = parseMessageToEvents(parent.message, {
-        source: channel,
-        timestamp: parent.date * 1000,
-        raw_text: parent.message
-      });
-      if (parentEvents.length) {
-        baseEvent = parentEvents[0];
-      }
-    }
-    return {
-      hasReply: true,
-      rootKey: `${channel}:${root}`,
-      parentText: parent?.message || null,
-      baseEvent
-    };
-  }
+    let lastTrackKey = null;
+    let lastTrackEvent = null;
+    const lastTrackByRegion = new Map();
+    const lastTrackEventByRegion = new Map();
 
-  let lastTrackKey = null;
-  let lastTrackEvent = null;
-  const lastTrackByRegion = new Map();
-  const lastTrackEventByRegion = new Map();
+    for (const item of allMessages) {
+      const { channel, msg } = item;
+      if (!msg?.message) continue;
 
-  for (const item of allMessages) {
-    const { channel, msg } = item;
-    if (!msg) continue;
-
-    const nowTs = Number(msg.date || 0) * 1000;
-    if (msg.message) {
+      const nowTs = Number(msg.date || 0) * 1000;
       const turnSignal = isTurnMessage(msg.message);
       const replyContext = findReplyContext(channel, msg);
       const regionPreference = preferredRegionIdForChannel(channel);
@@ -314,30 +356,26 @@ export async function loadTelegramEvents() {
       }
 
       const eventsFromMsg = parseMessageToEvents(msg.message, parseMeta);
+      if (!eventsFromMsg.length) continue;
 
-      if (eventsFromMsg.length) {
-        events.push(...eventsFromMsg);
-        lastTrackKey = rootKey;
-        lastTrackEvent = eventsFromMsg[0];
-        eventsFromMsg.forEach((eventItem) => {
-          if (eventItem?.region_id) {
-            lastTrackByRegion.set(eventItem.region_id, rootKey);
-            lastTrackEventByRegion.set(eventItem.region_id, eventItem);
-          }
-        });
-      }
+      events.push(...eventsFromMsg);
+      lastTrackKey = rootKey;
+      lastTrackEvent = eventsFromMsg[0];
+      eventsFromMsg.forEach((eventItem) => {
+        if (eventItem?.region_id) {
+          lastTrackByRegion.set(eventItem.region_id, rootKey);
+          lastTrackEventByRegion.set(eventItem.region_id, eventItem);
+        }
+      });
     }
 
+    return {
+      events: refineEventsByConsensus(events),
+      alarms: Array.from(alarmSet),
+      district_alarms: Array.from(districtAlarmMap.values()),
+      alarms_updated: alarmsUpdated
+    };
+  } finally {
+    await disconnectClient();
   }
-
-  return {
-    events: refineEventsByConsensus(events),
-    alarms: Array.from(alarmSet),
-    district_alarms: Array.from(districtAlarmMap.values()),
-    alarms_updated: alarmsUpdated
-  };
 }
-
-
-
-

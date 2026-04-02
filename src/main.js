@@ -1004,6 +1004,9 @@ function buildPopup(event, distanceKm) {
     : "";
   const userDistanceKm = distanceToUserKm(event);
   const eta = etaRangeForDistance(userDistanceKm);
+  const approachArrivalLine = Number.isFinite(userDistanceKm) && eta
+    ? `<br /><span class="popup-meta">РџСЂРёР±СѓС‚С‚СЏ (Kyiv): ${eta.fastAt} - ${eta.slowAt}</span>`
+    : "";
   const approachLine = Number.isFinite(userDistanceKm)
     ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Орієнтовний час підльоту: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span>`
     : "";
@@ -1039,6 +1042,7 @@ function buildPopup(event, distanceKm) {
         ${event.comment ? `<br />Коментар: ${event.comment}` : ""}
         ${targetLine}
         ${approachLine}
+        ${approachArrivalLine}
         ${confidenceLine}
         ${groupLine}
         ${evidenceLine}
@@ -1131,6 +1135,17 @@ function distanceToUserKm(event) {
   return haversineKm([event.lat, event.lng], user);
 }
 
+function formatClockTimeKyiv(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "вЂ”";
+  return date.toLocaleTimeString("uk-UA", {
+    timeZone: "Europe/Kyiv",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+
 function formatEtaFromHours(hours) {
   const totalMinutes = Math.max(1, Math.round(hours * 60));
   const hh = Math.floor(totalMinutes / 60);
@@ -1143,9 +1158,12 @@ function etaRangeForDistance(distanceKm) {
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) return null;
   const fastHours = distanceKm / 185;
   const slowHours = distanceKm / 150;
+  const now = Date.now();
   return {
     fast: formatEtaFromHours(fastHours),
-    slow: formatEtaFromHours(slowHours)
+    slow: formatEtaFromHours(slowHours),
+    fastAt: formatClockTimeKyiv(now + fastHours * 60 * 60 * 1000),
+    slowAt: formatClockTimeKyiv(now + slowHours * 60 * 60 * 1000)
   };
 }
 
