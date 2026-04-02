@@ -181,7 +181,7 @@ async function getClient() {
 
   try {
     if (sessionString) {
-      await withTimeout(client.connect(), clientStartTimeoutMs, "telegram connect");
+      await client.connect();
     } else {
       await withTimeout(
         client.start({
