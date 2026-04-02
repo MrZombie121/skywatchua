@@ -55,6 +55,8 @@ function parseSourceWeights(raw) {
 }
 
 const sourceWeights = parseSourceWeights(process.env.TG_SOURCE_WEIGHTS || "");
+const EVENTS_CACHE_KEY = "events_cache_v1";
+const EVENTS_CACHE_UPDATED_AT_KEY = "events_cache_updated_at_v1";
 
 const state = {
   lastFetch: 0,
@@ -119,6 +121,34 @@ function withConfidence(event) {
     direction: normalizeHeading(event),
     confidence: weighted
   };
+}
+
+async function hydrateEventCacheFromStore() {
+  if (state.cache.length > 0) return;
+  try {
+    const rawCache = await getSetting(EVENTS_CACHE_KEY, "[]");
+    const rawUpdatedAt = await getSetting(EVENTS_CACHE_UPDATED_AT_KEY, "0");
+    const parsed = JSON.parse(rawCache);
+    if (!Array.isArray(parsed) || parsed.length === 0) return;
+    state.cache = parsed.filter((event) =>
+      Number.isFinite(Number(event?.lat)) &&
+      Number.isFinite(Number(event?.lng)) &&
+      Number.isFinite(Date.parse(event?.timestamp))
+    );
+    const updatedAt = Number(rawUpdatedAt);
+    state.lastFetch = Number.isFinite(updatedAt) && updatedAt > 0 ? updatedAt : Date.now();
+  } catch (error) {
+    console.warn("Failed to hydrate event cache", error?.message || error);
+  }
+}
+
+async function persistEventCacheToStore(events, updatedAt = Date.now()) {
+  try {
+    await setSetting(EVENTS_CACHE_KEY, JSON.stringify(Array.isArray(events) ? events : []));
+    await setSetting(EVENTS_CACHE_UPDATED_AT_KEY, String(updatedAt));
+  } catch (error) {
+    console.warn("Failed to persist event cache", error?.message || error);
+  }
 }
 
 function deduplicateEvents(events) {
@@ -326,6 +356,7 @@ async function sendEvents(_req, res) {
 
     state.cache = combined;
     state.lastFetch = nowTs;
+    await persistEventCacheToStore(combined, nowTs);
 
     return {
       events: combined,
@@ -338,6 +369,7 @@ async function sendEvents(_req, res) {
   }
 
   try {
+    await hydrateEventCacheFromStore();
     const maintenance = await getMaintenanceState();
     const now = Date.now();
 
@@ -577,4 +609,8 @@ app.get("*", (_req, res) => {
 
 app.listen(port, () => {
   console.log(`Skywatch UA backend running on http://localhost:${port}`);
+});
+
+hydrateEventCacheFromStore().catch((error) => {
+  console.warn("Initial event cache hydrate failed", error?.message || error);
 });

@@ -63,6 +63,7 @@ const userLayer = L.layerGroup().addTo(map);
 let oblastGeoLayer = null;
 let oblastGeoReady = false;
 const markerById = new Map();
+const markerIconSignatureById = new Map();
 const eventById = new Map();
 const driftById = new Map();
 const markerSpawnAt = new Map();
@@ -724,6 +725,19 @@ function makeMarkerIcon(event) {
   });
 }
 
+function markerIconSignature(event) {
+  const freshness = freshnessState(event);
+  const spawnedAt = markerSpawnAt.get(event.id) || 0;
+  const spawnClass = Date.now() - spawnedAt <= SPAWN_ANIMATION_MS ? "spawn" : "";
+  return [
+    resolveMarkerVariant(event) || event.type || "other",
+    freshness.markerClass,
+    spawnClass,
+    event.is_test ? "test" : "real",
+    directionOrDefault(event.direction, event.fallbackDirection)
+  ].join("|");
+}
+
 function updateMarkerScale() {
   const zoom = map.getZoom();
   const scale = Math.min(1.8, Math.max(0.7, 1.5 - (zoom - 5) * 0.1));
@@ -897,6 +911,7 @@ function renderMarkers() {
     if (!nextIds.has(id)) {
       markerLayer.removeLayer(marker);
       markerById.delete(id);
+      markerIconSignatureById.delete(id);
       markerSpawnAt.delete(id);
       eventById.delete(id);
       const drift = driftById.get(id);
@@ -917,7 +932,11 @@ function renderMarkers() {
         !previous ||
         Math.abs(Number(previous.lat) - Number(event.lat)) > 0.0001 ||
         Math.abs(Number(previous.lng) - Number(event.lng)) > 0.0001;
-      existing.setIcon(makeMarkerIcon(event));
+      const nextIconSignature = markerIconSignature(event);
+      if (markerIconSignatureById.get(event.id) !== nextIconSignature) {
+        existing.setIcon(makeMarkerIcon(event));
+        markerIconSignatureById.set(event.id, nextIconSignature);
+      }
       existing.setPopupContent(popup);
       eventById.set(event.id, event);
       if (!driftById.has(event.id)) {
@@ -975,6 +994,7 @@ function renderMarkers() {
     marker.on("click", () => toggleTrackFor(event.id, marker));
     marker.on("popupopen", () => toggleTrackFor(event.id, marker));
     markerById.set(event.id, marker);
+    markerIconSignatureById.set(event.id, markerIconSignature(event));
     markerSpawnAt.set(event.id, Date.now());
     eventById.set(event.id, event);
     const drift = {
