@@ -61,6 +61,27 @@ const state = {
   cache: [],
   inFlight: null
 };
+const startedAt = Date.now();
+
+function memorySnapshot() {
+  const usage = process.memoryUsage();
+  return {
+    rss_mb: Number((usage.rss / 1024 / 1024).toFixed(1)),
+    heap_used_mb: Number((usage.heapUsed / 1024 / 1024).toFixed(1)),
+    heap_total_mb: Number((usage.heapTotal / 1024 / 1024).toFixed(1))
+  };
+}
+
+function logProcessEvent(label, extra = {}) {
+  console.error(`[process] ${label}`, {
+    pid: process.pid,
+    uptime_s: Number(process.uptime().toFixed(1)),
+    cache_size: state.cache.length,
+    last_fetch_age_ms: state.lastFetch ? Date.now() - state.lastFetch : null,
+    ...memorySnapshot(),
+    ...extra
+  });
+}
 
 async function loadPersistedEventCache() {
   const [rawEvents, rawFetchedAt] = await Promise.all([
@@ -269,6 +290,22 @@ async function sendStatus(_req, res) {
   });
 }
 
+function sendHealth(_req, res) {
+  res.json({
+    ok: true,
+    app_version: appVersion,
+    pid: process.pid,
+    uptime_sec: Number(process.uptime().toFixed(1)),
+    started_at: new Date(startedAt).toISOString(),
+    cache_size: state.cache.length,
+    last_fetch_at: state.lastFetch ? new Date(state.lastFetch).toISOString() : null,
+    in_flight: Boolean(state.inFlight),
+    refresh_ms: refreshMs,
+    event_ttl_min: eventTtlMin,
+    memory: memorySnapshot()
+  });
+}
+
 async function sendEvents(_req, res) {
   async function readStoredAlarmState() {
     const stored = await getSetting("alarms_state", "[]");
@@ -470,6 +507,7 @@ async function sendEvents(_req, res) {
 
 app.get("/api/meta", sendMeta);
 app.get("/api/v1/meta", sendMeta);
+app.get("/api/healthz", sendHealth);
 app.get("/api/status", sendStatus);
 app.get("/api/v1/status", sendStatus);
 app.get("/api/events", sendEvents);
@@ -647,6 +685,13 @@ app.get("*", (_req, res) => {
 
 app.listen(port, () => {
   console.log(`Skywatch UA backend running on http://localhost:${port}`);
+  console.log("Skywatch UA process started", {
+    pid: process.pid,
+    started_at: new Date(startedAt).toISOString(),
+    port,
+    refresh_ms: refreshMs,
+    event_ttl_min: eventTtlMin
+  });
   if (runtime.warmupOnStart) {
     setTimeout(() => {
       fetch(`http://127.0.0.1:${port}/api/events`).catch((error) => {
@@ -654,4 +699,39 @@ app.listen(port, () => {
       });
     }, 250);
   }
+});
+
+setInterval(() => {
+  console.log("[heartbeat]", {
+    pid: process.pid,
+    uptime_sec: Number(process.uptime().toFixed(1)),
+    cache_size: state.cache.length,
+    last_fetch_age_ms: state.lastFetch ? Date.now() - state.lastFetch : null,
+    in_flight: Boolean(state.inFlight),
+    ...memorySnapshot()
+  });
+}, 60000).unref();
+
+process.on("unhandledRejection", (reason) => {
+  logProcessEvent("unhandledRejection", {
+    reason: reason instanceof Error ? reason.stack || reason.message : String(reason)
+  });
+});
+
+process.on("uncaughtException", (error) => {
+  logProcessEvent("uncaughtException", {
+    error: error?.stack || error?.message || String(error)
+  });
+});
+
+process.on("SIGTERM", () => {
+  logProcessEvent("SIGTERM");
+});
+
+process.on("SIGINT", () => {
+  logProcessEvent("SIGINT");
+});
+
+process.on("exit", (code) => {
+  logProcessEvent("exit", { code });
 });
