@@ -265,6 +265,91 @@ async function sendEvents(_req, res) {
     return { alarmState, districtAlarmState };
   }
 
+  async function fetchFreshEvents() {
+    const tgPayload = await loadTelegramEvents();
+    let alarmState = tgPayload.alarms || [];
+    let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
+    alarmState = applyForcedAlarms(alarmState);
+    if (tgPayload.alarms_updated) {
+      await setSetting("alarms_state", JSON.stringify(alarmState));
+      await setSetting("district_alarms_state", JSON.stringify(districtAlarmState));
+      await setSetting("alarms_updated_at", String(Date.now()));
+    } else {
+      const storedStates = await readStoredAlarmState();
+      if (storedStates.alarmState.length > 0) {
+        alarmState = storedStates.alarmState;
+      }
+      if (storedStates.districtAlarmState.length > 0) {
+        districtAlarmState = storedStates.districtAlarmState;
+      }
+    }
+
+    const [rssEvents, openEvents] = await Promise.all([loadRssEvents(), loadOpenEvents()]);
+
+    const storedTests = await listTestEvents();
+    const testEvents = storedTests
+      .flatMap((item) =>
+        parseMessageToEvents(item.message, {
+          source: item.source || "admin",
+          timestamp: item.createdAt,
+          type: item.type,
+          direction: item.direction,
+          is_test: typeof item.is_test === "boolean" ? item.is_test : true,
+          group_count: item.group_count
+        })
+      )
+      .filter(Boolean);
+
+    const nowTs = Date.now();
+    const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
+    const staleKeepMs = Math.max(1, eventStaleKeepMin) * 60 * 1000;
+    const combinedRaw = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents]
+      .map(withConfidence)
+      .filter((event) => {
+        if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return false;
+        const time = Date.parse(event.timestamp);
+        if (!Number.isFinite(time)) return false;
+        return nowTs - time <= ttlMs;
+      });
+    const combined = deduplicateEvents(combinedRaw);
+
+    if (combined.length === 0 && state.cache.length && nowTs - state.lastFetch <= staleKeepMs) {
+      return {
+        events: state.cache,
+        alarms: alarmState,
+        district_alarms: districtAlarmState,
+        cached: true,
+        stale: true,
+        maintenance: false,
+        maintenance_until: null
+      };
+    }
+
+    state.cache = combined;
+    state.lastFetch = nowTs;
+
+    return {
+      events: combined,
+      alarms: alarmState,
+      district_alarms: districtAlarmState,
+      cached: false,
+      maintenance: false,
+      maintenance_until: null
+    };
+  }
+
+  function ensureBackgroundRefresh() {
+    if (state.inFlight) return state.inFlight;
+    state.inFlight = (async () => {
+      try {
+        return await fetchFreshEvents();
+      } finally {
+        state.inFlight = null;
+      }
+    })();
+    return state.inFlight;
+  }
+
   try {
     const maintenance = await getMaintenanceState();
     const now = Date.now();
@@ -294,92 +379,31 @@ async function sendEvents(_req, res) {
       });
     }
 
-    // Collapse concurrent requests into one upstream Telegram call.
-    if (state.inFlight) {
-      const payload = await state.inFlight;
-      return res.json(payload);
-    }
+    const { alarmState, districtAlarmState } = await readStoredAlarmState();
 
-    state.inFlight = (async () => {
-      const tgPayload = await loadTelegramEvents();
-      let alarmState = tgPayload.alarms || [];
-      let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
-      alarmState = applyForcedAlarms(alarmState);
-      if (tgPayload.alarms_updated) {
-        await setSetting("alarms_state", JSON.stringify(alarmState));
-        await setSetting("district_alarms_state", JSON.stringify(districtAlarmState));
-        await setSetting("alarms_updated_at", String(Date.now()));
-      } else {
-        const storedStates = await readStoredAlarmState();
-        if (storedStates.alarmState.length > 0) {
-          alarmState = storedStates.alarmState;
-        }
-        if (storedStates.districtAlarmState.length > 0) {
-          districtAlarmState = storedStates.districtAlarmState;
-        }
-      }
-
-      const [rssEvents, openEvents] = await Promise.all([loadRssEvents(), loadOpenEvents()]);
-
-      const storedTests = await listTestEvents();
-      const testEvents = storedTests
-        .flatMap((item) =>
-          parseMessageToEvents(item.message, {
-            source: item.source || "admin",
-            timestamp: item.createdAt,
-            type: item.type,
-            direction: item.direction,
-            is_test: typeof item.is_test === "boolean" ? item.is_test : true,
-            group_count: item.group_count
-          })
-        )
-        .filter(Boolean);
-
-      const nowTs = Date.now();
-      const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
-      const staleKeepMs = Math.max(1, eventStaleKeepMin) * 60 * 1000;
-      const combinedRaw = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents]
-        .map(withConfidence)
-        .filter((event) => {
-          if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return false;
-          const time = Date.parse(event.timestamp);
-          if (!Number.isFinite(time)) return false;
-          return nowTs - time <= ttlMs;
+    // If we have any cache, return it immediately and refresh in background.
+    if (state.cache.length) {
+      if (now - state.lastFetch >= refreshMs) {
+        ensureBackgroundRefresh().catch((error) => {
+          console.error("Background refresh failed", error);
         });
-      const combined = deduplicateEvents(combinedRaw);
-
-      if (combined.length === 0 && state.cache.length && nowTs - state.lastFetch <= staleKeepMs) {
-        return {
-          events: state.cache,
-          alarms: alarmState,
-          district_alarms: districtAlarmState,
-          cached: true,
-          stale: true,
-          maintenance: false,
-          maintenance_until: null
-        };
       }
-
-      state.cache = combined;
-      state.lastFetch = nowTs;
-
-      return {
-        events: combined,
+      return res.json({
+        events: state.cache,
         alarms: alarmState,
         district_alarms: districtAlarmState,
-        cached: false,
+        cached: true,
+        stale: now - state.lastFetch >= refreshMs,
         maintenance: false,
         maintenance_until: null
-      };
-    })();
+      });
+    }
 
-    const payload = await state.inFlight;
+    const payload = await ensureBackgroundRefresh();
     return res.json(payload);
   } catch (error) {
     console.error("Failed to load events", error);
     res.status(500).json({ error: "failed_to_load" });
-  } finally {
-    state.inFlight = null;
   }
 }
 
@@ -562,4 +586,11 @@ app.get("*", (_req, res) => {
 
 app.listen(port, () => {
   console.log(`Skywatch UA backend running on http://localhost:${port}`);
+  if (runtime.warmupOnStart) {
+    setTimeout(() => {
+      fetch(`http://127.0.0.1:${port}/api/events`).catch((error) => {
+        console.warn("Warmup failed", error?.message || error);
+      });
+    }, 250);
+  }
 });

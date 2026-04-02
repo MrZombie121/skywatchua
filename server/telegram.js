@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseMessageToEvents, extractAlarmSignals } from "./transform.js";
 import { canExtractImageMarkers, extractImageMarkers } from "./image.js";
+import { runtime } from "./config/runtime.js";
 import { getTelegramChannels } from "./config/source-presets.js";
 
 const apiId = process.env.TG_API_ID ? Number(process.env.TG_API_ID) : null;
@@ -26,6 +27,7 @@ const imageChannels = new Set(
 const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
+const channelConcurrency = Math.max(1, Number(runtime.telegramChannelConcurrency || 6));
 
 let client;
 let clientReady = false;
@@ -179,10 +181,20 @@ export async function loadTelegramEvents() {
 
   const channelMessages = new Map();
   const allMessages = [];
-  for (const channel of channels) {
+  async function readChannel(channel) {
     try {
       const messages = await tgClient.getMessages(channel, { limit });
-      const ordered = [...messages].filter(Boolean).reverse();
+      return { channel, ordered: [...messages].filter(Boolean).reverse() };
+    } catch (error) {
+      console.warn("Failed to read channel", channel, error?.message || error);
+      return { channel, ordered: [] };
+    }
+  }
+
+  for (let start = 0; start < channels.length; start += channelConcurrency) {
+    const batch = channels.slice(start, start + channelConcurrency);
+    const results = await Promise.all(batch.map(readChannel));
+    for (const { channel, ordered } of results) {
       channelMessages.set(channel, ordered);
       ordered.forEach((msg) => {
         allMessages.push({ channel, msg });
@@ -208,8 +220,6 @@ export async function loadTelegramEvents() {
           });
         }
       }
-    } catch (error) {
-      console.warn("Failed to read channel", channel, error?.message || error);
     }
   }
 
