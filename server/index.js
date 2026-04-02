@@ -28,6 +28,7 @@ const {
   port,
   sessionDays,
   refreshMs,
+  apiResponseTimeoutMs,
   eventTtlMin,
   eventStaleKeepMin,
   dedupRadiusKm,
@@ -368,6 +369,35 @@ async function sendEvents(_req, res) {
     };
   }
 
+  async function buildFastFallbackPayload(maintenance = { enabled: false, until: null }) {
+    const { alarmState, districtAlarmState } = await readStoredAlarmState();
+    return {
+      events: maintenance.enabled ? [] : state.cache,
+      alarms: alarmState,
+      district_alarms: districtAlarmState,
+      cached: true,
+      stale: true,
+      maintenance: maintenance.enabled,
+      maintenance_until: maintenance.enabled ? maintenance.until : null
+    };
+  }
+
+  async function waitForFreshPayloadOrFallback(maintenance) {
+    if (!state.inFlight) {
+      state.inFlight = fetchFreshPayload().finally(() => {
+        state.inFlight = null;
+      });
+    }
+
+    const timeout = new Promise((resolve) => {
+      setTimeout(async () => {
+        resolve(await buildFastFallbackPayload(maintenance));
+      }, apiResponseTimeoutMs);
+    });
+
+    return Promise.race([state.inFlight, timeout]);
+  }
+
   try {
     await hydrateEventCacheFromStore();
     const maintenance = await getMaintenanceState();
@@ -416,13 +446,7 @@ async function sendEvents(_req, res) {
       });
     }
 
-    if (!state.inFlight) {
-      state.inFlight = fetchFreshPayload().finally(() => {
-        state.inFlight = null;
-      });
-    }
-
-    const payload = await state.inFlight;
+    const payload = await waitForFreshPayloadOrFallback(maintenance);
     return res.json(payload);
   } catch (error) {
     console.error("Failed to load events", error);

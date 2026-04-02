@@ -98,6 +98,7 @@ const MAP_HEIGHT_STORAGE_KEY = "sw_map_height_v1";
 const MAP_MIN_HEIGHT = 360;
 const DOCK_MIN_HEIGHT = 160;
 const SOURCE_FETCH_TIMEOUT_MS = 5000;
+const MARKER_AGING_TICK_MS = 30000;
 
 const state = {
   events: [],
@@ -2589,7 +2590,7 @@ function startMarkerAgingTicker() {
   markerAgingTimer = setInterval(() => {
     if (state.maintenance) return;
     renderMarkers();
-  }, 1000);
+  }, MARKER_AGING_TICK_MS);
 }
 
 if (toolSettings && settingsModal && settingsClose) {
