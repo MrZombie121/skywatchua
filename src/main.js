@@ -136,8 +136,7 @@ function syncMarkerTtlWithServer(ttlMinutes) {
   const ttlMs = Number(ttlMinutes) * 60 * 1000;
   if (!Number.isFinite(ttlMs) || ttlMs < MIN_MARKER_TTL_MS) return;
   state.serverEventTtlMs = ttlMs;
-  if (hasCustomMarkerTtl()) return;
-  state.markerTtlMs = ttlMs;
+  state.markerTtlMs = Math.max(state.markerTtlMs, ttlMs);
   if (ttlSelect) ttlSelect.value = String(ttlMs);
 }
 
@@ -2785,8 +2784,12 @@ if (siteVersion) {
 if (ttlSelect) {
   ttlSelect.addEventListener("change", (event) => {
     const next = Number(event.target.value);
-    state.markerTtlMs = Number.isFinite(next) ? Math.max(MIN_MARKER_TTL_MS, next) : DEFAULT_MARKER_TTL_MS;
+    const floor = Number.isFinite(state.serverEventTtlMs) ? state.serverEventTtlMs : MIN_MARKER_TTL_MS;
+    state.markerTtlMs = Number.isFinite(next)
+      ? Math.max(MIN_MARKER_TTL_MS, floor, next)
+      : Math.max(DEFAULT_MARKER_TTL_MS, floor);
     localStorage.setItem(MARKER_TTL_KEY, String(state.markerTtlMs));
+    if (ttlSelect) ttlSelect.value = String(state.markerTtlMs);
     renderMarkers();
     renderRadarList();
     renderIntelFeed();
@@ -2924,6 +2927,9 @@ if (Number.isFinite(savedTtl) && savedTtl >= MIN_MARKER_TTL_MS) {
   state.markerTtlMs = savedTtl;
 } else if (Number.isFinite(savedTtl) && savedTtl > 0) {
   localStorage.setItem(MARKER_TTL_KEY, String(DEFAULT_MARKER_TTL_MS));
+}
+if (Number.isFinite(state.serverEventTtlMs) && state.serverEventTtlMs >= MIN_MARKER_TTL_MS) {
+  state.markerTtlMs = Math.max(state.markerTtlMs, state.serverEventTtlMs);
 }
 if (ttlSelect) ttlSelect.value = String(state.markerTtlMs);
 
