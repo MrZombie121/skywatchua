@@ -15,6 +15,7 @@ const defaultData = {
 const db = new Low(adapter, defaultData);
 let tursoClient = null;
 let tursoSettingsReady = false;
+let initError = null;
 
 const defaultAdminLocations = [
   { id: "uzyn", name: "Узин", keys: ["узин", "uzyn"], lat: 49.82, lng: 30.41, region_id: "kyivska" },
@@ -61,6 +62,24 @@ async function init() {
   }
   seedAdminLocations();
   await db.write();
+}
+
+const initPromise = (async () => {
+  try {
+    await init();
+    await initTursoSettings();
+    await ensureAdmin();
+  } catch (error) {
+    initError = error;
+    console.error("DB init failed:", error?.message || error);
+  }
+})();
+
+async function ensureReady() {
+  await initPromise;
+  if (initError) {
+    throw initError;
+  }
 }
 
 function normalizeKeyList(values) {
@@ -291,6 +310,7 @@ async function ensureAdmin() {
 }
 
 async function verifyAdmin(username, password) {
+  await ensureReady();
   await db.read();
   const row = db.data.admins.find((admin) => admin.username === username);
   if (!row) return false;
@@ -301,6 +321,7 @@ async function verifyAdmin(username, password) {
 }
 
 async function createSession(username, days = 7) {
+  await ensureReady();
   await db.read();
   const token = crypto.randomBytes(24).toString("hex");
   const expiresAt = Date.now() + days * 24 * 60 * 60 * 1000;
@@ -310,6 +331,7 @@ async function createSession(username, days = 7) {
 }
 
 async function getSession(token) {
+  await ensureReady();
   if (!token) return null;
   await db.read();
   const now = Date.now();
@@ -324,6 +346,7 @@ async function getSession(token) {
 }
 
 async function clearSession(token) {
+  await ensureReady();
   if (!token) return;
   await db.read();
   db.data.sessions = db.data.sessions.filter((session) => session.token !== token);
@@ -331,6 +354,7 @@ async function clearSession(token) {
 }
 
 async function getSetting(key, fallback = null) {
+  await ensureReady();
   if (tursoSettingsReady && tursoClient) {
     try {
       const result = await tursoClient.execute({
@@ -351,6 +375,7 @@ async function getSetting(key, fallback = null) {
 }
 
 async function setSetting(key, value) {
+  await ensureReady();
   if (tursoSettingsReady && tursoClient) {
     try {
       await tursoClient.execute({
@@ -371,12 +396,14 @@ async function setSetting(key, value) {
 }
 
 async function listTestEvents() {
+  await ensureReady();
   await db.read();
   const items = Array.isArray(db.data.test_events) ? db.data.test_events : [];
   return [...items];
 }
 
 async function addTestEvent(event) {
+  await ensureReady();
   await db.read();
   if (!Array.isArray(db.data.test_events)) {
     db.data.test_events = [];
@@ -386,14 +413,16 @@ async function addTestEvent(event) {
 }
 
 async function clearTestEvents() {
+  await ensureReady();
   await db.read();
   db.data.test_events = [];
   await db.write();
 }
 
 function getAdminLocationsSync() {
-  return Array.isArray(db.data?.admin_locations)
-    ? db.data.admin_locations.map((item) => ({
+  const locations = Array.isArray(db.data?.admin_locations) ? db.data.admin_locations : defaultData.admin_locations;
+  return Array.isArray(locations)
+    ? locations.map((item) => ({
       ...item,
       location_type: normalizeLocationType(item.location_type),
       parent_location_id: item.parent_location_id ? String(item.parent_location_id) : null
@@ -402,12 +431,14 @@ function getAdminLocationsSync() {
 }
 
 function getAdminLocationPointsSync() {
-  return Array.isArray(db.data?.admin_location_points)
-    ? db.data.admin_location_points.map((item) => ({ ...item }))
+  const points = Array.isArray(db.data?.admin_location_points) ? db.data.admin_location_points : defaultData.admin_location_points;
+  return Array.isArray(points)
+    ? points.map((item) => ({ ...item }))
     : [];
 }
 
 async function listAdminLocations() {
+  await ensureReady();
   if (tursoSettingsReady && tursoClient) {
     try {
       await loadAdminLocationsFromTurso();
@@ -425,6 +456,7 @@ async function listAdminLocations() {
 }
 
 async function upsertAdminLocationWithPoint(payload = {}) {
+  await ensureReady();
   await db.read();
   if (!Array.isArray(db.data.admin_locations)) {
     db.data.admin_locations = [];
@@ -505,10 +537,6 @@ async function upsertAdminLocationWithPoint(payload = {}) {
   }
   return resultItem;
 }
-
-await init();
-await initTursoSettings();
-await ensureAdmin();
 
 export {
   db,
