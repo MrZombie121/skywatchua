@@ -839,12 +839,10 @@ function startDrift() {
 }
 
 function getVisibleEvents() {
-  const now = Date.now();
   return state.events.filter((event) => {
     if (!state.showTests && event.is_test) return false;
     if (!state.selectedTypes.has(event.type)) return false;
     if (!state.selectedSources.has(event.source)) return false;
-    if (!isEventAlive(event, now)) return false;
     return true;
   });
 }
