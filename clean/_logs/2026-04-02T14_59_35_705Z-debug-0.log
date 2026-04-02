@@ -1,0 +1,786 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.7.0
+2 info using node@v22.11.0
+3 silly config load:file:C:\Users\User\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:H:\skywatchuaair\1.0\.npmrc
+5 silly config load:file:C:\Users\User\.npmrc
+6 silly config load:file:C:\Users\User\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install sharp
+8 verbose argv "install" "sharp"
+9 verbose logfile logs-max:10 dir:H:\skywatchuaair\1.0\clean\_logs\2026-04-02T14_59_35_705Z-
+10 verbose logfile H:\skywatchuaair\1.0\clean\_logs\2026-04-02T14_59_35_705Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly logfile done cleaning log files
+14 silly idealTree buildDeps
+15 silly fetch manifest sharp@*
+16 silly packumentCache full:https://registry.npmmirror.com/sharp cache-miss
+17 http fetch GET 200 https://registry.npmmirror.com/sharp 806ms (cache miss)
+18 silly packumentCache full:https://registry.npmmirror.com/sharp set size:120161 disposed:false
+19 silly placeDep ROOT sharp@0.34.5 OK for: skywatch-ua@2.0.2 want: *
+20 silly fetch manifest @img/colour@^1.0.0
+21 silly packumentCache full:https://registry.npmmirror.com/@img%2fcolour cache-miss
+22 silly fetch manifest detect-libc@^2.1.2
+23 silly packumentCache full:https://registry.npmmirror.com/detect-libc cache-miss
+24 silly fetch manifest semver@^7.7.3
+25 silly packumentCache full:https://registry.npmmirror.com/semver cache-miss
+26 silly fetch manifest @img/sharp-darwin-arm64@0.34.5
+27 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-darwin-arm64 cache-miss
+28 silly fetch manifest @img/sharp-darwin-x64@0.34.5
+29 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-darwin-x64 cache-miss
+30 silly fetch manifest @img/sharp-libvips-darwin-arm64@1.2.4
+31 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-darwin-arm64 cache-miss
+32 silly fetch manifest @img/sharp-libvips-darwin-x64@1.2.4
+33 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-darwin-x64 cache-miss
+34 http fetch GET 200 https://registry.npmmirror.com/@img%2fcolour 72ms (cache miss)
+35 silly packumentCache full:https://registry.npmmirror.com/@img%2fcolour set size:3036 disposed:false
+36 silly fetch manifest @img/sharp-libvips-linux-arm@1.2.4
+37 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-arm cache-miss
+38 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-linux-arm 77ms (cache miss)
+39 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-arm set size:13384 disposed:false
+40 silly fetch manifest @img/sharp-libvips-linux-arm64@1.2.4
+41 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-arm64 cache-miss
+42 http fetch GET 200 https://registry.npmmirror.com/detect-libc 210ms (cache revalidated)
+43 silly packumentCache full:https://registry.npmmirror.com/detect-libc set size:48467 disposed:false
+44 silly fetch manifest @img/sharp-libvips-linux-ppc64@1.2.4
+45 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-ppc64 cache-miss
+46 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-linux-arm64 68ms (cache miss)
+47 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-arm64 set size:12524 disposed:false
+48 silly fetch manifest @img/sharp-libvips-linux-riscv64@1.2.4
+49 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-riscv64 cache-miss
+50 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-darwin-arm64 250ms (cache miss)
+51 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-darwin-arm64 set size:13687 disposed:false
+52 silly fetch manifest @img/sharp-libvips-linux-s390x@1.2.4
+53 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-s390x cache-miss
+54 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-darwin-arm64 251ms (cache miss)
+55 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-darwin-arm64 set size:12146 disposed:false
+56 silly fetch manifest @img/sharp-libvips-linux-x64@1.2.4
+57 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-x64 cache-miss
+58 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-darwin-x64 264ms (cache miss)
+59 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-darwin-x64 set size:12020 disposed:false
+60 silly fetch manifest @img/sharp-libvips-linuxmusl-arm64@1.2.4
+61 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linuxmusl-arm64 cache-miss
+62 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-linux-riscv64 69ms (cache miss)
+63 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-riscv64 set size:7141 disposed:false
+64 silly fetch manifest @img/sharp-libvips-linuxmusl-x64@1.2.4
+65 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linuxmusl-x64 cache-miss
+66 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-linux-ppc64 84ms (cache miss)
+67 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-ppc64 set size:10084 disposed:false
+68 silly fetch manifest @img/sharp-linux-arm@0.34.5
+69 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-arm cache-miss
+70 http fetch GET 200 https://registry.npmmirror.com/semver 311ms (cache miss)
+71 silly packumentCache full:https://registry.npmmirror.com/semver set size:44819 disposed:false
+72 silly fetch manifest @img/sharp-linux-arm64@0.34.5
+73 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-arm64 cache-miss
+74 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-linux-s390x 76ms (cache miss)
+75 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-s390x set size:11902 disposed:false
+76 silly fetch manifest @img/sharp-linux-ppc64@0.34.5
+77 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-ppc64 cache-miss
+78 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-linux-x64 77ms (cache miss)
+79 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linux-x64 set size:12805 disposed:false
+80 silly fetch manifest @img/sharp-linux-riscv64@0.34.5
+81 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-riscv64 cache-miss
+82 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-linuxmusl-arm64 74ms (cache miss)
+83 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linuxmusl-arm64 set size:12188 disposed:false
+84 silly fetch manifest @img/sharp-linux-s390x@0.34.5
+85 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-s390x cache-miss
+86 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-libvips-linuxmusl-x64 66ms (cache miss)
+87 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-libvips-linuxmusl-x64 set size:12224 disposed:false
+88 silly fetch manifest @img/sharp-linux-x64@0.34.5
+89 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-x64 cache-miss
+90 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-linux-arm64 69ms (cache miss)
+91 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-arm64 set size:14020 disposed:false
+92 silly fetch manifest @img/sharp-linuxmusl-arm64@0.34.5
+93 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linuxmusl-arm64 cache-miss
+94 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-linux-riscv64 63ms (cache miss)
+95 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-riscv64 set size:2978 disposed:false
+96 silly fetch manifest @img/sharp-linuxmusl-x64@0.34.5
+97 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linuxmusl-x64 cache-miss
+98 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-linux-ppc64 69ms (cache miss)
+99 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-ppc64 set size:6972 disposed:false
+100 silly fetch manifest @img/sharp-wasm32@0.34.5
+101 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-wasm32 cache-miss
+102 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-linux-s390x 73ms (cache miss)
+103 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-s390x set size:13691 disposed:false
+104 silly fetch manifest @img/sharp-win32-arm64@0.34.5
+105 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-win32-arm64 cache-miss
+106 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-linux-x64 66ms (cache miss)
+107 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-x64 set size:14058 disposed:false
+108 silly fetch manifest @img/sharp-win32-ia32@0.34.5
+109 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-win32-ia32 cache-miss
+110 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-linuxmusl-arm64 66ms (cache miss)
+111 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linuxmusl-arm64 set size:13993 disposed:false
+112 silly fetch manifest @img/sharp-win32-x64@0.34.5
+113 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-win32-x64 cache-miss
+114 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-linuxmusl-x64 75ms (cache miss)
+115 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linuxmusl-x64 set size:14105 disposed:false
+116 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-wasm32 75ms (cache miss)
+117 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-wasm32 set size:14002 disposed:false
+118 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-win32-arm64 70ms (cache miss)
+119 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-win32-arm64 set size:6595 disposed:false
+120 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-win32-ia32 67ms (cache miss)
+121 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-win32-ia32 set size:14860 disposed:false
+122 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-win32-x64 68ms (cache miss)
+123 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-win32-x64 set size:14732 disposed:false
+124 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-linux-arm 340ms (cache miss)
+125 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-linux-arm set size:13984 disposed:false
+126 http fetch GET 200 https://registry.npmmirror.com/@img%2fsharp-darwin-x64 1044ms (cache miss)
+127 silly packumentCache full:https://registry.npmmirror.com/@img%2fsharp-darwin-x64 set size:13893 disposed:false
+128 silly placeDep ROOT @img/colour@1.1.0 OK for: sharp@0.34.5 want: ^1.0.0
+129 silly placeDep ROOT @img/sharp-darwin-arm64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+130 silly placeDep ROOT @img/sharp-darwin-x64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+131 silly placeDep ROOT @img/sharp-libvips-darwin-arm64@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+132 silly placeDep ROOT @img/sharp-libvips-darwin-x64@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+133 silly placeDep ROOT @img/sharp-libvips-linux-arm@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+134 silly placeDep ROOT @img/sharp-libvips-linux-arm64@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+135 silly placeDep ROOT @img/sharp-libvips-linux-ppc64@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+136 silly placeDep ROOT @img/sharp-libvips-linux-riscv64@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+137 silly placeDep ROOT @img/sharp-libvips-linux-s390x@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+138 silly placeDep ROOT @img/sharp-libvips-linux-x64@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+139 silly placeDep ROOT @img/sharp-libvips-linuxmusl-arm64@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+140 silly placeDep ROOT @img/sharp-libvips-linuxmusl-x64@1.2.4 OK for: sharp@0.34.5 want: 1.2.4
+141 silly placeDep ROOT @img/sharp-linux-arm@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+142 silly placeDep ROOT @img/sharp-linux-arm64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+143 silly placeDep ROOT @img/sharp-linux-ppc64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+144 silly placeDep ROOT @img/sharp-linux-riscv64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+145 silly placeDep ROOT @img/sharp-linux-s390x@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+146 silly placeDep ROOT @img/sharp-linux-x64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+147 silly placeDep ROOT @img/sharp-linuxmusl-arm64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+148 silly placeDep ROOT @img/sharp-linuxmusl-x64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+149 silly placeDep ROOT @img/sharp-wasm32@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+150 silly placeDep ROOT @img/sharp-win32-arm64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+151 silly placeDep ROOT @img/sharp-win32-ia32@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+152 silly placeDep ROOT @img/sharp-win32-x64@0.34.5 OK for: sharp@0.34.5 want: 0.34.5
+153 silly placeDep node_modules/sharp detect-libc@2.1.2 OK for: sharp@0.34.5 want: ^2.1.2
+154 silly placeDep ROOT semver@7.7.4 OK for: sharp@0.34.5 want: ^7.7.3
+155 silly fetch manifest @emnapi/runtime@^1.7.0
+156 silly packumentCache full:https://registry.npmmirror.com/@emnapi%2fruntime cache-miss
+157 http fetch GET 200 https://registry.npmmirror.com/@emnapi%2fruntime 88ms (cache miss)
+158 silly packumentCache full:https://registry.npmmirror.com/@emnapi%2fruntime set size:26469 disposed:false
+159 silly placeDep ROOT @emnapi/runtime@1.9.2 OK for: @img/sharp-wasm32@0.34.5 want: ^1.7.0
+160 silly reify moves {}
+161 silly audit bulk request {
+161 silly audit   '@cryptography/aes': [ '0.1.1' ],
+161 silly audit   '@esbuild/aix-ppc64': [ '0.21.5' ],
+161 silly audit   '@esbuild/android-arm': [ '0.21.5' ],
+161 silly audit   '@esbuild/android-arm64': [ '0.21.5' ],
+161 silly audit   '@esbuild/android-x64': [ '0.21.5' ],
+161 silly audit   '@esbuild/darwin-arm64': [ '0.21.5' ],
+161 silly audit   '@esbuild/darwin-x64': [ '0.21.5' ],
+161 silly audit   '@esbuild/freebsd-arm64': [ '0.21.5' ],
+161 silly audit   '@esbuild/freebsd-x64': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-arm': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-arm64': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-ia32': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-loong64': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-mips64el': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-ppc64': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-riscv64': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-s390x': [ '0.21.5' ],
+161 silly audit   '@esbuild/linux-x64': [ '0.21.5' ],
+161 silly audit   '@esbuild/netbsd-x64': [ '0.21.5' ],
+161 silly audit   '@esbuild/openbsd-x64': [ '0.21.5' ],
+161 silly audit   '@esbuild/sunos-x64': [ '0.21.5' ],
+161 silly audit   '@esbuild/win32-arm64': [ '0.21.5' ],
+161 silly audit   '@esbuild/win32-ia32': [ '0.21.5' ],
+161 silly audit   '@esbuild/win32-x64': [ '0.21.5' ],
+161 silly audit   '@libsql/client': [ '0.17.0' ],
+161 silly audit   '@libsql/core': [ '0.17.0' ],
+161 silly audit   '@libsql/darwin-arm64': [ '0.5.22' ],
+161 silly audit   '@libsql/darwin-x64': [ '0.5.22' ],
+161 silly audit   '@libsql/hrana-client': [ '0.9.0' ],
+161 silly audit   '@libsql/isomorphic-ws': [ '0.1.5' ],
+161 silly audit   '@libsql/linux-arm-gnueabihf': [ '0.5.22' ],
+161 silly audit   '@libsql/linux-arm-musleabihf': [ '0.5.22' ],
+161 silly audit   '@libsql/linux-arm64-gnu': [ '0.5.22' ],
+161 silly audit   '@libsql/linux-arm64-musl': [ '0.5.22' ],
+161 silly audit   '@libsql/linux-x64-gnu': [ '0.5.22' ],
+161 silly audit   '@libsql/linux-x64-musl': [ '0.5.22' ],
+161 silly audit   '@libsql/win32-x64-msvc': [ '0.5.22' ],
+161 silly audit   '@neon-rs/load': [ '0.0.4' ],
+161 silly audit   '@rollup/rollup-android-arm-eabi': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-android-arm64': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-darwin-arm64': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-darwin-x64': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-freebsd-arm64': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-freebsd-x64': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-arm-gnueabihf': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-arm-musleabihf': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-arm64-gnu': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-arm64-musl': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-loong64-gnu': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-loong64-musl': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-ppc64-gnu': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-ppc64-musl': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-riscv64-gnu': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-riscv64-musl': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-s390x-gnu': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-x64-gnu': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-linux-x64-musl': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-openbsd-x64': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-openharmony-arm64': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-win32-arm64-msvc': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-win32-ia32-msvc': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-win32-x64-gnu': [ '4.59.0' ],
+161 silly audit   '@rollup/rollup-win32-x64-msvc': [ '4.59.0' ],
+161 silly audit   '@types/estree': [ '1.0.8' ],
+161 silly audit   '@types/node': [ '25.5.0' ],
+161 silly audit   '@types/ws': [ '8.18.1' ],
+161 silly audit   accepts: [ '1.3.8' ],
+161 silly audit   'array-flatten': [ '1.1.1' ],
+161 silly audit   'async-mutex': [ '0.3.2' ],
+161 silly audit   'base64-js': [ '1.5.1' ],
+161 silly audit   'big-integer': [ '1.6.52' ],
+161 silly audit   'body-parser': [ '1.20.4' ],
+161 silly audit   buffer: [ '6.0.3' ],
+161 silly audit   bufferutil: [ '4.1.0' ],
+161 silly audit   bytes: [ '3.1.2' ],
+161 silly audit   'call-bind-apply-helpers': [ '1.0.2' ],
+161 silly audit   'call-bound': [ '1.0.4' ],
+161 silly audit   'content-disposition': [ '0.5.4' ],
+161 silly audit   'content-type': [ '1.0.5' ],
+161 silly audit   cookie: [ '0.7.2' ],
+161 silly audit   'cookie-signature': [ '1.0.7' ],
+161 silly audit   'cross-fetch': [ '4.1.0' ],
+161 silly audit   'node-fetch': [ '2.7.0', '3.3.2' ],
+161 silly audit   d: [ '1.0.2' ],
+161 silly audit   'data-uri-to-buffer': [ '4.0.1' ],
+161 silly audit   debug: [ '2.6.9' ],
+161 silly audit   depd: [ '2.0.0' ],
+161 silly audit   destroy: [ '1.2.0' ],
+161 silly audit   'detect-libc': [ '2.0.2', '2.1.2' ],
+161 silly audit   'dom-serializer': [ '1.4.1' ],
+161 silly audit   domelementtype: [ '2.3.0' ],
+161 silly audit   domhandler: [ '4.3.1' ],
+161 silly audit   domutils: [ '2.8.0' ],
+161 silly audit   dotenv: [ '16.6.1' ],
+161 silly audit   'dunder-proto': [ '1.0.1' ],
+161 silly audit   'ee-first': [ '1.1.1' ],
+161 silly audit   encodeurl: [ '2.0.0' ],
+161 silly audit   entities: [ '2.2.0' ],
+161 silly audit   'es-define-property': [ '1.0.1' ],
+161 silly audit   'es-errors': [ '1.3.0' ],
+161 silly audit   'es-object-atoms': [ '1.1.1' ],
+161 silly audit   'es5-ext': [ '0.10.64' ],
+161 silly audit   'es6-iterator': [ '2.0.3' ],
+161 silly audit   'es6-symbol': [ '3.1.4' ],
+161 silly audit   esbuild: [ '0.21.5' ],
+161 silly audit   'escape-html': [ '1.0.3' ],
+161 silly audit   esniff: [ '2.0.1' ],
+161 silly audit   etag: [ '1.8.1' ],
+161 silly audit   'event-emitter': [ '0.3.5' ],
+161 silly audit   express: [ '4.22.1' ],
+161 silly audit   ext: [ '1.7.0' ],
+161 silly audit   'fetch-blob': [ '3.2.0' ],
+161 silly audit   finalhandler: [ '1.3.2' ],
+161 silly audit   'formdata-polyfill': [ '4.0.10' ],
+161 silly audit   forwarded: [ '0.2.0' ],
+161 silly audit   fresh: [ '0.5.2' ],
+161 silly audit   fsevents: [ '2.3.3' ],
+161 silly audit   'function-bind': [ '1.1.2' ],
+161 silly audit   'get-intrinsic': [ '1.3.0' ],
+161 silly audit   'get-proto': [ '1.0.1' ],
+161 silly audit   gopd: [ '1.2.0' ],
+161 silly audit   'graceful-fs': [ '4.2.11' ],
+161 silly audit   'has-symbols': [ '1.1.0' ],
+161 silly audit   hasown: [ '2.0.2' ],
+161 silly audit   htmlparser2: [ '6.1.0' ],
+161 silly audit   'http-errors': [ '2.0.1' ],
+161 silly audit   'iconv-lite': [ '0.4.24' ],
+161 silly audit   ieee754: [ '1.2.1' ],
+161 silly audit   imurmurhash: [ '0.1.4' ],
+161 silly audit   inherits: [ '2.0.4' ],
+161 silly audit   'ip-address': [ '10.1.0' ],
+161 silly audit   'ipaddr.js': [ '1.9.1' ],
+161 silly audit   'is-typedarray': [ '1.0.0' ],
+161 silly audit   'js-base64': [ '3.7.8' ],
+161 silly audit   libsql: [ '0.5.22' ],
+161 silly audit   lowdb: [ '7.0.1' ],
+161 silly audit   'math-intrinsics': [ '1.1.0' ],
+161 silly audit   'media-typer': [ '0.3.0' ],
+161 silly audit   'merge-descriptors': [ '1.0.3' ],
+161 silly audit   methods: [ '1.1.2' ],
+161 silly audit   mime: [ '1.6.0', '3.0.0' ],
+161 silly audit   'mime-db': [ '1.52.0' ],
+161 silly audit   'mime-types': [ '2.1.35' ],
+161 silly audit   ms: [ '2.0.0', '2.1.3' ],
+161 silly audit   nanoid: [ '3.3.11' ],
+161 silly audit   negotiator: [ '0.6.3' ],
+161 silly audit   'next-tick': [ '1.1.0' ],
+161 silly audit   'node-domexception': [ '1.0.0' ],
+161 silly audit   'node-gyp-build': [ '4.8.4' ],
+161 silly audit   'node-localstorage': [ '2.2.1' ],
+161 silly audit   'object-inspect': [ '1.13.4' ],
+161 silly audit   'on-finished': [ '2.4.1' ],
+161 silly audit   pako: [ '2.1.0' ],
+161 silly audit   parseurl: [ '1.3.3' ],
+161 silly audit   'path-browserify': [ '1.0.1' ],
+161 silly audit   'path-to-regexp': [ '0.1.12' ],
+161 silly audit   picocolors: [ '1.1.1' ],
+161 silly audit   postcss: [ '8.5.8' ],
+161 silly audit   'promise-limit': [ '2.7.0' ],
+161 silly audit   'proxy-addr': [ '2.0.7' ],
+161 silly audit   qs: [ '6.14.2' ],
+161 silly audit   'range-parser': [ '1.2.1' ],
+161 silly audit   'raw-body': [ '2.5.3' ],
+161 silly audit   'real-cancellable-promise': [ '1.2.3' ],
+161 silly audit   rollup: [ '4.59.0' ],
+161 silly audit   'rss-parser': [ '3.13.0' ],
+161 silly audit   'safe-buffer': [ '5.2.1' ],
+161 silly audit   'safer-buffer': [ '2.1.2' ],
+161 silly audit   sax: [ '1.5.0' ],
+161 silly audit   send: [ '0.19.2' ],
+161 silly audit   'serve-static': [ '1.16.3' ],
+161 silly audit   setprototypeof: [ '1.2.0' ],
+161 silly audit   'side-channel': [ '1.1.0' ],
+161 silly audit   'side-channel-list': [ '1.0.0' ],
+161 silly audit   'side-channel-map': [ '1.0.1' ],
+161 silly audit   'side-channel-weakmap': [ '1.0.2' ],
+161 silly audit   slide: [ '1.1.6' ],
+161 silly audit   'smart-buffer': [ '4.2.0' ],
+161 silly audit   socks: [ '2.8.7' ],
+161 silly audit   'source-map-js': [ '1.2.1' ],
+161 silly audit   statuses: [ '2.0.2' ],
+161 silly audit   steno: [ '4.0.2' ],
+161 silly audit   store2: [ '2.14.4' ],
+161 silly audit   telegram: [ '2.26.22' ],
+161 silly audit   toidentifier: [ '1.0.1' ],
+161 silly audit   tr46: [ '0.0.3' ],
+161 silly audit   'ts-custom-error': [ '3.3.1' ],
+161 silly audit   tslib: [ '2.8.1' ],
+161 silly audit   type: [ '2.7.3' ],
+161 silly audit   'type-is': [ '1.6.18' ],
+161 silly audit   'typedarray-to-buffer': [ '3.1.5' ],
+161 silly audit   'undici-types': [ '7.18.2' ],
+161 silly audit   unpipe: [ '1.0.0' ],
+161 silly audit   'utf-8-validate': [ '5.0.10' ],
+161 silly audit   'utils-merge': [ '1.0.1' ],
+161 silly audit   vary: [ '1.1.2' ],
+161 silly audit   vite: [ '5.4.21' ],
+161 silly audit   'web-streams-polyfill': [ '3.3.3' ],
+161 silly audit   'webidl-conversions': [ '3.0.1' ],
+161 silly audit   websocket: [ '1.0.35' ],
+161 silly audit   'whatwg-url': [ '5.0.0' ],
+161 silly audit   'write-file-atomic': [ '1.3.4' ],
+161 silly audit   ws: [ '8.19.0' ],
+161 silly audit   xml2js: [ '0.5.0' ],
+161 silly audit   xmlbuilder: [ '11.0.1' ],
+161 silly audit   yaeti: [ '0.0.6' ],
+161 silly audit   sharp: [ '0.34.5' ],
+161 silly audit   '@img/colour': [ '1.1.0' ],
+161 silly audit   '@img/sharp-darwin-arm64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-darwin-x64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-libvips-darwin-arm64': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-darwin-x64': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-linux-arm': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-linux-arm64': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-linux-ppc64': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-linux-riscv64': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-linux-s390x': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-linux-x64': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-linuxmusl-arm64': [ '1.2.4' ],
+161 silly audit   '@img/sharp-libvips-linuxmusl-x64': [ '1.2.4' ],
+161 silly audit   '@img/sharp-linux-arm': [ '0.34.5' ],
+161 silly audit   '@img/sharp-linux-arm64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-linux-ppc64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-linux-riscv64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-linux-s390x': [ '0.34.5' ],
+161 silly audit   '@img/sharp-linux-x64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-linuxmusl-arm64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-linuxmusl-x64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-wasm32': [ '0.34.5' ],
+161 silly audit   '@img/sharp-win32-arm64': [ '0.34.5' ],
+161 silly audit   '@img/sharp-win32-ia32': [ '0.34.5' ],
+161 silly audit   '@img/sharp-win32-x64': [ '0.34.5' ],
+161 silly audit   semver: [ '7.7.4' ],
+161 silly audit   '@emnapi/runtime': [ '1.9.2' ]
+161 silly audit }
+162 http cache semver@https://registry.npmmirror.com/semver/-/semver-7.7.4.tgz 1ms (cache hit)
+163 http cache @img/colour@https://registry.npmmirror.com/@img/colour/-/colour-1.1.0.tgz 0ms (cache hit)
+164 http cache yaeti@https://registry.npmmirror.com/yaeti/-/yaeti-0.0.6.tgz 0ms (cache hit)
+165 http cache sharp@https://registry.npmmirror.com/sharp/-/sharp-0.34.5.tgz 0ms (cache hit)
+166 http cache xmlbuilder@https://registry.npmmirror.com/xmlbuilder/-/xmlbuilder-11.0.1.tgz 0ms (cache hit)
+167 http cache @img/sharp-win32-x64@https://registry.npmmirror.com/@img/sharp-win32-x64/-/sharp-win32-x64-0.34.5.tgz 0ms (cache hit)
+168 http cache xml2js@https://registry.npmmirror.com/xml2js/-/xml2js-0.5.0.tgz 0ms (cache hit)
+169 http cache ws@https://registry.npmmirror.com/ws/-/ws-8.19.0.tgz 0ms (cache hit)
+170 http cache write-file-atomic@https://registry.npmmirror.com/write-file-atomic/-/write-file-atomic-1.3.4.tgz 0ms (cache hit)
+171 http cache websocket@https://registry.npmmirror.com/websocket/-/websocket-1.0.35.tgz 0ms (cache hit)
+172 http cache whatwg-url@https://registry.npmmirror.com/whatwg-url/-/whatwg-url-5.0.0.tgz 0ms (cache hit)
+173 http cache webidl-conversions@https://registry.npmmirror.com/webidl-conversions/-/webidl-conversions-3.0.1.tgz 0ms (cache hit)
+174 http cache web-streams-polyfill@https://registry.npmmirror.com/web-streams-polyfill/-/web-streams-polyfill-3.3.3.tgz 0ms (cache hit)
+175 http cache vite@https://registry.npmmirror.com/vite/-/vite-5.4.21.tgz 0ms (cache hit)
+176 http cache vary@https://registry.npmmirror.com/vary/-/vary-1.1.2.tgz 0ms (cache hit)
+177 http cache utils-merge@https://registry.npmmirror.com/utils-merge/-/utils-merge-1.0.1.tgz 0ms (cache hit)
+178 http cache utf-8-validate@https://registry.npmmirror.com/utf-8-validate/-/utf-8-validate-5.0.10.tgz 0ms (cache hit)
+179 http cache unpipe@https://registry.npmmirror.com/unpipe/-/unpipe-1.0.0.tgz 0ms (cache hit)
+180 http cache typedarray-to-buffer@https://registry.npmmirror.com/typedarray-to-buffer/-/typedarray-to-buffer-3.1.5.tgz 0ms (cache hit)
+181 http cache undici-types@https://registry.npmmirror.com/undici-types/-/undici-types-7.18.2.tgz 0ms (cache hit)
+182 http cache type-is@https://registry.npmmirror.com/type-is/-/type-is-1.6.18.tgz 0ms (cache hit)
+183 http cache type@https://registry.npmmirror.com/type/-/type-2.7.3.tgz 0ms (cache hit)
+184 http cache tslib@https://registry.npmmirror.com/tslib/-/tslib-2.8.1.tgz 0ms (cache hit)
+185 http cache ts-custom-error@https://registry.npmmirror.com/ts-custom-error/-/ts-custom-error-3.3.1.tgz 0ms (cache hit)
+186 http cache tr46@https://registry.npmmirror.com/tr46/-/tr46-0.0.3.tgz 0ms (cache hit)
+187 http cache toidentifier@https://registry.npmmirror.com/toidentifier/-/toidentifier-1.0.1.tgz 0ms (cache hit)
+188 http cache telegram@https://registry.npmmirror.com/telegram/-/telegram-2.26.22.tgz 0ms (cache hit)
+189 http cache store2@https://registry.npmmirror.com/store2/-/store2-2.14.4.tgz 0ms (cache hit)
+190 http cache steno@https://registry.npmmirror.com/steno/-/steno-4.0.2.tgz 0ms (cache hit)
+191 http cache statuses@https://registry.npmmirror.com/statuses/-/statuses-2.0.2.tgz 0ms (cache hit)
+192 http cache source-map-js@https://registry.npmmirror.com/source-map-js/-/source-map-js-1.2.1.tgz 0ms (cache hit)
+193 http cache socks@https://registry.npmmirror.com/socks/-/socks-2.8.7.tgz 0ms (cache hit)
+194 http cache smart-buffer@https://registry.npmmirror.com/smart-buffer/-/smart-buffer-4.2.0.tgz 0ms (cache hit)
+195 http cache slide@https://registry.npmmirror.com/slide/-/slide-1.1.6.tgz 0ms (cache hit)
+196 http cache side-channel-weakmap@https://registry.npmmirror.com/side-channel-weakmap/-/side-channel-weakmap-1.0.2.tgz 0ms (cache hit)
+197 http cache side-channel-map@https://registry.npmmirror.com/side-channel-map/-/side-channel-map-1.0.1.tgz 0ms (cache hit)
+198 http cache side-channel-list@https://registry.npmmirror.com/side-channel-list/-/side-channel-list-1.0.0.tgz 0ms (cache hit)
+199 http cache side-channel@https://registry.npmmirror.com/side-channel/-/side-channel-1.1.0.tgz 0ms (cache hit)
+200 http cache setprototypeof@https://registry.npmmirror.com/setprototypeof/-/setprototypeof-1.2.0.tgz 0ms (cache hit)
+201 http cache send@https://registry.npmmirror.com/send/-/send-0.19.2.tgz 0ms (cache hit)
+202 http cache serve-static@https://registry.npmmirror.com/serve-static/-/serve-static-1.16.3.tgz 0ms (cache hit)
+203 http cache sax@https://registry.npmmirror.com/sax/-/sax-1.5.0.tgz 0ms (cache hit)
+204 http cache safer-buffer@https://registry.npmmirror.com/safer-buffer/-/safer-buffer-2.1.2.tgz 0ms (cache hit)
+205 http cache safe-buffer@https://registry.npmmirror.com/safe-buffer/-/safe-buffer-5.2.1.tgz 0ms (cache hit)
+206 http cache rss-parser@https://registry.npmmirror.com/rss-parser/-/rss-parser-3.13.0.tgz 0ms (cache hit)
+207 http cache rollup@https://registry.npmmirror.com/rollup/-/rollup-4.59.0.tgz 0ms (cache hit)
+208 http cache real-cancellable-promise@https://registry.npmmirror.com/real-cancellable-promise/-/real-cancellable-promise-1.2.3.tgz 0ms (cache hit)
+209 http cache raw-body@https://registry.npmmirror.com/raw-body/-/raw-body-2.5.3.tgz 0ms (cache hit)
+210 http cache range-parser@https://registry.npmmirror.com/range-parser/-/range-parser-1.2.1.tgz 0ms (cache hit)
+211 http cache qs@https://registry.npmmirror.com/qs/-/qs-6.14.2.tgz 1ms (cache hit)
+212 http cache proxy-addr@https://registry.npmmirror.com/proxy-addr/-/proxy-addr-2.0.7.tgz 0ms (cache hit)
+213 http cache promise-limit@https://registry.npmmirror.com/promise-limit/-/promise-limit-2.7.0.tgz 0ms (cache hit)
+214 http cache postcss@https://registry.npmmirror.com/postcss/-/postcss-8.5.8.tgz 0ms (cache hit)
+215 http cache path-to-regexp@https://registry.npmmirror.com/path-to-regexp/-/path-to-regexp-0.1.12.tgz 0ms (cache hit)
+216 http cache picocolors@https://registry.npmmirror.com/picocolors/-/picocolors-1.1.1.tgz 0ms (cache hit)
+217 http cache path-browserify@https://registry.npmmirror.com/path-browserify/-/path-browserify-1.0.1.tgz 0ms (cache hit)
+218 http cache pako@https://registry.npmmirror.com/pako/-/pako-2.1.0.tgz 0ms (cache hit)
+219 http cache on-finished@https://registry.npmmirror.com/on-finished/-/on-finished-2.4.1.tgz 0ms (cache hit)
+220 http cache parseurl@https://registry.npmmirror.com/parseurl/-/parseurl-1.3.3.tgz 0ms (cache hit)
+221 http cache object-inspect@https://registry.npmmirror.com/object-inspect/-/object-inspect-1.13.4.tgz 0ms (cache hit)
+222 http cache node-localstorage@https://registry.npmmirror.com/node-localstorage/-/node-localstorage-2.2.1.tgz 0ms (cache hit)
+223 http cache node-gyp-build@https://registry.npmmirror.com/node-gyp-build/-/node-gyp-build-4.8.4.tgz 0ms (cache hit)
+224 http cache node-fetch@https://registry.npmmirror.com/node-fetch/-/node-fetch-3.3.2.tgz 0ms (cache hit)
+225 http cache node-domexception@https://registry.npmmirror.com/node-domexception/-/node-domexception-1.0.0.tgz 0ms (cache hit)
+226 http cache nanoid@https://registry.npmmirror.com/nanoid/-/nanoid-3.3.11.tgz 0ms (cache hit)
+227 http cache next-tick@https://registry.npmmirror.com/next-tick/-/next-tick-1.1.0.tgz 0ms (cache hit)
+228 http cache negotiator@https://registry.npmmirror.com/negotiator/-/negotiator-0.6.3.tgz 0ms (cache hit)
+229 http cache ms@https://registry.npmmirror.com/ms/-/ms-2.0.0.tgz 0ms (cache hit)
+230 http cache mime-types@https://registry.npmmirror.com/mime-types/-/mime-types-2.1.35.tgz 0ms (cache hit)
+231 http cache mime-db@https://registry.npmmirror.com/mime-db/-/mime-db-1.52.0.tgz 0ms (cache hit)
+232 http cache mime@https://registry.npmmirror.com/mime/-/mime-1.6.0.tgz 0ms (cache hit)
+233 http cache merge-descriptors@https://registry.npmmirror.com/merge-descriptors/-/merge-descriptors-1.0.3.tgz 0ms (cache hit)
+234 http cache methods@https://registry.npmmirror.com/methods/-/methods-1.1.2.tgz 0ms (cache hit)
+235 http cache media-typer@https://registry.npmmirror.com/media-typer/-/media-typer-0.3.0.tgz 0ms (cache hit)
+236 http cache math-intrinsics@https://registry.npmmirror.com/math-intrinsics/-/math-intrinsics-1.1.0.tgz 0ms (cache hit)
+237 http cache lowdb@https://registry.npmmirror.com/lowdb/-/lowdb-7.0.1.tgz 0ms (cache hit)
+238 http cache libsql@https://registry.npmmirror.com/libsql/-/libsql-0.5.22.tgz 0ms (cache hit)
+239 http cache js-base64@https://registry.npmmirror.com/js-base64/-/js-base64-3.7.8.tgz 0ms (cache hit)
+240 http cache ipaddr.js@https://registry.npmmirror.com/ipaddr.js/-/ipaddr.js-1.9.1.tgz 0ms (cache hit)
+241 http cache is-typedarray@https://registry.npmmirror.com/is-typedarray/-/is-typedarray-1.0.0.tgz 0ms (cache hit)
+242 http cache ip-address@https://registry.npmmirror.com/ip-address/-/ip-address-10.1.0.tgz 0ms (cache hit)
+243 http cache imurmurhash@https://registry.npmmirror.com/imurmurhash/-/imurmurhash-0.1.4.tgz 0ms (cache hit)
+244 http cache inherits@https://registry.npmmirror.com/inherits/-/inherits-2.0.4.tgz 0ms (cache hit)
+245 http cache ieee754@https://registry.npmmirror.com/ieee754/-/ieee754-1.2.1.tgz 0ms (cache hit)
+246 http cache http-errors@https://registry.npmmirror.com/http-errors/-/http-errors-2.0.1.tgz 0ms (cache hit)
+247 http cache iconv-lite@https://registry.npmmirror.com/iconv-lite/-/iconv-lite-0.4.24.tgz 0ms (cache hit)
+248 http cache htmlparser2@https://registry.npmmirror.com/htmlparser2/-/htmlparser2-6.1.0.tgz 0ms (cache hit)
+249 http cache hasown@https://registry.npmmirror.com/hasown/-/hasown-2.0.2.tgz 0ms (cache hit)
+250 http cache has-symbols@https://registry.npmmirror.com/has-symbols/-/has-symbols-1.1.0.tgz 0ms (cache hit)
+251 http cache graceful-fs@https://registry.npmmirror.com/graceful-fs/-/graceful-fs-4.2.11.tgz 0ms (cache hit)
+252 http cache gopd@https://registry.npmmirror.com/gopd/-/gopd-1.2.0.tgz 0ms (cache hit)
+253 http cache get-intrinsic@https://registry.npmmirror.com/get-intrinsic/-/get-intrinsic-1.3.0.tgz 0ms (cache hit)
+254 http cache get-proto@https://registry.npmmirror.com/get-proto/-/get-proto-1.0.1.tgz 0ms (cache hit)
+255 http cache function-bind@https://registry.npmmirror.com/function-bind/-/function-bind-1.1.2.tgz 0ms (cache hit)
+256 http cache forwarded@https://registry.npmmirror.com/forwarded/-/forwarded-0.2.0.tgz 0ms (cache hit)
+257 http cache fresh@https://registry.npmmirror.com/fresh/-/fresh-0.5.2.tgz 0ms (cache hit)
+258 http cache formdata-polyfill@https://registry.npmmirror.com/formdata-polyfill/-/formdata-polyfill-4.0.10.tgz 0ms (cache hit)
+259 http cache ext@https://registry.npmmirror.com/ext/-/ext-1.7.0.tgz 0ms (cache hit)
+260 http cache fetch-blob@https://registry.npmmirror.com/fetch-blob/-/fetch-blob-3.2.0.tgz 0ms (cache hit)
+261 http cache express@https://registry.npmmirror.com/express/-/express-4.22.1.tgz 0ms (cache hit)
+262 http cache event-emitter@https://registry.npmmirror.com/event-emitter/-/event-emitter-0.3.5.tgz 0ms (cache hit)
+263 http cache finalhandler@https://registry.npmmirror.com/finalhandler/-/finalhandler-1.3.2.tgz 0ms (cache hit)
+264 http cache etag@https://registry.npmmirror.com/etag/-/etag-1.8.1.tgz 0ms (cache hit)
+265 http cache esniff@https://registry.npmmirror.com/esniff/-/esniff-2.0.1.tgz 0ms (cache hit)
+266 http cache escape-html@https://registry.npmmirror.com/escape-html/-/escape-html-1.0.3.tgz 0ms (cache hit)
+267 http cache esbuild@https://registry.npmmirror.com/esbuild/-/esbuild-0.21.5.tgz 0ms (cache hit)
+268 http cache es6-iterator@https://registry.npmmirror.com/es6-iterator/-/es6-iterator-2.0.3.tgz 0ms (cache hit)
+269 http cache es6-symbol@https://registry.npmmirror.com/es6-symbol/-/es6-symbol-3.1.4.tgz 0ms (cache hit)
+270 http cache es5-ext@https://registry.npmmirror.com/es5-ext/-/es5-ext-0.10.64.tgz 0ms (cache hit)
+271 http cache es-object-atoms@https://registry.npmmirror.com/es-object-atoms/-/es-object-atoms-1.1.1.tgz 0ms (cache hit)
+272 http cache es-errors@https://registry.npmmirror.com/es-errors/-/es-errors-1.3.0.tgz 0ms (cache hit)
+273 http cache es-define-property@https://registry.npmmirror.com/es-define-property/-/es-define-property-1.0.1.tgz 0ms (cache hit)
+274 http cache entities@https://registry.npmmirror.com/entities/-/entities-2.2.0.tgz 0ms (cache hit)
+275 http cache ee-first@https://registry.npmmirror.com/ee-first/-/ee-first-1.1.1.tgz 0ms (cache hit)
+276 http cache encodeurl@https://registry.npmmirror.com/encodeurl/-/encodeurl-2.0.0.tgz 0ms (cache hit)
+277 http cache dunder-proto@https://registry.npmmirror.com/dunder-proto/-/dunder-proto-1.0.1.tgz 0ms (cache hit)
+278 http cache dotenv@https://registry.npmmirror.com/dotenv/-/dotenv-16.6.1.tgz 0ms (cache hit)
+279 http cache domutils@https://registry.npmmirror.com/domutils/-/domutils-2.8.0.tgz 0ms (cache hit)
+280 http cache domhandler@https://registry.npmmirror.com/domhandler/-/domhandler-4.3.1.tgz 0ms (cache hit)
+281 http cache detect-libc@https://registry.npmmirror.com/detect-libc/-/detect-libc-2.0.2.tgz 0ms (cache hit)
+282 http cache domelementtype@https://registry.npmmirror.com/domelementtype/-/domelementtype-2.3.0.tgz 0ms (cache hit)
+283 http cache dom-serializer@https://registry.npmmirror.com/dom-serializer/-/dom-serializer-1.4.1.tgz 0ms (cache hit)
+284 http cache destroy@https://registry.npmmirror.com/destroy/-/destroy-1.2.0.tgz 0ms (cache hit)
+285 http cache depd@https://registry.npmmirror.com/depd/-/depd-2.0.0.tgz 0ms (cache hit)
+286 http cache debug@https://registry.npmmirror.com/debug/-/debug-2.6.9.tgz 0ms (cache hit)
+287 http cache data-uri-to-buffer@https://registry.npmmirror.com/data-uri-to-buffer/-/data-uri-to-buffer-4.0.1.tgz 0ms (cache hit)
+288 http cache d@https://registry.npmmirror.com/d/-/d-1.0.2.tgz 0ms (cache hit)
+289 http cache cross-fetch@https://registry.npmmirror.com/cross-fetch/-/cross-fetch-4.1.0.tgz 0ms (cache hit)
+290 http cache cookie-signature@https://registry.npmmirror.com/cookie-signature/-/cookie-signature-1.0.7.tgz 0ms (cache hit)
+291 http cache cookie@https://registry.npmmirror.com/cookie/-/cookie-0.7.2.tgz 0ms (cache hit)
+292 http cache content-disposition@https://registry.npmmirror.com/content-disposition/-/content-disposition-0.5.4.tgz 0ms (cache hit)
+293 http cache content-type@https://registry.npmmirror.com/content-type/-/content-type-1.0.5.tgz 0ms (cache hit)
+294 http cache bytes@https://registry.npmmirror.com/bytes/-/bytes-3.1.2.tgz 0ms (cache hit)
+295 http cache call-bound@https://registry.npmmirror.com/call-bound/-/call-bound-1.0.4.tgz 0ms (cache hit)
+296 http cache call-bind-apply-helpers@https://registry.npmmirror.com/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.2.tgz 0ms (cache hit)
+297 http cache bufferutil@https://registry.npmmirror.com/bufferutil/-/bufferutil-4.1.0.tgz 0ms (cache hit)
+298 http cache buffer@https://registry.npmmirror.com/buffer/-/buffer-6.0.3.tgz 0ms (cache hit)
+299 http cache body-parser@https://registry.npmmirror.com/body-parser/-/body-parser-1.20.4.tgz 0ms (cache hit)
+300 http cache big-integer@https://registry.npmmirror.com/big-integer/-/big-integer-1.6.52.tgz 0ms (cache hit)
+301 http cache async-mutex@https://registry.npmmirror.com/async-mutex/-/async-mutex-0.3.2.tgz 0ms (cache hit)
+302 http cache base64-js@https://registry.npmmirror.com/base64-js/-/base64-js-1.5.1.tgz 0ms (cache hit)
+303 http cache array-flatten@https://registry.npmmirror.com/array-flatten/-/array-flatten-1.1.1.tgz 0ms (cache hit)
+304 http cache accepts@https://registry.npmmirror.com/accepts/-/accepts-1.3.8.tgz 0ms (cache hit)
+305 http cache @types/ws@https://registry.npmmirror.com/@types/ws/-/ws-8.18.1.tgz 1ms (cache hit)
+306 http cache @types/node@https://registry.npmmirror.com/@types/node/-/node-25.5.0.tgz 0ms (cache hit)
+307 http cache @rollup/rollup-win32-x64-gnu@https://registry.npmmirror.com/@rollup/rollup-win32-x64-gnu/-/rollup-win32-x64-gnu-4.59.0.tgz 0ms (cache hit)
+308 http cache @types/estree@https://registry.npmmirror.com/@types/estree/-/estree-1.0.8.tgz 0ms (cache hit)
+309 http cache @rollup/rollup-win32-x64-msvc@https://registry.npmmirror.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.59.0.tgz 0ms (cache hit)
+310 http cache @neon-rs/load@https://registry.npmmirror.com/@neon-rs/load/-/load-0.0.4.tgz 0ms (cache hit)
+311 http cache @libsql/win32-x64-msvc@https://registry.npmmirror.com/@libsql/win32-x64-msvc/-/win32-x64-msvc-0.5.22.tgz 0ms (cache hit)
+312 http cache @libsql/isomorphic-ws@https://registry.npmmirror.com/@libsql/isomorphic-ws/-/isomorphic-ws-0.1.5.tgz 0ms (cache hit)
+313 http cache @libsql/hrana-client@https://registry.npmmirror.com/@libsql/hrana-client/-/hrana-client-0.9.0.tgz 0ms (cache hit)
+314 http cache @libsql/client@https://registry.npmmirror.com/@libsql/client/-/client-0.17.0.tgz 0ms (cache hit)
+315 http cache @libsql/core@https://registry.npmmirror.com/@libsql/core/-/core-0.17.0.tgz 0ms (cache hit)
+316 http cache @esbuild/win32-x64@https://registry.npmmirror.com/@esbuild/win32-x64/-/win32-x64-0.21.5.tgz 0ms (cache hit)
+317 http cache detect-libc@https://registry.npmmirror.com/detect-libc/-/detect-libc-2.1.2.tgz 0ms (cache hit)
+318 http cache @cryptography/aes@https://registry.npmmirror.com/@cryptography/aes/-/aes-0.1.1.tgz 0ms (cache hit)
+319 http cache mime@https://registry.npmmirror.com/mime/-/mime-3.0.0.tgz 0ms (cache hit)
+320 http cache node-fetch@https://registry.npmmirror.com/node-fetch/-/node-fetch-2.7.0.tgz 0ms (cache hit)
+321 http cache ms@https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz 0ms (cache hit)
+322 silly tarball no local data for semver@https://registry.npmmirror.com/semver/-/semver-7.7.4.tgz. Extracting by manifest.
+323 silly tarball no local data for @img/colour@https://registry.npmmirror.com/@img/colour/-/colour-1.1.0.tgz. Extracting by manifest.
+324 silly tarball no local data for sharp@https://registry.npmmirror.com/sharp/-/sharp-0.34.5.tgz. Extracting by manifest.
+325 silly tarball no local data for @img/sharp-win32-x64@https://registry.npmmirror.com/@img/sharp-win32-x64/-/sharp-win32-x64-0.34.5.tgz. Extracting by manifest.
+326 silly tarball no local data for detect-libc@https://registry.npmmirror.com/detect-libc/-/detect-libc-2.1.2.tgz. Extracting by manifest.
+327 http fetch POST 404 https://registry.npmmirror.com/-/npm/v1/security/advisories/bulk 462ms
+328 verbose audit error HttpErrorGeneral: 404 Not Found - POST https://registry.npmmirror.com/-/npm/v1/security/advisories/bulk - [NOT_IMPLEMENTED] /-/npm/v1/security/* not implemented yet
+328 verbose audit error     at C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\npm-registry-fetch\lib\check-response.js:103:15
+328 verbose audit error     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+328 verbose audit error     at async #getReport (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\audit-report.js:275:19)
+328 verbose audit error     at async AuditReport.run (C:\Users\User\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\audit-report.js:100:19) {
+328 verbose audit error   headers: [Object: null prototype] {
+328 verbose audit error     server: [ 'Tengine' ],
+328 verbose audit error     date: [ 'Thu, 02 Apr 2026 14:59:38 GMT' ],
+328 verbose audit error     'content-type': [ 'application/json' ],
+328 verbose audit error     'transfer-encoding': [ 'chunked' ],
+328 verbose audit error     connection: [ 'keep-alive' ],
+328 verbose audit error     'strict-transport-security': [ 'max-age=5184000' ],
+328 verbose audit error     via: [ 'ens-cache4.se2[,404666]' ],
+328 verbose audit error     'timing-allow-origin': [ '*' ],
+328 verbose audit error     eagleid: [ '2ff62c9817751419788015904e' ],
+328 verbose audit error     'x-fetch-attempts': [ '1' ]
+328 verbose audit error   },
+328 verbose audit error   statusCode: 404,
+328 verbose audit error   code: 'E404',
+328 verbose audit error   method: 'POST',
+328 verbose audit error   uri: 'https://registry.npmmirror.com/-/npm/v1/security/advisories/bulk',
+328 verbose audit error   body: {
+328 verbose audit error     error: '[NOT_IMPLEMENTED] /-/npm/v1/security/* not implemented yet'
+328 verbose audit error   },
+328 verbose audit error   pkgid: undefined
+328 verbose audit error }
+329 silly audit error [object Object]
+330 silly audit report null
+331 warn deprecated yaeti@0.0.6: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+332 http fetch GET 200 https://cdn.npmmirror.com/packages/detect-libc/2.1.2/detect-libc-2.1.2.tgz 1850ms (cache miss)
+333 http fetch GET 200 https://cdn.npmmirror.com/packages/%40img/colour/1.1.0/colour-1.1.0.tgz 1923ms (cache miss)
+334 verbose reify failed optional dependency H:\skywatchuaair\1.0\node_modules\@img\sharp-win32-x64
+335 silly reify mark deleted [ 'H:\\skywatchuaair\\1.0\\node_modules\\@img\\sharp-win32-x64' ]
+336 warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+337 http fetch GET 200 https://cdn.npmmirror.com/packages/sharp/0.34.5/sharp-0.34.5.tgz 2762ms (cache miss)
+338 http fetch GET 200 https://cdn.npmmirror.com/packages/semver/7.7.4/semver-7.7.4.tgz 2855ms (cache miss)
+339 info run bufferutil@4.1.0 install node_modules/bufferutil node-gyp-build
+340 info run sharp@0.34.5 install node_modules/sharp node install/check.js || npm run build
+341 info run utf-8-validate@5.0.10 install node_modules/utf-8-validate node-gyp-build
+342 info run sharp@0.34.5 install { code: 0, signal: null }
+343 info run bufferutil@4.1.0 install { code: 0, signal: null }
+344 info run utf-8-validate@5.0.10 install { code: 0, signal: null }
+345 info run es5-ext@0.10.64 postinstall node_modules/es5-ext  node -e "try{require('./_postinstall')}catch(e){}" || exit 0
+346 info run esbuild@0.21.5 postinstall node_modules/esbuild node install.js
+347 info run es5-ext@0.10.64 postinstall { code: 0, signal: null }
+348 info run esbuild@0.21.5 postinstall { code: 0, signal: null }
+349 warn cleanup Failed to remove some directories [
+349 warn cleanup   [
+349 warn cleanup     'H:\\skywatchuaair\\1.0\\node_modules\\@img\\sharp-win32-x64',
+349 warn cleanup     [Error: ENOTEMPTY: directory not empty, rmdir 'H:\skywatchuaair\1.0\node_modules\@img\sharp-win32-x64\lib'] {
+349 warn cleanup       errno: -4051,
+349 warn cleanup       code: 'ENOTEMPTY',
+349 warn cleanup       syscall: 'rmdir',
+349 warn cleanup       path: 'H:\\skywatchuaair\\1.0\\node_modules\\@img\\sharp-win32-x64\\lib'
+349 warn cleanup     }
+349 warn cleanup   ]
+349 warn cleanup ]
+350 silly ADD node_modules/semver
+351 silly ADD
+352 silly ADD node_modules/@img/colour
+353 silly ADD node_modules/sharp
+354 silly ADD node_modules/sharp/node_modules/detect-libc
+355 silly ADD node_modules/yaeti
+356 silly ADD node_modules/xmlbuilder
+357 silly ADD node_modules/xml2js
+358 silly ADD node_modules/ws
+359 silly ADD node_modules/write-file-atomic
+360 silly ADD node_modules/whatwg-url
+361 silly ADD node_modules/websocket
+362 silly ADD node_modules/webidl-conversions
+363 silly ADD node_modules/web-streams-polyfill
+364 silly ADD node_modules/vite
+365 silly ADD node_modules/vary
+366 silly ADD node_modules/utils-merge
+367 silly ADD node_modules/utf-8-validate
+368 silly ADD node_modules/unpipe
+369 silly ADD node_modules/undici-types
+370 silly ADD node_modules/typedarray-to-buffer
+371 silly ADD node_modules/type-is
+372 silly ADD node_modules/type
+373 silly ADD node_modules/tslib
+374 silly ADD node_modules/ts-custom-error
+375 silly ADD node_modules/tr46
+376 silly ADD node_modules/toidentifier
+377 silly ADD node_modules/telegram
+378 silly ADD node_modules/telegram/node_modules/mime
+379 silly ADD node_modules/store2
+380 silly ADD node_modules/steno
+381 silly ADD node_modules/statuses
+382 silly ADD node_modules/source-map-js
+383 silly ADD node_modules/socks
+384 silly ADD node_modules/smart-buffer
+385 silly ADD node_modules/slide
+386 silly ADD node_modules/side-channel-weakmap
+387 silly ADD node_modules/side-channel-map
+388 silly ADD node_modules/side-channel-list
+389 silly ADD node_modules/side-channel
+390 silly ADD node_modules/setprototypeof
+391 silly ADD node_modules/serve-static
+392 silly ADD node_modules/send
+393 silly ADD node_modules/send/node_modules/ms
+394 silly ADD node_modules/sax
+395 silly ADD node_modules/safer-buffer
+396 silly ADD node_modules/safe-buffer
+397 silly ADD node_modules/rss-parser
+398 silly ADD node_modules/rollup
+399 silly ADD node_modules/real-cancellable-promise
+400 silly ADD node_modules/raw-body
+401 silly ADD node_modules/range-parser
+402 silly ADD node_modules/qs
+403 silly ADD node_modules/proxy-addr
+404 silly ADD node_modules/promise-limit
+405 silly ADD node_modules/postcss
+406 silly ADD node_modules/picocolors
+407 silly ADD node_modules/path-to-regexp
+408 silly ADD node_modules/path-browserify
+409 silly ADD node_modules/parseurl
+410 silly ADD node_modules/pako
+411 silly ADD node_modules/on-finished
+412 silly ADD node_modules/object-inspect
+413 silly ADD node_modules/node-localstorage
+414 silly ADD node_modules/node-gyp-build
+415 silly ADD node_modules/node-fetch
+416 silly ADD node_modules/node-domexception
+417 silly ADD node_modules/next-tick
+418 silly ADD node_modules/negotiator
+419 silly ADD node_modules/nanoid
+420 silly ADD node_modules/ms
+421 silly ADD node_modules/mime-types
+422 silly ADD node_modules/mime-db
+423 silly ADD node_modules/mime
+424 silly ADD node_modules/methods
+425 silly ADD node_modules/merge-descriptors
+426 silly ADD node_modules/media-typer
+427 silly ADD node_modules/math-intrinsics
+428 silly ADD node_modules/lowdb
+429 silly ADD node_modules/libsql
+430 silly ADD node_modules/js-base64
+431 silly ADD node_modules/is-typedarray
+432 silly ADD node_modules/ipaddr.js
+433 silly ADD node_modules/ip-address
+434 silly ADD node_modules/inherits
+435 silly ADD node_modules/imurmurhash
+436 silly ADD node_modules/ieee754
+437 silly ADD node_modules/iconv-lite
+438 silly ADD node_modules/http-errors
+439 silly ADD node_modules/htmlparser2
+440 silly ADD node_modules/hasown
+441 silly ADD node_modules/has-symbols
+442 silly ADD node_modules/graceful-fs
+443 silly ADD node_modules/gopd
+444 silly ADD node_modules/get-proto
+445 silly ADD node_modules/get-intrinsic
+446 silly ADD node_modules/function-bind
+447 silly ADD node_modules/fresh
+448 silly ADD node_modules/forwarded
+449 silly ADD node_modules/formdata-polyfill
+450 silly ADD node_modules/finalhandler
+451 silly ADD node_modules/fetch-blob
+452 silly ADD node_modules/ext
+453 silly ADD node_modules/express
+454 silly ADD node_modules/event-emitter
+455 silly ADD node_modules/etag
+456 silly ADD node_modules/esniff
+457 silly ADD node_modules/escape-html
+458 silly ADD node_modules/esbuild
+459 silly ADD node_modules/es6-symbol
+460 silly ADD node_modules/es6-iterator
+461 silly ADD node_modules/es5-ext
+462 silly ADD node_modules/es-object-atoms
+463 silly ADD node_modules/es-errors
+464 silly ADD node_modules/es-define-property
+465 silly ADD node_modules/entities
+466 silly ADD node_modules/encodeurl
+467 silly ADD node_modules/ee-first
+468 silly ADD node_modules/dunder-proto
+469 silly ADD node_modules/dotenv
+470 silly ADD node_modules/domutils
+471 silly ADD node_modules/domhandler
+472 silly ADD node_modules/domelementtype
+473 silly ADD node_modules/dom-serializer
+474 silly ADD node_modules/detect-libc
+475 silly ADD node_modules/destroy
+476 silly ADD node_modules/depd
+477 silly ADD node_modules/debug
+478 silly ADD node_modules/data-uri-to-buffer
+479 silly ADD node_modules/d
+480 silly ADD node_modules/cross-fetch
+481 silly ADD node_modules/cross-fetch/node_modules/node-fetch
+482 silly ADD node_modules/cookie-signature
+483 silly ADD node_modules/cookie
+484 silly ADD node_modules/content-type
+485 silly ADD node_modules/content-disposition
+486 silly ADD node_modules/call-bound
+487 silly ADD node_modules/call-bind-apply-helpers
+488 silly ADD node_modules/bytes
+489 silly ADD node_modules/bufferutil
+490 silly ADD node_modules/buffer
+491 silly ADD node_modules/body-parser
+492 silly ADD node_modules/big-integer
+493 silly ADD node_modules/base64-js
+494 silly ADD node_modules/async-mutex
+495 silly ADD node_modules/array-flatten
+496 silly ADD node_modules/accepts
+497 silly ADD node_modules/@types/ws
+498 silly ADD node_modules/@types/node
+499 silly ADD node_modules/@types/estree
+500 silly ADD node_modules/@rollup/rollup-win32-x64-msvc
+501 silly ADD node_modules/@rollup/rollup-win32-x64-gnu
+502 silly ADD node_modules/@neon-rs/load
+503 silly ADD node_modules/@libsql/win32-x64-msvc
+504 silly ADD node_modules/@libsql/isomorphic-ws
+505 silly ADD node_modules/@libsql/hrana-client
+506 silly ADD node_modules/@libsql/core
+507 silly ADD node_modules/@libsql/client
+508 silly ADD node_modules/@esbuild/win32-x64
+509 silly ADD node_modules/@cryptography/aes
+510 verbose cwd H:\skywatchuaair\1.0
+511 verbose os Windows_NT 10.0.19045
+512 verbose node v22.11.0
+513 verbose npm  v11.7.0
+514 verbose exit 0
+515 info ok
