@@ -173,7 +173,10 @@ export async function loadTelegramEvents() {
   if (!tgClient || channels.length === 0) {
     return { events: [], alarms: [], district_alarms: [], alarms_updated: false };
   }
-  const imageMarkerDetectionEnabled = imageChannels.size > 0 && await canExtractImageMarkers();
+  const imageMarkerDetectionEnabled =
+    runtime.enableImageMarkers &&
+    imageChannels.size > 0 &&
+    await canExtractImageMarkers();
 
   const events = [];
   const alarmSet = new Set();
@@ -356,7 +359,7 @@ export async function loadTelegramEvents() {
     const channelKey = String(channel || "").toLowerCase().replace(/^@/, "");
     const isImageChannel = imageMarkerDetectionEnabled && imageChannels.has(channelKey);
     const hasMedia = Boolean(msg?.media || msg?.photo || msg?.document);
-    if (!isImageChannel || !hasMedia) continue;
+    if (!isImageChannel || !hasMedia || eventsFromMsg.length > 0) continue;
 
     let imagePath = null;
     try {

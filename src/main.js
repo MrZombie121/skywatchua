@@ -83,6 +83,7 @@ let radarUserLayer = null;
 let radarTargetLayer = null;
 
 const DEFAULT_MARKER_TTL_MS = 10 * 60 * 1000;
+const MIN_MARKER_TTL_MS = 5 * 60 * 1000;
 const STALE_WARN_MS = 5 * 60 * 1000;
 const STALE_CRITICAL_MS = 9 * 60 * 1000;
 const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -2765,7 +2766,7 @@ if (siteVersion) {
 if (ttlSelect) {
   ttlSelect.addEventListener("change", (event) => {
     const next = Number(event.target.value);
-    state.markerTtlMs = Number.isFinite(next) ? next : DEFAULT_MARKER_TTL_MS;
+    state.markerTtlMs = Number.isFinite(next) ? Math.max(MIN_MARKER_TTL_MS, next) : DEFAULT_MARKER_TTL_MS;
     localStorage.setItem(MARKER_TTL_KEY, String(state.markerTtlMs));
     renderMarkers();
     renderRadarList();
@@ -2900,8 +2901,10 @@ state.soundEnabled = savedSound;
 if (toggleSound) toggleSound.checked = savedSound;
 
 const savedTtl = Number(localStorage.getItem(MARKER_TTL_KEY));
-if (Number.isFinite(savedTtl) && savedTtl > 0) {
+if (Number.isFinite(savedTtl) && savedTtl >= MIN_MARKER_TTL_MS) {
   state.markerTtlMs = savedTtl;
+} else if (Number.isFinite(savedTtl) && savedTtl > 0) {
+  localStorage.setItem(MARKER_TTL_KEY, String(DEFAULT_MARKER_TTL_MS));
 }
 if (ttlSelect) ttlSelect.value = String(state.markerTtlMs);
 
