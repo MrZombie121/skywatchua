@@ -645,28 +645,6 @@ textarea {
   position: relative;
 }
 
-.marker-wrap::after {
-  content: "";
-  position: absolute;
-  inset: -5px;
-  border-radius: 999px;
-  border: 2px solid var(--fresh-color, #34d37b);
-  box-shadow: 0 0 10px var(--fresh-color, #34d37b);
-  opacity: 0.75;
-}
-
-.marker-wrap.stale-5::after { --fresh-color: #ffc234; }
-.marker-wrap.stale-9::after { --fresh-color: #ef5353; }
-
-.marker-wrap.spawn::before {
-  content: "";
-  position: absolute;
-  inset: -12px;
-  border-radius: 999px;
-  border: 2px solid rgba(53, 214, 255, 0.85);
-  animation: markerSpawnPulse 1.4s ease-out 2;
-}
-
 .marker-icon-img {
   width: 36px;
   height: 36px;
