@@ -96,6 +96,7 @@ const SOUND_COOLDOWN_MS = 4000;
 const MAP_HEIGHT_STORAGE_KEY = "sw_map_height_v1";
 const MAP_MIN_HEIGHT = 360;
 const DOCK_MIN_HEIGHT = 160;
+const SOURCE_FETCH_TIMEOUT_MS = 5000;
 
 const state = {
   events: [],
@@ -366,7 +367,19 @@ function resolveMarkerVariant(event) {
 }
 
 async function fetchSource(source) {
-  const response = await fetch(source.url, { cache: "no-store" });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SOURCE_FETCH_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(source.url, { cache: "no-store", signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`Source ${source.id} timeout after ${SOURCE_FETCH_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
   if (!response.ok) {
     throw new Error(`Source ${source.id} responded with ${response.status}`);
   }
