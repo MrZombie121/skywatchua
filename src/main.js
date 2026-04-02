@@ -1185,24 +1185,30 @@ async function renderAlarmMap() {
   }
 
   if (oblastGeoReady && oblastGeoLayer) {
+    const inactiveStyle = {
+      color: "transparent",
+      opacity: 0,
+      weight: 0,
+      fill: true,
+      fillColor: "transparent",
+      fillOpacity: 0
+    };
+    const activeStyle = {
+      color: "#ff3b30",
+      opacity: 0.9,
+      weight: 1.5,
+      fill: true,
+      fillColor: "#ff3b30",
+      fillOpacity: 0.12
+    };
     oblastGeoLayer.eachLayer((layer) => {
       const feature = layer.feature || {};
       const id = feature.properties?._regionId;
       const isActive = id && active.has(id);
-      layer.setStyle(
-        isActive
-          ? {
-              color: "#ff3b30",
-              weight: 1.5,
-              fillColor: "#ff3b30",
-              fillOpacity: 0.12
-            }
-          : {
-              color: "transparent",
-              weight: 0,
-              fillOpacity: 0
-            }
-      );
+      layer.setStyle(isActive ? activeStyle : inactiveStyle);
+      if (typeof layer.redraw === "function") {
+        layer.redraw();
+      }
       if (isActive) {
         layer.bringToFront();
       }
