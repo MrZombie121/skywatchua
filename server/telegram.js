@@ -174,25 +174,30 @@ async function getClient() {
 
   if (!client) {
     client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
-      connectionRetries: 2
+      connectionRetries: 2,
+      receiveUpdates: false
     });
   }
 
   try {
-    await withTimeout(
-      client.start({
-        phoneNumber: async () => process.env.TG_PHONE || "",
-        password: async () => process.env.TG_PASSWORD || "",
-        phoneCode: async () => process.env.TG_CODE || "",
-        onError: (err) => console.error("Telegram auth error", err)
-      }),
-      clientStartTimeoutMs,
-      "telegram start"
-    );
+    if (sessionString) {
+      await withTimeout(client.connect(), clientStartTimeoutMs, "telegram connect");
+    } else {
+      await withTimeout(
+        client.start({
+          phoneNumber: async () => process.env.TG_PHONE || "",
+          password: async () => process.env.TG_PASSWORD || "",
+          phoneCode: async () => process.env.TG_CODE || "",
+          onError: (err) => console.error("Telegram auth error", err)
+        }),
+        clientStartTimeoutMs,
+        "telegram start"
+      );
+    }
     clientReady = true;
     return client;
   } catch (error) {
-    console.warn("Telegram client start failed", error?.message || error);
+    console.warn("Telegram client init failed", error?.message || error);
     await disconnectClient();
     return null;
   }
@@ -398,7 +403,9 @@ export async function loadTelegramEvents() {
       district_alarms: Array.from(districtAlarmMap.values()),
       alarms_updated: alarmsUpdated
     };
-  } finally {
+  } catch (error) {
+    console.warn("Telegram load failed", error?.message || error);
     await disconnectClient();
+    return { events: [], alarms: [], district_alarms: [], alarms_updated: false };
   }
 }

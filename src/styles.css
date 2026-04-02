@@ -645,6 +645,15 @@ textarea {
   position: relative;
 }
 
+.marker-wrap.spawn::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 999px;
+  border: 2px solid rgba(53, 214, 255, 0.85);
+  animation: markerSpawnPulse 1.4s ease-out 2;
+}
+
 .marker-icon-img {
   width: 36px;
   height: 36px;
