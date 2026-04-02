@@ -8,8 +8,8 @@
   },
   "admins": [
     {
-      "username": "adminka",
-      "password_hash": "fe4b1f09668d259d8deca5f92188ad1f:54917a8109cee831a08deffc3036cf407d005925ed6cf94c1322b0608d202c020b92d4de55b318a1d9ce26663a7b3f68a9a3e6bcd2c6af7721b6d609945775e2"
+      "username": "admin26",
+      "password_hash": "3f439bfc9cf1924803cccaa132a942dd:04e11a28bb9b1ca3903349c0518cefa6aa4fcc50f8e00d99685b3f9e1d60dc17031394228fde55b62e031bea072c40d3291b71195bed8322be206e95a8b7d3b1"
     }
   ],
   "sessions": [

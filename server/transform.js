@@ -731,9 +731,17 @@ function extractLocationHits(text) {
   hits.sort((a, b) => a.index - b.index);
   const unique = new Map();
   hits.forEach((hit) => {
-    if (!unique.has(hit.label)) {
+    const existing = unique.get(hit.label);
+    if (!existing) {
       unique.set(hit.label, hit);
-    } else if (unique.get(hit.label).count == null && hit.count != null) {
+      return;
+    }
+
+    const shouldReplace =
+      (!existing.location_id && hit.location_id) ||
+      (existing.count == null && hit.count != null);
+
+    if (shouldReplace) {
       unique.set(hit.label, hit);
     }
   });
