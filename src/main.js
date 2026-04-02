@@ -120,10 +120,26 @@ const state = {
   savedViews: [],
   soundEnabled: false,
   markerTtlMs: DEFAULT_MARKER_TTL_MS,
+  serverEventTtlMs: DEFAULT_MARKER_TTL_MS,
   userLocation: null,
   radarRadiusKm: 100,
   dangerRadiusKm: 25
 };
+
+function hasCustomMarkerTtl() {
+  const raw = localStorage.getItem(MARKER_TTL_KEY);
+  const saved = Number(raw);
+  return Number.isFinite(saved) && saved >= MIN_MARKER_TTL_MS;
+}
+
+function syncMarkerTtlWithServer(ttlMinutes) {
+  const ttlMs = Number(ttlMinutes) * 60 * 1000;
+  if (!Number.isFinite(ttlMs) || ttlMs < MIN_MARKER_TTL_MS) return;
+  state.serverEventTtlMs = ttlMs;
+  if (hasCustomMarkerTtl()) return;
+  state.markerTtlMs = ttlMs;
+  if (ttlSelect) ttlSelect.value = String(ttlMs);
+}
 
 const typeContainer = document.getElementById("type-filters");
 const sourceContainer = document.getElementById("source-filters");
@@ -389,6 +405,9 @@ async function fetchSource(source) {
     state.maintenanceUntil = payload.maintenance_until;
   } else {
     state.maintenanceUntil = null;
+  }
+  if (payload.event_ttl_min) {
+    syncMarkerTtlWithServer(payload.event_ttl_min);
   }
   const items = Array.isArray(payload)
     ? payload

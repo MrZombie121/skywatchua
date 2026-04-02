@@ -1,0 +1,26 @@
+﻿{
+  "events": [
+    {
+      "id": "tg-001",
+      "type": "shahed",
+      "lat": 50.45,
+      "lng": 30.52,
+      "direction": 210,
+      "source": "tg",
+      "timestamp": "2026-02-08T15:32:00Z",
+      "comment": "Демонстраційний сигнал у районі Києва",
+      "is_test": false
+    },
+    {
+      "id": "tg-002",
+      "type": "missile",
+      "lat": 48.6,
+      "lng": 32.25,
+      "direction": 135,
+      "source": "tg",
+      "timestamp": "2026-02-08T15:34:00Z",
+      "comment": "Умовний маршрут через центральний регіон",
+      "is_test": true
+    }
+  ]
+}

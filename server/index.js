@@ -62,6 +62,35 @@ const state = {
   inFlight: null
 };
 
+async function loadPersistedEventCache() {
+  const [rawEvents, rawFetchedAt] = await Promise.all([
+    getSetting("events_cache", "[]"),
+    getSetting("events_cache_fetched_at", "0")
+  ]);
+
+  try {
+    const parsed = JSON.parse(rawEvents);
+    const fetchedAt = Number(rawFetchedAt || 0);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { events: [], fetchedAt: 0 };
+    }
+    return {
+      events: parsed,
+      fetchedAt: Number.isFinite(fetchedAt) ? fetchedAt : 0
+    };
+  } catch {
+    return { events: [], fetchedAt: 0 };
+  }
+}
+
+async function persistEventCache(events, fetchedAt) {
+  if (!Array.isArray(events) || events.length === 0) return;
+  await Promise.all([
+    setSetting("events_cache", JSON.stringify(events)),
+    setSetting("events_cache_fetched_at", String(fetchedAt))
+  ]);
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const distPath = path.resolve(__dirname, "..", "dist");
@@ -321,12 +350,32 @@ async function sendEvents(_req, res) {
         cached: true,
         stale: true,
         maintenance: false,
-        maintenance_until: null
+        maintenance_until: null,
+        event_ttl_min: eventTtlMin
       };
+    }
+
+    if (combined.length === 0) {
+      const persisted = await loadPersistedEventCache();
+      if (persisted.events.length && nowTs - persisted.fetchedAt <= staleKeepMs) {
+        state.cache = persisted.events;
+        state.lastFetch = persisted.fetchedAt;
+        return {
+          events: persisted.events,
+          alarms: alarmState,
+          district_alarms: districtAlarmState,
+          cached: true,
+          stale: true,
+          maintenance: false,
+          maintenance_until: null,
+          event_ttl_min: eventTtlMin
+        };
+      }
     }
 
     state.cache = combined;
     state.lastFetch = nowTs;
+    await persistEventCache(combined, nowTs);
 
     return {
       events: combined,
@@ -334,7 +383,8 @@ async function sendEvents(_req, res) {
       district_alarms: districtAlarmState,
       cached: false,
       maintenance: false,
-      maintenance_until: null
+      maintenance_until: null,
+      event_ttl_min: eventTtlMin
     };
   }
 
@@ -363,7 +413,8 @@ async function sendEvents(_req, res) {
         district_alarms: districtAlarmState,
         cached: true,
         maintenance: maintenance.enabled,
-        maintenance_until: maintenance.enabled ? maintenance.until : null
+        maintenance_until: maintenance.enabled ? maintenance.until : null,
+        event_ttl_min: eventTtlMin
       });
     }
 
@@ -375,11 +426,20 @@ async function sendEvents(_req, res) {
         district_alarms: districtAlarmState,
         maintenance: true,
         maintenance_until: maintenance.until,
-        cached: true
+        cached: true,
+        event_ttl_min: eventTtlMin
       });
     }
 
     const { alarmState, districtAlarmState } = await readStoredAlarmState();
+
+    if (!state.cache.length) {
+      const persisted = await loadPersistedEventCache();
+      if (persisted.events.length) {
+        state.cache = persisted.events;
+        state.lastFetch = persisted.fetchedAt;
+      }
+    }
 
     // If we have any cache, return it immediately and refresh in background.
     if (state.cache.length) {
@@ -395,7 +455,8 @@ async function sendEvents(_req, res) {
         cached: true,
         stale: now - state.lastFetch >= refreshMs,
         maintenance: false,
-        maintenance_until: null
+        maintenance_until: null,
+        event_ttl_min: eventTtlMin
       });
     }
 
