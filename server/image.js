@@ -2,6 +2,10 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
+const imageMagickCommands = [
+  { binary: "magick", prefixArgs: [] },
+  { binary: "convert", prefixArgs: [] }
+];
 
 function parseCalibrationPoints(raw) {
   if (!raw) return [];
@@ -114,17 +118,32 @@ export async function extractImageMarkers(imagePath) {
     "null:"
   ];
 
-  try {
-    const { stdout, stderr } = await execFileAsync("magick", commandArgs, { timeout: 15000 });
-    const markers = parseConnectedComponents(`${stdout}\n${stderr}`);
-    return markers.map((marker) => ({
-      ...mapPixel(marker.x, marker.y),
-      x: marker.x,
-      y: marker.y,
-      area: marker.area
-    }));
-  } catch (error) {
-    console.warn("Failed to extract image markers via ImageMagick:", error?.message || error);
-    return [];
+  for (const command of imageMagickCommands) {
+    try {
+      const { stdout, stderr } = await execFileAsync(
+        command.binary,
+        [...command.prefixArgs, ...commandArgs],
+        { timeout: 15000 }
+      );
+      const markers = parseConnectedComponents(`${stdout}\n${stderr}`);
+      return markers.map((marker) => ({
+        ...mapPixel(marker.x, marker.y),
+        x: marker.x,
+        y: marker.y,
+        area: marker.area
+      }));
+    } catch (error) {
+      const message = error?.message || String(error);
+      const missingBinary =
+        error?.code === "ENOENT" ||
+        message.includes("not found") ||
+        message.includes("is not recognized");
+      if (missingBinary) continue;
+      console.warn(`Failed to extract image markers via ${command.binary}:`, message);
+      return [];
+    }
   }
+
+  console.warn("Failed to extract image markers: ImageMagick binary not found (tried: magick, convert).");
+  return [];
 }
