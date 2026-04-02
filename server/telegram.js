@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseMessageToEvents, extractAlarmSignals } from "./transform.js";
-import { extractImageMarkers, hasImageMarkerCalibration } from "./image.js";
+import { canExtractImageMarkers, extractImageMarkers } from "./image.js";
 import { getTelegramChannels } from "./config/source-presets.js";
 
 const apiId = process.env.TG_API_ID ? Number(process.env.TG_API_ID) : null;
@@ -23,7 +23,6 @@ const imageChannels = new Set(
     .map((item) => item.trim().toLowerCase().replace(/^@/, ""))
     .filter(Boolean)
 );
-const imageMarkerDetectionEnabled = imageChannels.size > 0 && hasImageMarkerCalibration();
 const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
@@ -171,6 +170,7 @@ export async function loadTelegramEvents() {
   if (!tgClient || channels.length === 0) {
     return { events: [], alarms: [], district_alarms: [], alarms_updated: false };
   }
+  const imageMarkerDetectionEnabled = imageChannels.size > 0 && await canExtractImageMarkers();
 
   const events = [];
   const alarmSet = new Set();

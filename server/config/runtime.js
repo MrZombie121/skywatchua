@@ -25,6 +25,8 @@ export const runtime = {
   port: toNumber(process.env.PORT, 8787),
   sessionDays: toNumber(process.env.ADMIN_SESSION_DAYS, 7),
   refreshMs: toNumber(process.env.REFRESH_MS, 12000),
+  warmupOnStart: toBoolean(process.env.WARMUP_ON_START, true),
+  telegramChannelConcurrency: toNumber(process.env.TG_CHANNEL_CONCURRENCY, 6),
   eventTtlMin: toNumber(process.env.EVENT_TTL_MIN, 8),
   eventStaleKeepMin: toNumber(process.env.EVENT_STALE_KEEP_MIN, 90),
   dedupRadiusKm: toNumber(process.env.EVENT_DEDUP_RADIUS_KM, 5),

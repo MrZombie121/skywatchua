@@ -3,6 +3,8 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 let warnedAboutCalibration = false;
+let warnedAboutMagick = false;
+let imageMagickAvailable = null;
 
 function parseCalibrationPoints(raw) {
   if (!raw) return [];
@@ -113,6 +115,26 @@ export function hasImageMarkerCalibration() {
   return Boolean(buildPixelMapper(calibrationPoints));
 }
 
+async function detectImageMagick() {
+  if (typeof imageMagickAvailable === "boolean") return imageMagickAvailable;
+  try {
+    await execFileAsync("magick", ["-version"], { timeout: 5000 });
+    imageMagickAvailable = true;
+  } catch (error) {
+    imageMagickAvailable = false;
+    if (!warnedAboutMagick) {
+      console.warn("Image markers disabled: ImageMagick `magick` not found in PATH.");
+      warnedAboutMagick = true;
+    }
+  }
+  return imageMagickAvailable;
+}
+
+export async function canExtractImageMarkers() {
+  if (!hasImageMarkerCalibration()) return false;
+  return detectImageMagick();
+}
+
 function parseConnectedComponents(output) {
   const lines = String(output || "").split(/\r?\n/);
   const points = [];
@@ -139,6 +161,9 @@ export async function extractImageMarkers(imagePath) {
       console.warn("Image markers skipped: MAP_CALIBRATION_POINTS missing or invalid. Configure it in .env or use /calibration.html.");
       warnedAboutCalibration = true;
     }
+    return [];
+  }
+  if (!(await detectImageMagick())) {
     return [];
   }
 
@@ -171,7 +196,16 @@ export async function extractImageMarkers(imagePath) {
       area: marker.area
     }));
   } catch (error) {
-    console.warn("Failed to extract image markers via ImageMagick:", error?.message || error);
+    const message = error?.message || String(error);
+    if (/ENOENT/i.test(message)) {
+      imageMagickAvailable = false;
+      if (!warnedAboutMagick) {
+        console.warn("Image markers disabled: ImageMagick `magick` not found in PATH.");
+        warnedAboutMagick = true;
+      }
+      return [];
+    }
+    console.warn("Failed to extract image markers via ImageMagick:", message);
     return [];
   }
 }
