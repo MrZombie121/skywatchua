@@ -8,7 +8,7 @@
     "dev:server": "node server/index.js",
     "dev:client": "vite",
     "tg:session": "node server/create-session.js",
-    "build": "vite build",
+    "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
     "start": "node server/index.js"
   },
