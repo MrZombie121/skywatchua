@@ -1,11 +1,10 @@
-﻿import { TelegramClient } from "telegram";
+import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseMessageToEvents, extractAlarmSignals } from "./transform.js";
-import { canExtractImageMarkers, extractImageMarkers } from "./image.js";
-import { runtime } from "./config/runtime.js";
+import { extractImageMarkers, hasImageMarkerCalibration } from "./image.js";
 import { getTelegramChannels } from "./config/source-presets.js";
 
 const apiId = process.env.TG_API_ID ? Number(process.env.TG_API_ID) : null;
@@ -24,29 +23,16 @@ const imageChannels = new Set(
     .map((item) => item.trim().toLowerCase().replace(/^@/, ""))
     .filter(Boolean)
 );
+const imageMarkerDetectionEnabled = imageChannels.size > 0 && hasImageMarkerCalibration();
 const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
-const channelConcurrency = Math.max(1, Number(runtime.telegramChannelConcurrency || 6));
-const channelTimeoutMs = Math.max(1000, Number(runtime.telegramChannelTimeoutMs || 5000));
 
 let client;
 let clientReady = false;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const tmpDir = path.resolve(__dirname, "tmp");
-
-function withTimeout(promise, timeoutMs, label) {
-  let timer = null;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new Error(`${label} timeout after ${timeoutMs}ms`));
-    }, timeoutMs);
-  });
-  return Promise.race([promise, timeout]).finally(() => {
-    if (timer) clearTimeout(timer);
-  });
-}
 
 function normalizeText(text) {
   return String(text || "")
@@ -99,7 +85,6 @@ function isTrackGoneMessage(text) {
 function preferredRegionIdForChannel(channel) {
   const lower = String(channel || "").toLowerCase().replace(/^@/, "");
   if (lower.includes("xydessa_live") || lower.includes("pivdenmedia")) return "odeska";
-  if (lower.includes("tlknewsua") || lower.includes("tlknews")) return "kharkivska";
   if (lower.includes("kyivoperat")) return "kyiv";
   if (lower.includes("dneproperatyv")) return "dniprovska";
   if (lower.includes("dnipro_alerts")) return "dniprovska";
@@ -166,34 +151,19 @@ async function getClient() {
   if (!apiId || !apiHash) return null;
   if (clientReady) return client;
 
-  if (!client) {
-    client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
-      connectionRetries: 3
-    });
-  }
+  client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
+    connectionRetries: 3
+  });
 
-  try {
-    await withTimeout(
-      client.start({
-        phoneNumber: async () => process.env.TG_PHONE || "",
-        password: async () => process.env.TG_PASSWORD || "",
-        phoneCode: async () => process.env.TG_CODE || "",
-        onError: (err) => console.error("Telegram auth error", err)
-      }),
-      channelTimeoutMs,
-      "telegram start"
-    );
-    clientReady = true;
-    return client;
-  } catch (error) {
-    clientReady = false;
-    console.warn("Telegram client start failed", error?.message || error);
-    try {
-      await client?.disconnect();
-    } catch {}
-    client = null;
-    return null;
-  }
+  await client.start({
+    phoneNumber: async () => process.env.TG_PHONE || "",
+    password: async () => process.env.TG_PASSWORD || "",
+    phoneCode: async () => process.env.TG_CODE || "",
+    onError: (err) => console.error("Telegram auth error", err)
+  });
+
+  clientReady = true;
+  return client;
 }
 
 export async function loadTelegramEvents() {
@@ -201,10 +171,6 @@ export async function loadTelegramEvents() {
   if (!tgClient || channels.length === 0) {
     return { events: [], alarms: [], district_alarms: [], alarms_updated: false };
   }
-  const imageMarkerDetectionEnabled =
-    runtime.enableImageMarkers &&
-    imageChannels.size > 0 &&
-    await canExtractImageMarkers();
 
   const events = [];
   const alarmSet = new Set();
@@ -213,24 +179,10 @@ export async function loadTelegramEvents() {
 
   const channelMessages = new Map();
   const allMessages = [];
-  async function readChannel(channel) {
+  for (const channel of channels) {
     try {
-      const messages = await withTimeout(
-        tgClient.getMessages(channel, { limit }),
-        channelTimeoutMs,
-        `telegram channel ${channel}`
-      );
-      return { channel, ordered: [...messages].filter(Boolean).reverse() };
-    } catch (error) {
-      console.warn("Failed to read channel", channel, error?.message || error);
-      return { channel, ordered: [] };
-    }
-  }
-
-  for (let start = 0; start < channels.length; start += channelConcurrency) {
-    const batch = channels.slice(start, start + channelConcurrency);
-    const results = await Promise.all(batch.map(readChannel));
-    for (const { channel, ordered } of results) {
+      const messages = await tgClient.getMessages(channel, { limit });
+      const ordered = [...messages].filter(Boolean).reverse();
       channelMessages.set(channel, ordered);
       ordered.forEach((msg) => {
         allMessages.push({ channel, msg });
@@ -256,6 +208,8 @@ export async function loadTelegramEvents() {
           });
         }
       }
+    } catch (error) {
+      console.warn("Failed to read channel", channel, error?.message || error);
     }
   }
 
@@ -391,7 +345,7 @@ export async function loadTelegramEvents() {
     const channelKey = String(channel || "").toLowerCase().replace(/^@/, "");
     const isImageChannel = imageMarkerDetectionEnabled && imageChannels.has(channelKey);
     const hasMedia = Boolean(msg?.media || msg?.photo || msg?.document);
-    if (!isImageChannel || !hasMedia || eventsFromMsg.length > 0) continue;
+    if (!isImageChannel || !hasMedia) continue;
 
     let imagePath = null;
     try {

@@ -8,7 +8,7 @@
     "dev:server": "node server/index.js",
     "dev:client": "vite",
     "tg:session": "node server/create-session.js",
-    "build": "node ./node_modules/vite/bin/vite.js build",
+    "build": "vite build",
     "preview": "vite preview",
     "start": "node server/index.js"
   },
@@ -21,7 +21,6 @@
     "express": "^4.19.2",
     "lowdb": "^7.0.1",
     "rss-parser": "^3.13.0",
-    "sharp": "^0.34.5",
     "telegram": "^2.26.11"
   }
 }

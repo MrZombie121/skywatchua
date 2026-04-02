@@ -1,4 +1,4 @@
-﻿import fs from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getAdminLocationsSync, getAdminLocationPointsSync } from "./db/index.js";
@@ -36,7 +36,7 @@ const typeRules = [
       "молния"
     ]
   },
-  { type: "missile", patterns: ["missile", "ракета", "ракет", "крилат", "баліст", "баллист", "ballistic", "швидкісна ціль", "скоростная цель"] },
+  { type: "missile", patterns: ["missile", "ракета", "ракет", "крилат", "баліст", "баллист", "ballistic"] },
   { type: "kab", patterns: ["kab", "каб"] },
   {
     type: "airplane",
@@ -56,18 +56,6 @@ const typeRules = [
 const locationHints = [
   { name: "Київ", keys: ["kyiv", "київ", "kiev"], lat: 50.45, lng: 30.52 },
   { name: "Харків", keys: ["kharkiv", "харків"], lat: 49.98, lng: 36.25 },
-  { name: "Пісочин", keys: ["пісочин", "песочин"], lat: 49.9576, lng: 36.1091 },
-  { name: "Коротич", keys: ["коротич"], lat: 49.9479, lng: 36.0374 },
-  { name: "Солоницівка", keys: ["солоницівка", "солоницевка"], lat: 49.9969, lng: 36.0348 },
-  { name: "Баварія", keys: ["баварія", "бавария"], lat: 49.9564, lng: 36.1575 },
-  { name: "Олексіївка", keys: ["олексіївка", "алексеевка"], lat: 50.0463, lng: 36.2031 },
-  { name: "Основа", keys: ["основа"], lat: 49.9472, lng: 36.2695 },
-  { name: "Аеропорт", keys: ["аеропорт", "аэропорт"], lat: 49.9243, lng: 36.2892 },
-  { name: "Вокзал", keys: ["вокзал"], lat: 49.9935, lng: 36.2062, context: ["харків", "tlkinst", "tlknews", "коротич", "пісочин", "песочин"] },
-  { name: "Центр", keys: ["центр"], lat: 50.0042, lng: 36.2312, context: ["харків", "tlkinst", "tlknews", "коротич", "пісочин", "песочин"] },
-  { name: "Сортування", keys: ["сортировка", "сортування"], lat: 50.0301, lng: 36.1908 },
-  { name: "Холодна Гора", keys: ["холодна гора", "холодная гора", "хг"], lat: 49.9826, lng: 36.1854 },
-  { name: "Лиса Гора", keys: ["лиса гора", "лысая гора", "лг"], lat: 49.993, lng: 36.1817 },
   { name: "Одеса", keys: ["odesa", "odessa", "одеса", "одессе"], lat: 46.48, lng: 30.72 },
   {
     name: "Дніпровське (Миколаївська)",
@@ -89,7 +77,7 @@ const locationHints = [
   { name: "Дніпро", keys: ["dnipro", "dnepr", "дніпро", "днепр", "днепро"], lat: 48.46, lng: 35.05 },
   { name: "Кривий Ріг", keys: ["kryvyi rih", "кривий ріг", "кривой рог"], lat: 47.91, lng: 33.39 },
   { name: "Кропивницький", keys: ["kropyvnytskyi", "кропивницький", "кировоград"], lat: 48.51, lng: 32.26 },
-  { name: "Запоріжжя", keys: ["zaporizh", "запоріжжя", "запорожье", "запор"], lat: 47.84, lng: 35.14 },
+  { name: "Запоріжжя", keys: ["zaporizh", "запор"], lat: 47.84, lng: 35.14 },
   { name: "Миколаїв", keys: ["mykolaiv", "николаев", "миколаїв"], lat: 46.97, lng: 31.99 },
   { name: "Херсон", keys: ["kherson", "херсон"], lat: 46.63, lng: 32.62 },
   { name: "Маріуполь", keys: ["mariupol", "маріуполь", "мариуполь"], lat: 47.1, lng: 37.55 },
@@ -328,7 +316,6 @@ function pickType(text) {
 function shouldUseContextForType(meta = {}, baseText = "") {
   if (meta.allow_bearing_from_base === true) return true;
   if (meta.has_reply === true) return true;
-  if (String(meta.source || "").toLowerCase().includes("tlknews")) return true;
   return hasTrackContext(baseText);
 }
 
@@ -344,7 +331,7 @@ function extractAlarmRegions(text) {
   const lower = normalizeText(text);
   const matches = [];
   alarmRegions.forEach((region) => {
-    if (region.keys.some((key) => containsWholeKey(lower, key))) {
+    if (region.keys.some((key) => lower.includes(key))) {
       matches.push(region.id);
       return;
     }
@@ -414,13 +401,13 @@ function pickLocation(text) {
   const allLocationHints = getAllLocationHints();
   const contextual = allLocationHints.filter((hint) => Array.isArray(hint.context) && hint.context.length > 0);
   for (const hint of contextual) {
-    if (hint.keys.some((key) => containsLocationKey(lower, key)) && hint.context.some((ctx) => lower.includes(ctx))) {
+    if (hint.keys.some((key) => containsWholeKey(lower, key)) && hint.context.some((ctx) => lower.includes(ctx))) {
       return { lat: hint.lat, lng: hint.lng, label: hint.name };
     }
   }
   for (const hint of allLocationHints) {
     if (Array.isArray(hint.context) && hint.context.length > 0) continue;
-    if (hint.keys.some((key) => containsLocationKey(lower, key))) {
+    if (hint.keys.some((key) => containsWholeKey(lower, key))) {
       return { lat: hint.lat, lng: hint.lng, label: hint.name };
     }
   }
@@ -489,49 +476,6 @@ function containsWholeKey(text, key) {
   const escaped = escapeRegex(normalizeText(key));
   const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`, "u");
   return pattern.test(text);
-}
-
-function locationKeyForms(key) {
-  const normalized = normalizeText(key);
-  const forms = new Set([normalized]);
-  if (!normalized || normalized.includes(" ") || !/^[\p{Script=Cyrillic}'-]+$/u.test(normalized)) {
-    return Array.from(forms);
-  }
-
-  const add = (...items) => items.filter(Boolean).forEach((item) => forms.add(item));
-  if (normalized.endsWith("а")) {
-    const stem = normalized.slice(0, -1);
-    add(`${stem}и`, `${stem}і`, `${stem}у`, `${stem}ою`, `${stem}е`);
-  } else if (normalized.endsWith("я")) {
-    const stem = normalized.slice(0, -1);
-    add(`${stem}і`, `${stem}ю`, `${stem}ею`, `${stem}е`);
-  } else if (normalized.endsWith("ь")) {
-    const stem = normalized.slice(0, -1);
-    add(`${stem}я`, `${stem}ю`, `${stem}ем`, `${stem}і`);
-  } else if (normalized.endsWith("й")) {
-    const stem = normalized.slice(0, -1);
-    add(`${stem}я`, `${stem}ю`, `${stem}єм`, `${stem}ї`);
-  } else if (normalized.endsWith("о")) {
-    const stem = normalized.slice(0, -1);
-    add(`${stem}а`, `${stem}у`, `${stem}ом`, `${stem}і`);
-  } else {
-    add(`${normalized}а`, `${normalized}у`, `${normalized}ом`, `${normalized}і`);
-  }
-
-  if (normalized.endsWith("жжя")) {
-    add(`${normalized.slice(0, -1)}і`);
-  }
-
-  return Array.from(forms);
-}
-
-function containsLocationKey(text, key) {
-  return locationKeyForms(key).some((form) => containsWholeKey(text, form));
-}
-
-function findLocationKeyIndex(text, key) {
-  const matched = locationKeyForms(key).find((form) => containsWholeKey(text, form));
-  return matched ? text.indexOf(matched) : -1;
 }
 
 function loadOverrideLocations() {
@@ -648,13 +592,13 @@ function parseDirection(text) {
 function resolveRegionId(text, label) {
   const lower = normalizeText(text);
   for (const region of alarmRegions) {
-    if (region.keys.some((key) => containsWholeKey(lower, key))) {
+    if (region.keys.some((key) => lower.includes(key))) {
       return region.id;
     }
   }
   const labelLower = normalizeText(label);
   for (const region of alarmRegions) {
-    if (region.keys.some((key) => containsWholeKey(labelLower, key))) {
+    if (region.keys.some((key) => labelLower.includes(key))) {
       return region.id;
     }
   }
@@ -795,8 +739,9 @@ function extractLocationHits(text) {
       if (!hasContext) return;
     }
     hint.keys.forEach((key) => {
-      if (!containsLocationKey(lower, key)) return;
-      const idx = findLocationKeyIndex(lower, key);
+      if (!containsWholeKey(lower, key)) return;
+      const keyNorm = normalizeText(key);
+      const idx = lower.indexOf(keyNorm);
       if (idx === -1) return;
       const before = lower.slice(Math.max(0, idx - 30), idx);
       const countMatch = before.match(
@@ -1136,7 +1081,9 @@ export function parseMessageToEvents(text, meta = {}) {
   const contextTexts = Array.isArray(meta.context_texts)
     ? meta.context_texts.filter(Boolean)
     : [];
-  const mergedText = [baseText, ...contextTexts].filter(Boolean).join(" ");
+  const mergedText = isTlk
+    ? baseText
+    : [baseText, ...contextTexts].filter(Boolean).join(" ");
 
   if (isDowned(mergedText)) return [];
   const allowContextForType = shouldUseContextForType(meta, baseText);
@@ -1152,9 +1099,6 @@ export function parseMessageToEvents(text, meta = {}) {
   let type = pickTypeWithContext(baseText, mergedText, meta);
   const hasCount = locationHits.some((hit) => Number.isFinite(hit.count) && hit.count > 0);
   if (!type && locationHits.length > 0 && (hasTrackContext(trackContextText) || hasCount)) {
-    type = "shahed";
-  }
-  if (!type && isTlk && locationHits.length > 0) {
     type = "shahed";
   }
   if (!type && shouldInferTrackFromSea({
@@ -1210,9 +1154,7 @@ export function parseMessageToEvents(text, meta = {}) {
   if (isTlk) {
     regionId = "kharkivska";
   }
-  const regionCenter = regionId && (isTlk || hasRouteGuidance || hasTrackContext(trackContextText))
-    ? regionCenters[regionId]
-    : null;
+  const regionCenter = isTlk && regionId ? regionCenters[regionId] : null;
 
   if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !hasBasePoint && !(isTlk && type === "shahed")) {
     return [];
@@ -1296,9 +1238,7 @@ export function parseMessageToEvents(text, meta = {}) {
         regionId
       );
     const spawnRegionId =
-      isTlk
-        ? "kharkivska"
-        : sea?.name && sea.name.toLowerCase().includes("азов")
+      sea?.name && sea.name.toLowerCase().includes("азов")
         ? "sea_azov"
         : (sea || forceSea)
           ? "sea_black"

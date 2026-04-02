@@ -1,4 +1,4 @@
-﻿import "dotenv/config";
+import "dotenv/config";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,115 +55,12 @@ function parseSourceWeights(raw) {
 }
 
 const sourceWeights = parseSourceWeights(process.env.TG_SOURCE_WEIGHTS || "");
-const telegramFetchTimeoutMs = Math.max(1000, Number(runtime.telegramFetchTimeoutMs || 12000));
-const telegramFailureThreshold = Math.max(1, Number(runtime.telegramFailureThreshold || 3));
-const telegramCooldownMs = Math.max(1000, Number(runtime.telegramCooldownMs || 180000));
 
 const state = {
   lastFetch: 0,
   cache: [],
-  inFlight: null,
-  telegram: {
-    cachedPayload: { events: [], alarms: [], district_alarms: [], alarms_updated: false },
-    lastSuccessAt: 0,
-    lastFailureAt: 0,
-    consecutiveFailures: 0
-  }
+  inFlight: null
 };
-const startedAt = Date.now();
-
-function memorySnapshot() {
-  const usage = process.memoryUsage();
-  return {
-    rss_mb: Number((usage.rss / 1024 / 1024).toFixed(1)),
-    heap_used_mb: Number((usage.heapUsed / 1024 / 1024).toFixed(1)),
-    heap_total_mb: Number((usage.heapTotal / 1024 / 1024).toFixed(1))
-  };
-}
-
-function logProcessEvent(label, extra = {}) {
-  console.error(`[process] ${label}`, {
-    pid: process.pid,
-    uptime_s: Number(process.uptime().toFixed(1)),
-    cache_size: state.cache.length,
-    last_fetch_age_ms: state.lastFetch ? Date.now() - state.lastFetch : null,
-    ...memorySnapshot(),
-    ...extra
-  });
-}
-
-function withTimeout(promise, timeoutMs, label) {
-  let timer = null;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new Error(`${label} timeout after ${timeoutMs}ms`));
-    }, timeoutMs);
-  });
-  return Promise.race([promise, timeout]).finally(() => {
-    if (timer) clearTimeout(timer);
-  });
-}
-
-function shouldSkipTelegramFetch(now = Date.now()) {
-  return (
-    state.telegram.consecutiveFailures >= telegramFailureThreshold &&
-    now - state.telegram.lastFailureAt < telegramCooldownMs
-  );
-}
-
-async function getTelegramPayload(now = Date.now()) {
-  if (shouldSkipTelegramFetch(now)) {
-    console.warn("Telegram fetch skipped during cooldown", {
-      consecutive_failures: state.telegram.consecutiveFailures,
-      cooldown_ms_left: Math.max(0, telegramCooldownMs - (now - state.telegram.lastFailureAt))
-    });
-    return state.telegram.cachedPayload;
-  }
-
-  try {
-    const payload = await withTimeout(loadTelegramEvents(), telegramFetchTimeoutMs, "telegram fetch");
-    state.telegram.cachedPayload = payload;
-    state.telegram.lastSuccessAt = now;
-    state.telegram.consecutiveFailures = 0;
-    return payload;
-  } catch (error) {
-    state.telegram.lastFailureAt = now;
-    state.telegram.consecutiveFailures += 1;
-    console.warn("Telegram fetch degraded", error?.message || error, {
-      consecutive_failures: state.telegram.consecutiveFailures
-    });
-    return state.telegram.cachedPayload;
-  }
-}
-
-async function loadPersistedEventCache() {
-  const [rawEvents, rawFetchedAt] = await Promise.all([
-    getSetting("events_cache", "[]"),
-    getSetting("events_cache_fetched_at", "0")
-  ]);
-
-  try {
-    const parsed = JSON.parse(rawEvents);
-    const fetchedAt = Number(rawFetchedAt || 0);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return { events: [], fetchedAt: 0 };
-    }
-    return {
-      events: parsed,
-      fetchedAt: Number.isFinite(fetchedAt) ? fetchedAt : 0
-    };
-  } catch {
-    return { events: [], fetchedAt: 0 };
-  }
-}
-
-async function persistEventCache(events, fetchedAt) {
-  if (!Array.isArray(events) || events.length === 0) return;
-  await Promise.all([
-    setSetting("events_cache", JSON.stringify(events)),
-    setSetting("events_cache_fetched_at", String(fetchedAt))
-  ]);
-}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -343,22 +240,6 @@ async function sendStatus(_req, res) {
   });
 }
 
-function sendHealth(_req, res) {
-  res.json({
-    ok: true,
-    app_version: appVersion,
-    pid: process.pid,
-    uptime_sec: Number(process.uptime().toFixed(1)),
-    started_at: new Date(startedAt).toISOString(),
-    cache_size: state.cache.length,
-    last_fetch_at: state.lastFetch ? new Date(state.lastFetch).toISOString() : null,
-    in_flight: Boolean(state.inFlight),
-    refresh_ms: refreshMs,
-    event_ttl_min: eventTtlMin,
-    memory: memorySnapshot()
-  });
-}
-
 async function sendEvents(_req, res) {
   async function readStoredAlarmState() {
     const stored = await getSetting("alarms_state", "[]");
@@ -384,112 +265,6 @@ async function sendEvents(_req, res) {
     return { alarmState, districtAlarmState };
   }
 
-  async function fetchFreshEvents() {
-    const tgPayload = await getTelegramPayload();
-    let alarmState = tgPayload.alarms || [];
-    let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
-    alarmState = applyForcedAlarms(alarmState);
-    if (tgPayload.alarms_updated) {
-      await setSetting("alarms_state", JSON.stringify(alarmState));
-      await setSetting("district_alarms_state", JSON.stringify(districtAlarmState));
-      await setSetting("alarms_updated_at", String(Date.now()));
-    } else {
-      const storedStates = await readStoredAlarmState();
-      if (storedStates.alarmState.length > 0) {
-        alarmState = storedStates.alarmState;
-      }
-      if (storedStates.districtAlarmState.length > 0) {
-        districtAlarmState = storedStates.districtAlarmState;
-      }
-    }
-
-    const [rssEvents, openEvents] = await Promise.all([loadRssEvents(), loadOpenEvents()]);
-
-    const storedTests = await listTestEvents();
-    const testEvents = storedTests
-      .flatMap((item) =>
-        parseMessageToEvents(item.message, {
-          source: item.source || "admin",
-          timestamp: item.createdAt,
-          type: item.type,
-          direction: item.direction,
-          is_test: typeof item.is_test === "boolean" ? item.is_test : true,
-          group_count: item.group_count
-        })
-      )
-      .filter(Boolean);
-
-    const nowTs = Date.now();
-    const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
-    const staleKeepMs = Math.max(1, eventStaleKeepMin) * 60 * 1000;
-    const combinedRaw = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents]
-      .map(withConfidence)
-      .filter((event) => {
-        if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return false;
-        const time = Date.parse(event.timestamp);
-        if (!Number.isFinite(time)) return false;
-        return nowTs - time <= ttlMs;
-      });
-    const combined = deduplicateEvents(combinedRaw);
-
-    if (combined.length === 0 && state.cache.length && nowTs - state.lastFetch <= staleKeepMs) {
-      return {
-        events: state.cache,
-        alarms: alarmState,
-        district_alarms: districtAlarmState,
-        cached: true,
-        stale: true,
-        maintenance: false,
-        maintenance_until: null,
-        event_ttl_min: eventTtlMin
-      };
-    }
-
-    if (combined.length === 0) {
-      const persisted = await loadPersistedEventCache();
-      if (persisted.events.length && nowTs - persisted.fetchedAt <= staleKeepMs) {
-        state.cache = persisted.events;
-        state.lastFetch = persisted.fetchedAt;
-        return {
-          events: persisted.events,
-          alarms: alarmState,
-          district_alarms: districtAlarmState,
-          cached: true,
-          stale: true,
-          maintenance: false,
-          maintenance_until: null,
-          event_ttl_min: eventTtlMin
-        };
-      }
-    }
-
-    state.cache = combined;
-    state.lastFetch = nowTs;
-    await persistEventCache(combined, nowTs);
-
-    return {
-      events: combined,
-      alarms: alarmState,
-      district_alarms: districtAlarmState,
-      cached: false,
-      maintenance: false,
-      maintenance_until: null,
-      event_ttl_min: eventTtlMin
-    };
-  }
-
-  function ensureBackgroundRefresh() {
-    if (state.inFlight) return state.inFlight;
-    state.inFlight = (async () => {
-      try {
-        return await fetchFreshEvents();
-      } finally {
-        state.inFlight = null;
-      }
-    })();
-    return state.inFlight;
-  }
-
   try {
     const maintenance = await getMaintenanceState();
     const now = Date.now();
@@ -503,8 +278,7 @@ async function sendEvents(_req, res) {
         district_alarms: districtAlarmState,
         cached: true,
         maintenance: maintenance.enabled,
-        maintenance_until: maintenance.enabled ? maintenance.until : null,
-        event_ttl_min: eventTtlMin
+        maintenance_until: maintenance.enabled ? maintenance.until : null
       });
     }
 
@@ -516,51 +290,101 @@ async function sendEvents(_req, res) {
         district_alarms: districtAlarmState,
         maintenance: true,
         maintenance_until: maintenance.until,
-        cached: true,
-        event_ttl_min: eventTtlMin
+        cached: true
       });
     }
 
-    const { alarmState, districtAlarmState } = await readStoredAlarmState();
-
-    if (!state.cache.length) {
-      const persisted = await loadPersistedEventCache();
-      if (persisted.events.length) {
-        state.cache = persisted.events;
-        state.lastFetch = persisted.fetchedAt;
-      }
+    // Collapse concurrent requests into one upstream Telegram call.
+    if (state.inFlight) {
+      const payload = await state.inFlight;
+      return res.json(payload);
     }
 
-    // If we have any cache, return it immediately and refresh in background.
-    if (state.cache.length) {
-      if (now - state.lastFetch >= refreshMs) {
-        ensureBackgroundRefresh().catch((error) => {
-          console.error("Background refresh failed", error);
-        });
+    state.inFlight = (async () => {
+      const tgPayload = await loadTelegramEvents();
+      let alarmState = tgPayload.alarms || [];
+      let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
+      alarmState = applyForcedAlarms(alarmState);
+      if (tgPayload.alarms_updated) {
+        await setSetting("alarms_state", JSON.stringify(alarmState));
+        await setSetting("district_alarms_state", JSON.stringify(districtAlarmState));
+        await setSetting("alarms_updated_at", String(Date.now()));
+      } else {
+        const storedStates = await readStoredAlarmState();
+        if (storedStates.alarmState.length > 0) {
+          alarmState = storedStates.alarmState;
+        }
+        if (storedStates.districtAlarmState.length > 0) {
+          districtAlarmState = storedStates.districtAlarmState;
+        }
       }
-      return res.json({
-        events: state.cache,
+
+      const [rssEvents, openEvents] = await Promise.all([loadRssEvents(), loadOpenEvents()]);
+
+      const storedTests = await listTestEvents();
+      const testEvents = storedTests
+        .flatMap((item) =>
+          parseMessageToEvents(item.message, {
+            source: item.source || "admin",
+            timestamp: item.createdAt,
+            type: item.type,
+            direction: item.direction,
+            is_test: typeof item.is_test === "boolean" ? item.is_test : true,
+            group_count: item.group_count
+          })
+        )
+        .filter(Boolean);
+
+      const nowTs = Date.now();
+      const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
+      const staleKeepMs = Math.max(1, eventStaleKeepMin) * 60 * 1000;
+      const combinedRaw = [...tgPayload.events, ...rssEvents, ...openEvents, ...testEvents]
+        .map(withConfidence)
+        .filter((event) => {
+          if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return false;
+          const time = Date.parse(event.timestamp);
+          if (!Number.isFinite(time)) return false;
+          return nowTs - time <= ttlMs;
+        });
+      const combined = deduplicateEvents(combinedRaw);
+
+      if (combined.length === 0 && state.cache.length && nowTs - state.lastFetch <= staleKeepMs) {
+        return {
+          events: state.cache,
+          alarms: alarmState,
+          district_alarms: districtAlarmState,
+          cached: true,
+          stale: true,
+          maintenance: false,
+          maintenance_until: null
+        };
+      }
+
+      state.cache = combined;
+      state.lastFetch = nowTs;
+
+      return {
+        events: combined,
         alarms: alarmState,
         district_alarms: districtAlarmState,
-        cached: true,
-        stale: now - state.lastFetch >= refreshMs,
+        cached: false,
         maintenance: false,
-        maintenance_until: null,
-        event_ttl_min: eventTtlMin
-      });
-    }
+        maintenance_until: null
+      };
+    })();
 
-    const payload = await ensureBackgroundRefresh();
+    const payload = await state.inFlight;
     return res.json(payload);
   } catch (error) {
     console.error("Failed to load events", error);
     res.status(500).json({ error: "failed_to_load" });
+  } finally {
+    state.inFlight = null;
   }
 }
 
 app.get("/api/meta", sendMeta);
 app.get("/api/v1/meta", sendMeta);
-app.get("/api/healthz", sendHealth);
 app.get("/api/status", sendStatus);
 app.get("/api/v1/status", sendStatus);
 app.get("/api/events", sendEvents);
@@ -738,53 +562,4 @@ app.get("*", (_req, res) => {
 
 app.listen(port, () => {
   console.log(`Skywatch UA backend running on http://localhost:${port}`);
-  console.log("Skywatch UA process started", {
-    pid: process.pid,
-    started_at: new Date(startedAt).toISOString(),
-    port,
-    refresh_ms: refreshMs,
-    event_ttl_min: eventTtlMin
-  });
-  if (runtime.warmupOnStart) {
-    setTimeout(() => {
-      fetch(`http://127.0.0.1:${port}/api/events`).catch((error) => {
-        console.warn("Warmup failed", error?.message || error);
-      });
-    }, 250);
-  }
-});
-
-setInterval(() => {
-  console.log("[heartbeat]", {
-    pid: process.pid,
-    uptime_sec: Number(process.uptime().toFixed(1)),
-    cache_size: state.cache.length,
-    last_fetch_age_ms: state.lastFetch ? Date.now() - state.lastFetch : null,
-    in_flight: Boolean(state.inFlight),
-    ...memorySnapshot()
-  });
-}, 60000).unref();
-
-process.on("unhandledRejection", (reason) => {
-  logProcessEvent("unhandledRejection", {
-    reason: reason instanceof Error ? reason.stack || reason.message : String(reason)
-  });
-});
-
-process.on("uncaughtException", (error) => {
-  logProcessEvent("uncaughtException", {
-    error: error?.stack || error?.message || String(error)
-  });
-});
-
-process.on("SIGTERM", () => {
-  logProcessEvent("SIGTERM");
-});
-
-process.on("SIGINT", () => {
-  logProcessEvent("SIGINT");
-});
-
-process.on("exit", (code) => {
-  logProcessEvent("exit", { code });
 });

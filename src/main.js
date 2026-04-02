@@ -1,4 +1,4 @@
-﻿
+
 import { sources } from "./data/sources.js";
 import { oblasts } from "./data/oblasts.js";
 import "./styles.css";
@@ -83,7 +83,6 @@ let radarUserLayer = null;
 let radarTargetLayer = null;
 
 const DEFAULT_MARKER_TTL_MS = 10 * 60 * 1000;
-const MIN_MARKER_TTL_MS = 5 * 60 * 1000;
 const STALE_WARN_MS = 5 * 60 * 1000;
 const STALE_CRITICAL_MS = 9 * 60 * 1000;
 const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -93,7 +92,6 @@ const PINNED_STORAGE_KEY = "sw_pinned_v2";
 const SAVED_VIEWS_KEY = "sw_saved_views_v2";
 const OPS_NOTES_KEY = "sw_ops_notes_v2";
 const MARKER_TTL_KEY = "sw_marker_ttl_ms";
-const SNAPSHOT_STORAGE_KEY = "sw_boot_snapshot_v1";
 const SOUND_COOLDOWN_MS = 4000;
 const MAP_HEIGHT_STORAGE_KEY = "sw_map_height_v1";
 const MAP_MIN_HEIGHT = 360;
@@ -121,25 +119,10 @@ const state = {
   savedViews: [],
   soundEnabled: false,
   markerTtlMs: DEFAULT_MARKER_TTL_MS,
-  serverEventTtlMs: DEFAULT_MARKER_TTL_MS,
   userLocation: null,
   radarRadiusKm: 100,
   dangerRadiusKm: 25
 };
-
-function hasCustomMarkerTtl() {
-  const raw = localStorage.getItem(MARKER_TTL_KEY);
-  const saved = Number(raw);
-  return Number.isFinite(saved) && saved >= MIN_MARKER_TTL_MS;
-}
-
-function syncMarkerTtlWithServer(ttlMinutes) {
-  const ttlMs = Number(ttlMinutes) * 60 * 1000;
-  if (!Number.isFinite(ttlMs) || ttlMs < MIN_MARKER_TTL_MS) return;
-  state.serverEventTtlMs = ttlMs;
-  state.markerTtlMs = Math.max(state.markerTtlMs, ttlMs);
-  if (ttlSelect) ttlSelect.value = String(ttlMs);
-}
 
 const typeContainer = document.getElementById("type-filters");
 const sourceContainer = document.getElementById("source-filters");
@@ -406,9 +389,6 @@ async function fetchSource(source) {
   } else {
     state.maintenanceUntil = null;
   }
-  if (payload.event_ttl_min) {
-    syncMarkerTtlWithServer(payload.event_ttl_min);
-  }
   const items = Array.isArray(payload)
     ? payload
     : payload.events || payload.items || payload.data || [];
@@ -444,49 +424,6 @@ function updateFilterSets(events) {
 
   if (state.selectedSources.size === 0) {
     state.selectedSources = new Set(state.sources);
-  }
-}
-
-function saveBootSnapshot() {
-  try {
-    const payload = {
-      saved_at: Date.now(),
-      events: state.events,
-      alarms: state.alarms,
-      districtAlarms: state.districtAlarms,
-      maintenance: state.maintenance,
-      maintenanceUntil: state.maintenanceUntil
-    };
-    localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(payload));
-  } catch {}
-}
-
-function loadBootSnapshot() {
-  try {
-    const raw = localStorage.getItem(SNAPSHOT_STORAGE_KEY);
-    if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed?.events) || parsed.events.length === 0) return false;
-    state.events = parsed.events.map((event) => normalizeEvent(event, event.source || "snapshot"));
-    state.alarms = Array.isArray(parsed.alarms) ? parsed.alarms : [];
-    state.districtAlarms = Array.isArray(parsed.districtAlarms) ? parsed.districtAlarms : [];
-    state.maintenance = Boolean(parsed.maintenance);
-    state.maintenanceUntil = parsed.maintenanceUntil || null;
-    updateFilterSets(state.events);
-    renderFilterControls();
-    renderMarkers();
-    renderRadarList();
-    renderAlarmList();
-    renderIntelFeed();
-    renderLocalAlert();
-    renderPinnedList();
-    renderDockWatchlist();
-    renderMetrics();
-    renderRadarCanvas();
-    renderAlarmMap().catch(() => {});
-    return true;
-  } catch {
-    return false;
   }
 }
 
@@ -569,17 +506,6 @@ function formatTime(value) {
   if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleString("uk-UA", {
     timeZone: "Europe/Kyiv",
-    hour12: false
-  });
-}
-
-function formatClockTimeKyiv(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleTimeString("uk-UA", {
-    timeZone: "Europe/Kyiv",
-    hour: "2-digit",
-    minute: "2-digit",
     hour12: false
   });
 }
@@ -1079,7 +1005,7 @@ function buildPopup(event, distanceKm) {
   const userDistanceKm = distanceToUserKm(event);
   const eta = etaRangeForDistance(userDistanceKm);
   const approachLine = Number.isFinite(userDistanceKm)
-    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Орієнтовний час підльоту: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span><br /><span class="popup-meta">Можливий час прильоту: ${eta ? `${eta.arrivalFast} - ${eta.arrivalSlow}` : "—"} (за Києвом)</span>`
+    ? `<br /><span class="popup-meta">До вас: ${userDistanceKm.toFixed(1)} км</span><br /><span class="popup-meta">Швидкість: 150-185 км/год (середня)</span><br /><span class="popup-meta">Орієнтовний час підльоту: ${eta ? `${eta.fast} - ${eta.slow}` : "—"}</span>`
     : "";
   const targetLine =
     event.target_label && Number.isFinite(event.target_lat) && Number.isFinite(event.target_lng)
@@ -1217,12 +1143,9 @@ function etaRangeForDistance(distanceKm) {
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) return null;
   const fastHours = distanceKm / 185;
   const slowHours = distanceKm / 150;
-  const now = Date.now();
   return {
     fast: formatEtaFromHours(fastHours),
-    slow: formatEtaFromHours(slowHours),
-    arrivalFast: formatClockTimeKyiv(now + fastHours * 60 * 60 * 1000),
-    arrivalSlow: formatClockTimeKyiv(now + slowHours * 60 * 60 * 1000)
+    slow: formatEtaFromHours(slowHours)
   };
 }
 
@@ -1895,10 +1818,7 @@ async function refresh() {
     renderDockWatchlist();
     renderMetrics();
     renderRadarCanvas();
-    renderAlarmMap().catch((error) => {
-      console.warn("Failed to render alarm map", error);
-    });
-    saveBootSnapshot();
+    await renderAlarmMap();
     if (!state.maintenance && state.autoFollow) {
       followLatestTarget();
     }
@@ -2831,12 +2751,8 @@ if (siteVersion) {
 if (ttlSelect) {
   ttlSelect.addEventListener("change", (event) => {
     const next = Number(event.target.value);
-    const floor = Number.isFinite(state.serverEventTtlMs) ? state.serverEventTtlMs : MIN_MARKER_TTL_MS;
-    state.markerTtlMs = Number.isFinite(next)
-      ? Math.max(MIN_MARKER_TTL_MS, floor, next)
-      : Math.max(DEFAULT_MARKER_TTL_MS, floor);
+    state.markerTtlMs = Number.isFinite(next) ? next : DEFAULT_MARKER_TTL_MS;
     localStorage.setItem(MARKER_TTL_KEY, String(state.markerTtlMs));
-    if (ttlSelect) ttlSelect.value = String(state.markerTtlMs);
     renderMarkers();
     renderRadarList();
     renderIntelFeed();
@@ -2970,13 +2886,8 @@ state.soundEnabled = savedSound;
 if (toggleSound) toggleSound.checked = savedSound;
 
 const savedTtl = Number(localStorage.getItem(MARKER_TTL_KEY));
-if (Number.isFinite(savedTtl) && savedTtl >= MIN_MARKER_TTL_MS) {
+if (Number.isFinite(savedTtl) && savedTtl > 0) {
   state.markerTtlMs = savedTtl;
-} else if (Number.isFinite(savedTtl) && savedTtl > 0) {
-  localStorage.setItem(MARKER_TTL_KEY, String(DEFAULT_MARKER_TTL_MS));
-}
-if (Number.isFinite(state.serverEventTtlMs) && state.serverEventTtlMs >= MIN_MARKER_TTL_MS) {
-  state.markerTtlMs = Math.max(state.markerTtlMs, state.serverEventTtlMs);
 }
 if (ttlSelect) ttlSelect.value = String(state.markerTtlMs);
 
@@ -3003,6 +2914,5 @@ if (opsNotes) {
   opsNotes.value = localStorage.getItem(OPS_NOTES_KEY) || "";
 }
 
-loadBootSnapshot();
 refresh();
 startMarkerAgingTicker();

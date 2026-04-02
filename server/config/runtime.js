@@ -1,4 +1,4 @@
-﻿function toNumber(value, fallback) {
+function toNumber(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
@@ -25,13 +25,6 @@ export const runtime = {
   port: toNumber(process.env.PORT, 8787),
   sessionDays: toNumber(process.env.ADMIN_SESSION_DAYS, 7),
   refreshMs: toNumber(process.env.REFRESH_MS, 12000),
-  warmupOnStart: toBoolean(process.env.WARMUP_ON_START, true),
-  telegramChannelConcurrency: toNumber(process.env.TG_CHANNEL_CONCURRENCY, 2),
-  telegramFetchTimeoutMs: toNumber(process.env.TG_FETCH_TIMEOUT_MS, 12000),
-  telegramChannelTimeoutMs: toNumber(process.env.TG_CHANNEL_TIMEOUT_MS, 5000),
-  telegramFailureThreshold: toNumber(process.env.TG_FAILURE_THRESHOLD, 3),
-  telegramCooldownMs: toNumber(process.env.TG_COOLDOWN_MS, 180000),
-  enableImageMarkers: toBoolean(process.env.TG_ENABLE_IMAGE_MARKERS, false),
   eventTtlMin: toNumber(process.env.EVENT_TTL_MIN, 8),
   eventStaleKeepMin: toNumber(process.env.EVENT_STALE_KEEP_MIN, 90),
   dedupRadiusKm: toNumber(process.env.EVENT_DEDUP_RADIUS_KM, 5),
