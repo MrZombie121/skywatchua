@@ -9,7 +9,6 @@ const execFileAsync = promisify(execFile);
 const REPORT_WINDOW_MS = 15 * 60 * 1000;
 const ACTIVE_WINDOW_MS = Math.max(1, Number(runtime.eventTtlMin || 10)) * 60 * 1000;
 const TEMPLATE_PATH = path.resolve("public", "ico", "map-creation-teamplate.png");
-const WATERMARK_PATH = path.resolve("public", "ico", "watermark.png");
 const TEMPLATE_WIDTH = 928;
 const TEMPLATE_HEIGHT = 588;
 const DEFAULT_TEMPLATE_CALIBRATION_POINTS = [
@@ -195,8 +194,6 @@ function toSvgFileHref(filePath) {
 async function loadAssets() {
   if (!assetsPromise) {
     assetsPromise = (async () => {
-      const background = toSvgFileHref(TEMPLATE_PATH);
-      const watermark = toSvgFileHref(WATERMARK_PATH);
       const icons = {};
       for (const [key, filePath] of Object.entries(ICON_PATHS)) {
         icons[key] = toSvgFileHref(filePath);
@@ -208,7 +205,7 @@ async function loadAssets() {
       if (!project) {
         throw new Error("MAP_REPORT_CALIBRATION_POINTS missing or invalid for map report");
       }
-      return { background, watermark, icons, project };
+      return { icons, project };
     })();
   }
   return assetsPromise;
@@ -334,6 +331,11 @@ function buildSvg(icons, project, events) {
 
   <g>
     ${eventLayer}
+  </g>
+
+  <g>
+    <text x="${(TEMPLATE_WIDTH / 2).toFixed(1)}" y="${(TEMPLATE_HEIGHT - 18).toFixed(1)}" text-anchor="middle" fill="rgba(15,23,42,0.18)" font-size="28" font-weight="800" letter-spacing="1.2">t.me/airwatcher</text>
+    <text x="${(TEMPLATE_WIDTH - 18).toFixed(1)}" y="28" text-anchor="end" fill="rgba(15,23,42,0.45)" font-size="12" font-weight="700" letter-spacing="0.8">t.me/airwatcher</text>
   </g>
 </svg>`;
 }
