@@ -116,7 +116,7 @@ const state = {
   refreshPaused: false,
   autoFollow: false,
   showHistory: true,
-  refreshIntervalMs: 12000,
+  refreshIntervalMs: 5000,
   adminLocations: [],
   adminMapPickMode: null,
   pinnedIds: new Set(),
@@ -2609,7 +2609,7 @@ function loadSnapshotStore() {
 
 function applyRefreshInterval(value, persist = true) {
   const parsed = Number(value);
-  const next = Number.isFinite(parsed) && parsed >= 250 ? parsed : 12000;
+  const next = Number.isFinite(parsed) && parsed >= 250 ? parsed : 5000;
   state.refreshIntervalMs = next;
   if (refreshModeSelect) {
     refreshModeSelect.value = String(next);

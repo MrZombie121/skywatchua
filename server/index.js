@@ -255,6 +255,32 @@ async function sendTelegramAnnouncement(text) {
   return true;
 }
 
+function shouldAnnounceEvent(event, previousIds = new Set(), announcedSet = new Set(), now = Date.now()) {
+  const id = String(event?.id || "").trim();
+  if (!id || previousIds.has(id) || announcedSet.has(id)) return false;
+  if (event?.is_test) return false;
+  const ts = Date.parse(event?.timestamp);
+  return Number.isFinite(ts) && now - ts <= announceMaxAgeMs;
+}
+
+async function announceSingleEvent(event, options = {}) {
+  if (!announceEnabled) return false;
+  const previousIds = options.previousIds instanceof Set ? options.previousIds : new Set();
+  const announcedIds = Array.isArray(options.announcedIds) ? options.announcedIds : await readAnnouncedEventIds();
+  const announcedSet = new Set(announcedIds);
+  const now = Number.isFinite(options.now) ? options.now : Date.now();
+  if (!shouldAnnounceEvent(event, previousIds, announcedSet, now)) return false;
+
+  const typeLabel = announcementTypeLabel(event);
+  if (!typeLabel) return false;
+  const locationLabel = await resolveAnnouncementLocation(event);
+  if (!locationLabel) return false;
+
+  await sendTelegramAnnouncement(`${typeLabel} на ${locationLabel}`);
+  await writeAnnouncedEventIds([...announcedIds, String(event.id)]);
+  return true;
+}
+
 async function announceNewEvents(events, previousEvents = []) {
   if (!announceEnabled) return;
 
@@ -262,13 +288,9 @@ async function announceNewEvents(events, previousEvents = []) {
   const announcedIds = await readAnnouncedEventIds();
   const announcedSet = new Set(announcedIds);
   const now = Date.now();
-  const candidates = (Array.isArray(events) ? events : []).filter((event) => {
-    const id = String(event?.id || "").trim();
-    if (!id || previousIds.has(id) || announcedSet.has(id)) return false;
-    if (event?.is_test) return false;
-    const ts = Date.parse(event?.timestamp);
-    return Number.isFinite(ts) && now - ts <= announceMaxAgeMs;
-  });
+  const candidates = (Array.isArray(events) ? events : []).filter((event) =>
+    shouldAnnounceEvent(event, previousIds, announcedSet, now)
+  );
 
   if (candidates.length === 0) return;
 
@@ -694,6 +716,17 @@ app.get("/api/v1/status", sendStatus);
 app.get("/api/events", sendEvents);
 app.get("/api/v1/events", sendEvents);
 app.get("/api/embed/events", requireApiKey, sendEmbedEvents);
+
+app.post("/api/announce-event", async (req, res) => {
+  try {
+    const event = req.body?.event || req.body || {};
+    const announced = await announceSingleEvent(event);
+    return res.json({ ok: true, announced });
+  } catch (error) {
+    console.warn("Failed to announce event from client", error?.message || error);
+    return res.status(500).json({ ok: false, error: "announce_failed" });
+  }
+});
 
 app.post("/api/auth/register", async (req, res) => {
   const { email, password } = req.body || {};

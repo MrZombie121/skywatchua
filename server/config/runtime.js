@@ -24,7 +24,7 @@ export const runtime = {
   apiDefaultVersion: process.env.API_DEFAULT_VERSION || "v1",
   port: toNumber(process.env.PORT, 8787),
   sessionDays: toNumber(process.env.ADMIN_SESSION_DAYS, 7),
-  refreshMs: toNumber(process.env.REFRESH_MS, 12000),
+  refreshMs: toNumber(process.env.REFRESH_MS, 5000),
   apiResponseTimeoutMs: toNumber(process.env.API_RESPONSE_TIMEOUT_MS, 3500),
   eventTtlMin: toNumber(process.env.EVENT_TTL_MIN, 8),
   eventStaleKeepMin: toNumber(process.env.EVENT_STALE_KEEP_MIN, 90),
