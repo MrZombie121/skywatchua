@@ -8,6 +8,7 @@ const execFileAsync = promisify(execFile);
 const REPORT_WINDOW_MS = 15 * 60 * 1000;
 const ACTIVE_WINDOW_MS = Math.max(1, Number(runtime.eventTtlMin || 10)) * 60 * 1000;
 const TEMPLATE_PATH = path.resolve("public", "ico", "map-creation-teamplate.png");
+const WATERMARK_PATH = path.resolve("public", "ico", "watermark.png");
 const TEMPLATE_WIDTH = 928;
 const TEMPLATE_HEIGHT = 588;
 const DEFAULT_TEMPLATE_CALIBRATION_POINTS = [
@@ -152,18 +153,19 @@ async function loadAssets() {
   if (!assetsPromise) {
     assetsPromise = (async () => {
       const background = await toDataUri(TEMPLATE_PATH);
+      const watermark = await toDataUri(WATERMARK_PATH);
       const icons = {};
       for (const [key, filePath] of Object.entries(ICON_PATHS)) {
         icons[key] = await toDataUri(filePath);
       }
       const calibrationPoints = parseCalibrationPoints(
-        process.env.MAP_REPORT_CALIBRATION_POINTS || process.env.MAP_CALIBRATION_POINTS || ""
+        process.env.MAP_REPORT_CALIBRATION_POINTS || ""
       );
       const project = buildLatLngProjector(calibrationPoints);
       if (!project) {
-        throw new Error("MAP_CALIBRATION_POINTS missing or invalid for map report");
+        throw new Error("MAP_REPORT_CALIBRATION_POINTS missing or invalid for map report");
       }
-      return { background, icons, project };
+      return { background, watermark, icons, project };
     })();
   }
   return assetsPromise;
@@ -245,6 +247,7 @@ function renderEvents(project, icons, events) {
 
     nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="18" fill="rgba(15,23,42,0.78)" stroke="${color}" stroke-width="2.8" />`);
     nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="23" fill="none" stroke="${color}" stroke-width="1.4" opacity="0.30" />`);
+    nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${color}" />`);
     nodes.push(`<image href="${iconHref}" x="${(x - 14).toFixed(1)}" y="${(y - 14).toFixed(1)}" width="28" height="28" />`);
 
     if (location) {
@@ -262,7 +265,7 @@ function renderEvents(project, icons, events) {
   return nodes.join("");
 }
 
-function buildSvg(background, icons, project, events) {
+function buildSvg(background, watermark, icons, project, events) {
   const nowLabel = formatKyivDate();
   const legend = renderLegend(events);
   const eventLayer = renderEvents(project, icons, events);
@@ -295,8 +298,8 @@ function buildSvg(background, icons, project, events) {
     ${eventLayer}
   </g>
 
-  <text x="${TEMPLATE_WIDTH / 2}" y="${TEMPLATE_HEIGHT - 18}" text-anchor="middle" fill="rgba(107,114,128,0.24)" font-size="32" font-weight="800">t.me/airwatcher</text>
-  <text x="${TEMPLATE_WIDTH - 18}" y="24" text-anchor="end" fill="rgba(107,114,128,0.55)" font-size="13" font-weight="700">t.me/airwatcher</text>
+  <image href="${watermark}" x="${(TEMPLATE_WIDTH / 2 - 130).toFixed(1)}" y="${(TEMPLATE_HEIGHT - 72).toFixed(1)}" width="260" height="46" opacity="0.28" />
+  <image href="${watermark}" x="${(TEMPLATE_WIDTH - 162).toFixed(1)}" y="10" width="144" height="26" opacity="0.42" />
 </svg>`;
 }
 
@@ -322,8 +325,8 @@ export async function generateRecentMapReport(events) {
     return null;
   }
 
-  const { background, icons, project } = await loadAssets();
-  const svg = buildSvg(background, icons, project, active);
+  const { background, watermark, icons, project } = await loadAssets();
+  const svg = buildSvg(background, watermark, icons, project, active);
   const reportId = `airwatcher-report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const tmpDir = path.resolve("server", "tmp");
   const svgPath = path.join(tmpDir, `${reportId}.svg`);
