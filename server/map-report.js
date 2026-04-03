@@ -5,9 +5,17 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 const REPORT_WINDOW_MS = 15 * 60 * 1000;
-const WIDTH = 1600;
-const HEIGHT = 900;
-const PADDING = 48;
+const TEMPLATE_PATH = path.resolve("public", "ico", "map-creation-teamplate.png");
+const TEMPLATE_WIDTH = 928;
+const TEMPLATE_HEIGHT = 588;
+const ICON_PATHS = {
+  shahed: path.resolve("public", "ico", "shahed.png"),
+  missile: path.resolve("public", "ico", "missle.png"),
+  airplane: path.resolve("public", "ico", "airplane.png"),
+  kab: path.resolve("public", "ico", "kab.png"),
+  recon: path.resolve("public", "ico", "bplaviewer.png"),
+  other: path.resolve("public", "ico", "bplaviewer.png")
+};
 const TYPE_COLORS = {
   shahed: "#ffb703",
   missile: "#ff5f5f",
@@ -17,8 +25,7 @@ const TYPE_COLORS = {
   other: "#93c5fd"
 };
 
-let featureCollectionPromise = null;
-let projectedShapesPromise = null;
+let assetsPromise = null;
 
 function escapeXml(value) {
   return String(value ?? "")
@@ -52,172 +59,126 @@ function extractLocationLabel(event) {
 }
 
 function formatKyivDate(value = Date.now()) {
-  const date = new Date(value);
-  return date.toLocaleString("uk-UA", {
+  return new Date(value).toLocaleString("uk-UA", {
     timeZone: "Europe/Kyiv",
     hour12: false
   });
 }
 
-function geometryToPolygons(geometry) {
-  if (!geometry || !geometry.type || !Array.isArray(geometry.coordinates)) return [];
-  if (geometry.type === "Polygon") {
-    return [geometry.coordinates];
+function parseCalibrationPoints(raw) {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item) =>
+        item &&
+        Number.isFinite(Number(item.lat)) &&
+        Number.isFinite(Number(item.lng)) &&
+        Number.isFinite(Number(item.x)) &&
+        Number.isFinite(Number(item.y))
+      )
+      .map((item) => ({
+        lat: Number(item.lat),
+        lng: Number(item.lng),
+        x: Number(item.x),
+        y: Number(item.y)
+      }));
+  } catch {
+    return [];
   }
-  if (geometry.type === "MultiPolygon") {
-    return geometry.coordinates;
-  }
-  return [];
 }
 
-async function loadFeatureCollection() {
-  if (!featureCollectionPromise) {
-    const geojsonPath = path.resolve("public", "data", "ukr-adm1.geojson");
-    featureCollectionPromise = fs.readFile(geojsonPath, "utf8").then((raw) => JSON.parse(raw));
-  }
-  return featureCollectionPromise;
+function solveAffineLatLng(points, valueKey) {
+  if (points.length < 3) return null;
+  const [p1, p2, p3] = points;
+  const x1 = p1.lat;
+  const y1 = p1.lng;
+  const x2 = p2.lat;
+  const y2 = p2.lng;
+  const x3 = p3.lat;
+  const y3 = p3.lng;
+  const v1 = p1[valueKey];
+  const v2 = p2[valueKey];
+  const v3 = p3[valueKey];
+
+  const det =
+    x1 * (y2 - y3) -
+    y1 * (x2 - x3) +
+    (x2 * y3 - x3 * y2);
+  if (!Number.isFinite(det) || Math.abs(det) < 1e-6) return null;
+
+  const a =
+    (v1 * (y2 - y3) - y1 * (v2 - v3) + (v2 * y3 - v3 * y2)) / det;
+  const b =
+    (x1 * (v2 - v3) - v1 * (x2 - x3) + (x2 * v3 - x3 * v2)) / det;
+  const c =
+    (x1 * (y3 * v2 - y2 * v3) -
+      y1 * (x3 * v2 - x2 * v3) +
+      v1 * (x3 * y2 - x2 * y3)) / det;
+
+  return { a, b, c };
 }
 
-function buildProjector(features) {
-  let minLng = Infinity;
-  let maxLng = -Infinity;
-  let minLat = Infinity;
-  let maxLat = -Infinity;
-
-  for (const feature of features) {
-    const polygons = geometryToPolygons(feature?.geometry);
-    for (const polygon of polygons) {
-      for (const ring of polygon) {
-        for (const point of ring) {
-          const lng = Number(point?.[0]);
-          const lat = Number(point?.[1]);
-          if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-          minLng = Math.min(minLng, lng);
-          maxLng = Math.max(maxLng, lng);
-          minLat = Math.min(minLat, lat);
-          maxLat = Math.max(maxLat, lat);
-        }
-      }
-    }
-  }
-
-  const lngSpan = Math.max(1e-6, maxLng - minLng);
-  const latSpan = Math.max(1e-6, maxLat - minLat);
-  const innerWidth = WIDTH - PADDING * 2;
-  const innerHeight = HEIGHT - PADDING * 2;
-  const scale = Math.min(innerWidth / lngSpan, innerHeight / latSpan);
-  const usedWidth = lngSpan * scale;
-  const usedHeight = latSpan * scale;
-  const offsetX = (WIDTH - usedWidth) / 2;
-  const offsetY = (HEIGHT - usedHeight) / 2;
-
-  return (lng, lat) => ({
-    x: offsetX + (lng - minLng) * scale,
-    y: HEIGHT - (offsetY + (lat - minLat) * scale)
+function buildLatLngProjector(points) {
+  if (points.length < 3) return null;
+  const xAffine = solveAffineLatLng(points, "x");
+  const yAffine = solveAffineLatLng(points, "y");
+  if (!xAffine || !yAffine) return null;
+  return (lat, lng) => ({
+    x: xAffine.a * lat + xAffine.b * lng + xAffine.c,
+    y: yAffine.a * lat + yAffine.b * lng + yAffine.c
   });
 }
 
-async function loadProjectedShapes() {
-  if (!projectedShapesPromise) {
-    projectedShapesPromise = loadFeatureCollection().then((collection) => {
-      const features = Array.isArray(collection?.features) ? collection.features : [];
-      const project = buildProjector(features);
-      const shapes = [];
-      for (const feature of features) {
-        const polygons = geometryToPolygons(feature?.geometry);
-        for (const polygon of polygons) {
-          const rings = polygon
-            .map((ring) =>
-              ring
-                .map((point) => {
-                  const lng = Number(point?.[0]);
-                  const lat = Number(point?.[1]);
-                  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-                  return project(lng, lat);
-                })
-                .filter(Boolean)
-            )
-            .filter((ring) => ring.length >= 2);
-          if (rings.length > 0) {
-            shapes.push(rings);
-          }
-        }
-      }
-      return { shapes, project };
-    });
-  }
-  return projectedShapesPromise;
+async function toDataUri(filePath) {
+  const buffer = await fs.readFile(filePath);
+  const ext = path.extname(filePath).toLowerCase();
+  const mime = ext === ".png" ? "image/png" : "application/octet-stream";
+  return `data:${mime};base64,${buffer.toString("base64")}`;
 }
 
-function buildPathData(rings) {
-  return rings
-    .map((ring) => {
-      const [first, ...rest] = ring;
-      const segments = [`M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`];
-      rest.forEach((point) => {
-        segments.push(`L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`);
-      });
-      segments.push("Z");
-      return segments.join(" ");
-    })
-    .join(" ");
+async function loadAssets() {
+  if (!assetsPromise) {
+    assetsPromise = (async () => {
+      const background = await toDataUri(TEMPLATE_PATH);
+      const icons = {};
+      for (const [key, filePath] of Object.entries(ICON_PATHS)) {
+        icons[key] = await toDataUri(filePath);
+      }
+      const calibrationPoints = parseCalibrationPoints(process.env.MAP_CALIBRATION_POINTS || "");
+      const project = buildLatLngProjector(calibrationPoints);
+      if (!project) {
+        throw new Error("MAP_CALIBRATION_POINTS missing or invalid for map report");
+      }
+      return { background, icons, project };
+    })();
+  }
+  return assetsPromise;
 }
 
 function projectEvent(project, event) {
   const lat = Number(event?.lat);
   const lng = Number(event?.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  return project(lng, lat);
+  return project(lat, lng);
 }
 
-function buildArrow(project, event) {
-  const center = projectEvent(project, event);
-  if (!center) return null;
+function buildArrow(point, event) {
   const rawDirection = Number(event?.direction);
-  const direction = Number.isFinite(rawDirection) ? rawDirection : null;
-  if (direction === null) return null;
-
+  if (!Number.isFinite(rawDirection)) return null;
+  const direction = rawDirection;
   const radians = ((direction - 90) * Math.PI) / 180;
-  const length = normalizeReportType(event?.type) === "missile" ? 88 : 62;
-  const endX = center.x + Math.cos(radians) * length;
-  const endY = center.y + Math.sin(radians) * length;
-  const wing = 11;
+  const length = normalizeReportType(event?.type) === "missile" ? 72 : 56;
+  const endX = point.x + Math.cos(radians) * length;
+  const endY = point.y + Math.sin(radians) * length;
+  const wing = 9;
   const left = radians + Math.PI * 0.82;
   const right = radians - Math.PI * 0.82;
-  const leftX = endX + Math.cos(left) * wing;
-  const leftY = endY + Math.sin(left) * wing;
-  const rightX = endX + Math.cos(right) * wing;
-  const rightY = endY + Math.sin(right) * wing;
   return {
-    line: `M ${center.x.toFixed(1)} ${center.y.toFixed(1)} L ${endX.toFixed(1)} ${endY.toFixed(1)}`,
-    head: `${leftX.toFixed(1)},${leftY.toFixed(1)} ${endX.toFixed(1)},${endY.toFixed(1)} ${rightX.toFixed(1)},${rightY.toFixed(1)}`
+    line: `M ${point.x.toFixed(1)} ${point.y.toFixed(1)} L ${endX.toFixed(1)} ${endY.toFixed(1)}`,
+    head: `${(endX + Math.cos(left) * wing).toFixed(1)},${(endY + Math.sin(left) * wing).toFixed(1)} ${endX.toFixed(1)},${endY.toFixed(1)} ${(endX + Math.cos(right) * wing).toFixed(1)},${(endY + Math.sin(right) * wing).toFixed(1)}`
   };
-}
-
-function renderEventLayer(project, events) {
-  const nodes = [];
-  const sorted = [...events].sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
-  sorted.forEach((event, index) => {
-    const point = projectEvent(project, event);
-    if (!point) return;
-    const type = normalizeReportType(event.type);
-    const color = TYPE_COLORS[type];
-    const arrow = buildArrow(project, event);
-    const ageMin = Math.max(0, Math.floor((Date.now() - Date.parse(event.timestamp)) / 60000));
-    const label = `${reportTypeLabel(type)}${extractLocationLabel(event) ? ` · ${extractLocationLabel(event)}` : ""}`;
-    const labelY = point.y - 16 - (index % 2) * 10;
-
-    if (arrow) {
-      nodes.push(`<path d="${arrow.line}" stroke="${color}" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.9" />`);
-      nodes.push(`<polygon points="${arrow.head}" fill="${color}" opacity="0.95" />`);
-    }
-
-    nodes.push(`<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="11" fill="rgba(8,16,28,0.92)" stroke="${color}" stroke-width="3" />`);
-    nodes.push(`<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="4.5" fill="${color}" />`);
-    nodes.push(`<text x="${(point.x + 16).toFixed(1)}" y="${labelY.toFixed(1)}" fill="#f8fafc" font-size="20" font-weight="700">${escapeXml(label)}</text>`);
-    nodes.push(`<text x="${(point.x + 16).toFixed(1)}" y="${(labelY + 22).toFixed(1)}" fill="rgba(226,232,240,0.82)" font-size="15">≈ ${ageMin} хв тому</text>`);
-  });
-  return nodes.join("");
 }
 
 function renderLegend(events) {
@@ -226,64 +187,103 @@ function renderLegend(events) {
     const type = normalizeReportType(event.type);
     counts.set(type, (counts.get(type) || 0) + 1);
   });
-  const ordered = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-  return ordered
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([type, count], index) => {
-      const y = 146 + index * 30;
+      const y = 112 + index * 22;
       return `
-        <circle cx="1268" cy="${y}" r="7" fill="${TYPE_COLORS[type]}" />
-        <text x="1286" y="${y + 5}" fill="rgba(226,232,240,0.88)" font-size="18">${escapeXml(reportTypeLabel(type))}: ${count}</text>
+        <circle cx="742" cy="${y}" r="5" fill="${TYPE_COLORS[type]}" />
+        <text x="756" y="${y + 4}" fill="#f8fafc" font-size="13">${escapeXml(reportTypeLabel(type))}: ${count}</text>
       `;
     })
     .join("");
 }
 
-function buildSvg(shapes, project, events) {
+function renderEvents(project, icons, events) {
+  const nodes = [];
+  const placed = [];
+  const sorted = [...events].sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
+
+  sorted.forEach((event) => {
+    const point = projectEvent(project, event);
+    if (!point) return;
+
+    let x = point.x;
+    let y = point.y;
+    for (const prior of placed) {
+      if (Math.abs(prior.x - x) < 18 && Math.abs(prior.y - y) < 18) {
+        x += 14;
+        y -= 10;
+      }
+    }
+    placed.push({ x, y });
+
+    const type = normalizeReportType(event.type);
+    const iconHref = icons[type] || icons.other;
+    const color = TYPE_COLORS[type];
+    const arrow = buildArrow({ x, y }, event);
+    const ageMin = Math.max(0, Math.floor((Date.now() - Date.parse(event.timestamp)) / 60000));
+    const location = extractLocationLabel(event);
+
+    if (arrow) {
+      nodes.push(`<path d="${arrow.line}" stroke="${color}" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.95" />`);
+      nodes.push(`<polygon points="${arrow.head}" fill="${color}" opacity="0.98" />`);
+    }
+
+    nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14" fill="rgba(5,10,18,0.65)" stroke="${color}" stroke-width="2" />`);
+    nodes.push(`<image href="${iconHref}" x="${(x - 11).toFixed(1)}" y="${(y - 11).toFixed(1)}" width="22" height="22" />`);
+
+    if (location) {
+      nodes.push(`
+        <g>
+          <rect x="${(x + 14).toFixed(1)}" y="${(y - 26).toFixed(1)}" rx="8" width="${Math.max(62, location.length * 7.1).toFixed(1)}" height="18" fill="rgba(2,6,23,0.72)" />
+          <text x="${(x + 20).toFixed(1)}" y="${(y - 13).toFixed(1)}" fill="#f8fafc" font-size="12" font-weight="700">${escapeXml(location)}</text>
+        </g>
+      `);
+    }
+
+    nodes.push(`<text x="${(x + 16).toFixed(1)}" y="${(y + 22).toFixed(1)}" fill="rgba(248,250,252,0.78)" font-size="11">≈ ${ageMin} хв</text>`);
+  });
+
+  return nodes.join("");
+}
+
+function buildSvg(background, icons, project, events) {
   const nowLabel = formatKyivDate();
-  const mapPaths = shapes
-    .map((rings) => `<path d="${buildPathData(rings)}" fill="rgba(15,23,42,0.92)" stroke="rgba(71,85,105,0.62)" stroke-width="1.15" />`)
-    .join("");
-  const eventLayer = renderEventLayer(project, events);
   const legend = renderLegend(events);
+  const eventLayer = renderEvents(project, icons, events);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${TEMPLATE_WIDTH}" height="${TEMPLATE_HEIGHT}" viewBox="0 0 ${TEMPLATE_WIDTH} ${TEMPLATE_HEIGHT}">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#07111d" />
-      <stop offset="100%" stop-color="#0b1f2e" />
-    </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#020617" flood-opacity="0.48" />
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#020617" flood-opacity="0.46" />
     </filter>
   </defs>
 
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#bg)" />
-  <rect x="28" y="28" width="${WIDTH - 56}" height="${HEIGHT - 56}" rx="28" fill="rgba(5,10,18,0.34)" stroke="rgba(34,211,238,0.22)" />
+  <image href="${background}" x="0" y="0" width="${TEMPLATE_WIDTH}" height="${TEMPLATE_HEIGHT}" />
+
   <g filter="url(#shadow)">
-    <rect x="52" y="52" width="520" height="126" rx="24" fill="rgba(2,6,23,0.76)" stroke="rgba(34,211,238,0.20)" />
-    <text x="84" y="100" fill="#f8fafc" font-size="36" font-weight="800">AirWatcher Map Report</text>
-    <text x="84" y="136" fill="rgba(226,232,240,0.86)" font-size="22">Час: ${escapeXml(nowLabel)} (Kyiv)</text>
-    <text x="84" y="166" fill="rgba(226,232,240,0.86)" font-size="22">Цілей за 15 хв: ${events.length}</text>
+    <rect x="18" y="18" width="330" height="80" rx="18" fill="rgba(2,6,23,0.82)" stroke="rgba(34,211,238,0.22)" />
+    <text x="36" y="48" fill="#f8fafc" font-size="18" font-weight="800">AirWatcher</text>
+    <text x="36" y="70" fill="rgba(226,232,240,0.92)" font-size="14">Час: ${escapeXml(nowLabel)}</text>
+    <text x="36" y="90" fill="rgba(226,232,240,0.92)" font-size="14">Кількість цілей: ${events.length}</text>
   </g>
 
-  <g>
-    ${mapPaths}
+  <g filter="url(#shadow)">
+    <rect x="726" y="18" width="184" height="150" rx="18" fill="rgba(2,6,23,0.82)" stroke="rgba(248,250,252,0.12)" />
+    <text x="742" y="44" fill="#f8fafc" font-size="16" font-weight="800">Цілі за 15 хв</text>
+    <text x="742" y="78" fill="#22d3ee" font-size="30" font-weight="800">${events.length}</text>
+    ${legend}
   </g>
+
   <g>
     ${eventLayer}
   </g>
 
-  <g>
-    <rect x="1228" y="58" width="320" height="152" rx="22" fill="rgba(2,6,23,0.76)" stroke="rgba(248,250,252,0.10)" />
-    <text x="1260" y="102" fill="#f8fafc" font-size="28" font-weight="800">Кількість цілей</text>
-    <text x="1260" y="132" fill="#22d3ee" font-size="44" font-weight="800">${events.length}</text>
-    ${legend}
-  </g>
-
-  <text x="${WIDTH / 2}" y="${HEIGHT - 34}" text-anchor="middle" fill="rgba(248,250,252,0.12)" font-size="54" font-weight="800">t.me/airwatcher</text>
-  <text x="${WIDTH - 36}" y="${HEIGHT - 24}" text-anchor="end" fill="rgba(226,232,240,0.60)" font-size="18">t.me/airwatcher</text>
+  <text x="${TEMPLATE_WIDTH / 2}" y="${TEMPLATE_HEIGHT - 18}" text-anchor="middle" fill="rgba(248,250,252,0.18)" font-size="32" font-weight="800">t.me/airwatcher</text>
+  <text x="${TEMPLATE_WIDTH - 18}" y="24" text-anchor="end" fill="rgba(248,250,252,0.55)" font-size="13" font-weight="700">t.me/airwatcher</text>
 </svg>`;
 }
 
@@ -304,12 +304,13 @@ export async function generateRecentMapReport(events) {
     return null;
   }
 
-  const { shapes, project } = await loadProjectedShapes();
-  const svg = buildSvg(shapes, project, recent);
+  const { background, icons, project } = await loadAssets();
+  const svg = buildSvg(background, icons, project, recent);
   const reportId = `airwatcher-report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const tmpDir = path.resolve("server", "tmp");
   const svgPath = path.join(tmpDir, `${reportId}.svg`);
   const pngPath = path.join(tmpDir, `${reportId}.png`);
+
   await fs.mkdir(tmpDir, { recursive: true });
   await fs.writeFile(svgPath, svg, "utf8");
   await svgToPng(svgPath, pngPath);
