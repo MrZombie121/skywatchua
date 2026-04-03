@@ -809,6 +809,29 @@ function hasTrackContext(text) {
   ].some((key) => lower.includes(key));
 }
 
+function isLooseTrackSource(source) {
+  const lower = String(source || "").toLowerCase();
+  return [
+    "airalertmonitor_bot",
+    "air_alert_ua",
+    "war_monitor",
+    "monitor_ukraine",
+    "monitorwar",
+    "avimonitor",
+    "raketa_trevoga",
+    "kudy_letyt",
+    "ukrainealarmsignal",
+    "povitryanatrivogaaa",
+    "ukrainian_intelligence",
+    "xydessa_live",
+    "pivdenmedia",
+    "dnipro_alerts",
+    "onemaster_kr",
+    "kyivoperat",
+    "chernigivoperative"
+  ].some((key) => lower.includes(key));
+}
+
 function bearingDeg(fromLat, fromLng, toLat, toLng) {
   const toRad = (value) => (value * Math.PI) / 180;
   const toDeg = (value) => (value * 180) / Math.PI;
@@ -1101,6 +1124,9 @@ export function parseMessageToEvents(text, meta = {}) {
   if (!type && locationHits.length > 0 && (hasTrackContext(trackContextText) || hasCount)) {
     type = "shahed";
   }
+  if (!type && locationHits.length > 0 && isLooseTrackSource(sourceLower)) {
+    type = "shahed";
+  }
   if (!type && shouldInferTrackFromSea({
     sea,
     forceSea: false,
@@ -1334,4 +1360,3 @@ export function parseMessageToEvents(text, meta = {}) {
 }
 
 export { extractAlarmRegions, extractAlarmSignals };
-
