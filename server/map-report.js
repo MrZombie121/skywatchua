@@ -2,12 +2,22 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { runtime } from "./config/runtime.js";
 
 const execFileAsync = promisify(execFile);
 const REPORT_WINDOW_MS = 15 * 60 * 1000;
+const ACTIVE_WINDOW_MS = Math.max(1, Number(runtime.eventTtlMin || 10)) * 60 * 1000;
 const TEMPLATE_PATH = path.resolve("public", "ico", "map-creation-teamplate.png");
 const TEMPLATE_WIDTH = 928;
 const TEMPLATE_HEIGHT = 588;
+const DEFAULT_TEMPLATE_CALIBRATION_POINTS = [
+  { name: "Lviv", lat: 49.8397, lng: 24.0297, x: 112, y: 179 },
+  { name: "Kyiv", lat: 50.4501, lng: 30.5234, x: 430, y: 152 },
+  { name: "Odesa", lat: 46.4825, lng: 30.7233, x: 426, y: 427 },
+  { name: "Kharkiv", lat: 49.9935, lng: 36.2304, x: 717, y: 165 },
+  { name: "Dnipro", lat: 48.4647, lng: 35.0462, x: 622, y: 281 },
+  { name: "Chernihiv", lat: 51.4982, lng: 31.2893, x: 496, y: 86 }
+];
 const ICON_PATHS = {
   shahed: path.resolve("public", "ico", "shahed.png"),
   missile: path.resolve("public", "ico", "missle.png"),
@@ -66,10 +76,10 @@ function formatKyivDate(value = Date.now()) {
 }
 
 function parseCalibrationPoints(raw) {
-  if (!raw) return [];
+  if (!raw) return DEFAULT_TEMPLATE_CALIBRATION_POINTS;
   try {
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed) || parsed.length < 3) return DEFAULT_TEMPLATE_CALIBRATION_POINTS;
     return parsed
       .filter((item) =>
         item &&
@@ -85,7 +95,7 @@ function parseCalibrationPoints(raw) {
         y: Number(item.y)
       }));
   } catch {
-    return [];
+    return DEFAULT_TEMPLATE_CALIBRATION_POINTS;
   }
 }
 
@@ -146,7 +156,9 @@ async function loadAssets() {
       for (const [key, filePath] of Object.entries(ICON_PATHS)) {
         icons[key] = await toDataUri(filePath);
       }
-      const calibrationPoints = parseCalibrationPoints(process.env.MAP_CALIBRATION_POINTS || "");
+      const calibrationPoints = parseCalibrationPoints(
+        process.env.MAP_REPORT_CALIBRATION_POINTS || process.env.MAP_CALIBRATION_POINTS || ""
+      );
       const project = buildLatLngProjector(calibrationPoints);
       if (!project) {
         throw new Error("MAP_CALIBRATION_POINTS missing or invalid for map report");
@@ -227,12 +239,13 @@ function renderEvents(project, icons, events) {
     const location = extractLocationLabel(event);
 
     if (arrow) {
-      nodes.push(`<path d="${arrow.line}" stroke="${color}" stroke-width="2.6" stroke-linecap="round" fill="none" opacity="0.95" />`);
+      nodes.push(`<path d="${arrow.line}" stroke="${color}" stroke-width="3.4" stroke-linecap="round" fill="none" opacity="0.98" />`);
       nodes.push(`<polygon points="${arrow.head}" fill="${color}" opacity="0.98" />`);
     }
 
-    nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14" fill="rgba(5,10,18,0.65)" stroke="${color}" stroke-width="2" />`);
-    nodes.push(`<image href="${iconHref}" x="${(x - 11).toFixed(1)}" y="${(y - 11).toFixed(1)}" width="22" height="22" />`);
+    nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="18" fill="rgba(15,23,42,0.78)" stroke="${color}" stroke-width="2.8" />`);
+    nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="23" fill="none" stroke="${color}" stroke-width="1.4" opacity="0.30" />`);
+    nodes.push(`<image href="${iconHref}" x="${(x - 14).toFixed(1)}" y="${(y - 14).toFixed(1)}" width="28" height="28" />`);
 
     if (location) {
       nodes.push(`
@@ -268,12 +281,12 @@ function buildSvg(background, icons, project, events) {
     <rect x="18" y="18" width="330" height="80" rx="18" fill="rgba(2,6,23,0.82)" stroke="rgba(34,211,238,0.22)" />
     <text x="36" y="48" fill="#f8fafc" font-size="18" font-weight="800">AirWatcher</text>
     <text x="36" y="70" fill="rgba(226,232,240,0.92)" font-size="14">Час: ${escapeXml(nowLabel)}</text>
-    <text x="36" y="90" fill="rgba(226,232,240,0.92)" font-size="14">Кількість цілей: ${events.length}</text>
+    <text x="36" y="90" fill="rgba(226,232,240,0.92)" font-size="14">Активних цілей: ${events.length}</text>
   </g>
 
   <g filter="url(#shadow)">
     <rect x="726" y="18" width="184" height="150" rx="18" fill="rgba(2,6,23,0.82)" stroke="rgba(248,250,252,0.12)" />
-    <text x="742" y="44" fill="#f8fafc" font-size="16" font-weight="800">Цілі за 15 хв</text>
+    <text x="742" y="44" fill="#f8fafc" font-size="16" font-weight="800">Активні цілі</text>
     <text x="742" y="78" fill="#22d3ee" font-size="30" font-weight="800">${events.length}</text>
     ${legend}
   </g>
@@ -282,8 +295,8 @@ function buildSvg(background, icons, project, events) {
     ${eventLayer}
   </g>
 
-  <text x="${TEMPLATE_WIDTH / 2}" y="${TEMPLATE_HEIGHT - 18}" text-anchor="middle" fill="rgba(248,250,252,0.18)" font-size="32" font-weight="800">t.me/airwatcher</text>
-  <text x="${TEMPLATE_WIDTH - 18}" y="24" text-anchor="end" fill="rgba(248,250,252,0.55)" font-size="13" font-weight="700">t.me/airwatcher</text>
+  <text x="${TEMPLATE_WIDTH / 2}" y="${TEMPLATE_HEIGHT - 18}" text-anchor="middle" fill="rgba(107,114,128,0.24)" font-size="32" font-weight="800">t.me/airwatcher</text>
+  <text x="${TEMPLATE_WIDTH - 18}" y="24" text-anchor="end" fill="rgba(107,114,128,0.55)" font-size="13" font-weight="700">t.me/airwatcher</text>
 </svg>`;
 }
 
@@ -300,12 +313,17 @@ export async function generateRecentMapReport(events) {
       return Number.isFinite(ts) && now - ts <= REPORT_WINDOW_MS;
     });
 
-  if (recent.length === 0) {
+  const active = recent.filter((event) => {
+    const ts = Date.parse(event?.timestamp);
+    return Number.isFinite(ts) && now - ts <= ACTIVE_WINDOW_MS;
+  });
+
+  if (active.length === 0) {
     return null;
   }
 
   const { background, icons, project } = await loadAssets();
-  const svg = buildSvg(background, icons, project, recent);
+  const svg = buildSvg(background, icons, project, active);
   const reportId = `airwatcher-report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const tmpDir = path.resolve("server", "tmp");
   const svgPath = path.join(tmpDir, `${reportId}.svg`);
@@ -318,7 +336,7 @@ export async function generateRecentMapReport(events) {
 
   return {
     path: pngPath,
-    caption: `AirWatcher map | ${formatKyivDate(now)} | Цілей: ${recent.length}`,
-    count: recent.length
+    caption: `AirWatcher map | ${formatKyivDate(now)} | Активних цілей: ${active.length}`,
+    count: active.length
   };
 }
