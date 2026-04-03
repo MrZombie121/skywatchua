@@ -12,7 +12,7 @@ const newKeyBox = document.getElementById("new-key-box");
 const newKeyValue = document.getElementById("new-key-value");
 
 const errorLabels = {
-  invalid_email: "Некоректний email.",
+  invalid_email: "Некоректна електронна пошта.",
   password_too_short: "Пароль має містити щонайменше 8 символів.",
   user_exists: "Користувач з таким email вже існує.",
   invalid_credentials: "Невірний email або пароль.",

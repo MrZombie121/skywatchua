@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Skywatch UA API Docs</title>
+    <title>Документація Skywatch UA API</title>
     <style>
       :root {
         color-scheme: dark;
@@ -206,14 +206,14 @@
               <p><code>/api-docs</code> або <code>/developers/api</code></p>
             </div>
             <div class="endpoint">
-              <strong>Embed-карта</strong>
+              <strong>Вбудована карта</strong>
               <p><code>/embed/map?api_key=YOUR_API_KEY</code></p>
             </div>
           </div>
         </section>
 
         <section class="card">
-          <h2>3. Embed приклад</h2>
+          <h2>3. Приклад вбудовування</h2>
           <pre>&lt;iframe
   src="https://your-domain.example/embed/map?api_key=YOUR_API_KEY"
   width="100%"
@@ -223,7 +223,7 @@
   referrerpolicy="strict-origin-when-cross-origin"
 &gt;&lt;/iframe&gt;</pre>
           <div class="inline-actions">
-            <a class="btn" href="/embed/map" target="_blank" rel="noreferrer">Відкрити embed</a>
+            <a class="btn" href="/embed/map" target="_blank" rel="noreferrer">Відкрити вбудовану карту</a>
           </div>
         </section>
 
@@ -258,7 +258,7 @@
           <div class="stack">
             <div class="endpoint">
               <strong>GET /api/meta</strong>
-              <p>Версія API, supported versions, feature flags.</p>
+              <p>Версія API, підтримувані версії та прапорці функцій.</p>
             </div>
             <div class="endpoint">
               <strong>GET /api/status</strong>
@@ -284,8 +284,8 @@
           </ul>
           <pre>curl "https://your-domain.example/api/embed/events?api_key=YOUR_API_KEY"</pre>
           <div class="note">
-            Если ключ невалиден, сервер возвращает <code>401</code> с ошибкой
-            <code>invalid_api_key</code> или <code>api_key_required</code>.
+            Якщо ключ невалідний, сервер повертає <code>401</code> з помилкою
+            <code>invalid_api_key</code> або <code>api_key_required</code>.
           </div>
         </section>
       </div>

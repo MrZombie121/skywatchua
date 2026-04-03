@@ -52,7 +52,7 @@ function renderEvents(events) {
 
 async function refresh() {
   if (!apiKey) {
-    setStatus("API key не передано.");
+    setStatus("API-ключ не передано.");
     return;
   }
 
@@ -72,7 +72,7 @@ async function refresh() {
     renderEvents(Array.isArray(data.events) ? data.events : []);
   } catch (error) {
     layer.clearLayers();
-    setStatus(error.message === "invalid_api_key" ? "Невірний API key." : "Не вдалося завантажити карту.");
+    setStatus(error.message === "invalid_api_key" ? "Невірний API-ключ." : "Не вдалося завантажити карту.");
   }
 }
 
