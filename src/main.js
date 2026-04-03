@@ -842,6 +842,7 @@ function startDrift() {
 
 function getVisibleEvents() {
   return state.events.filter((event) => {
+    if (!isEventAlive(event)) return false;
     if (!state.showTests && event.is_test) return false;
     if (!state.selectedTypes.has(event.type)) return false;
     if (!state.selectedSources.has(event.source)) return false;

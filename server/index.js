@@ -193,6 +193,39 @@ function formatAnnouncementLocation(location, byId) {
   return location.name || null;
 }
 
+function normalizeAnnouncementLookup(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[.,;:!?()[\]{}"'`]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractAnnouncementCommentLabel(event) {
+  const comment = String(event?.comment || "");
+  const match = comment.match(/Локація:\s*([^.;]+?)(?:[.;]|$)/u);
+  return match?.[1]?.trim() || null;
+}
+
+function matchAnnouncementLocationByLabel(label, locations, byId) {
+  const normalizedLabel = normalizeAnnouncementLookup(label);
+  if (!normalizedLabel) return null;
+
+  const normalizedWithoutCityPrefix = normalizedLabel.replace(/^м\s+/, "").trim();
+
+  for (const location of locations) {
+    const variants = new Set([
+      normalizeAnnouncementLookup(location.name),
+      ...((Array.isArray(location.keys) ? location.keys : []).map((item) => normalizeAnnouncementLookup(item)))
+    ]);
+    if (variants.has(normalizedLabel) || variants.has(normalizedWithoutCityPrefix)) {
+      return formatAnnouncementLocation(location, byId);
+    }
+  }
+
+  return label;
+}
+
 async function resolveAnnouncementLocation(event) {
   const lat = Number(event?.lat);
   const lng = Number(event?.lng);
@@ -202,6 +235,11 @@ async function resolveAnnouncementLocation(event) {
   if (!Array.isArray(locations) || locations.length === 0) return null;
   const byId = new Map(locations.map((item) => [item.id, item]));
   const type = String(event?.type || "").toLowerCase();
+  const explicitLabel = extractAnnouncementCommentLabel(event) || String(event?.target_label || "").trim() || null;
+
+  if (explicitLabel) {
+    return matchAnnouncementLocationByLabel(explicitLabel, locations, byId);
+  }
 
   let nearestPoint = null;
   for (const location of locations) {
@@ -220,21 +258,7 @@ async function resolveAnnouncementLocation(event) {
   if (nearestPoint && nearestPoint.distanceKm <= announcePointRadiusKm) {
     return formatAnnouncementLocation(nearestPoint.location, byId);
   }
-
-  let nearestLocation = null;
-  for (const location of locations) {
-    const distanceKm = haversineKm({ lat, lng }, { lat: Number(location.lat), lng: Number(location.lng) });
-    if (!Number.isFinite(distanceKm)) continue;
-    if (!nearestLocation || distanceKm < nearestLocation.distanceKm) {
-      nearestLocation = { location, distanceKm };
-    }
-  }
-
-  if (nearestLocation && nearestLocation.distanceKm <= announceLocationRadiusKm) {
-    return formatAnnouncementLocation(nearestLocation.location, byId);
-  }
-
-  return String(event?.target_label || event?.comment || "").trim() || null;
+  return null;
 }
 
 async function sendTelegramAnnouncement(text) {
