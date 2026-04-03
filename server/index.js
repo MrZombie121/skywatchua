@@ -18,7 +18,16 @@ import {
   addTestEvent,
   clearTestEvents,
   listAdminLocations,
-  upsertAdminLocationWithPoint
+  upsertAdminLocationWithPoint,
+  createUserAccount,
+  verifyUser,
+  createUserSession,
+  getUserSession,
+  clearUserSession,
+  listUserApiKeys,
+  createApiKeyForUser,
+  revokeApiKeyForUser,
+  authenticateApiKey
 } from "./db/index.js";
 
 const app = express();
@@ -58,6 +67,7 @@ function parseSourceWeights(raw) {
 const sourceWeights = parseSourceWeights(process.env.TG_SOURCE_WEIGHTS || "");
 const EVENTS_CACHE_KEY = "events_cache_v1";
 const EVENTS_CACHE_UPDATED_AT_KEY = "events_cache_updated_at_v1";
+const USER_SESSION_DAYS = Number(process.env.USER_SESSION_DAYS || 30);
 
 const state = {
   lastFetch: 0,
@@ -67,15 +77,34 @@ const state = {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const publicPath = path.resolve(__dirname, "..", "public");
 const distPath = path.resolve(__dirname, "..", "dist");
 
 app.use(express.json({ limit: "200kb" }));
+app.use(express.static(publicPath));
 app.use(express.static(distPath));
 
-function readSessionToken(req) {
+function readCookie(req, cookieName) {
   const cookie = req.headers.cookie || "";
-  const match = cookie.match(/sw_admin=([^;]+)/);
+  const pattern = new RegExp(`${cookieName}=([^;]+)`);
+  const match = cookie.match(pattern);
   return match ? match[1] : null;
+}
+
+function readSessionToken(req) {
+  return readCookie(req, "sw_admin");
+}
+
+function readUserSessionToken(req) {
+  return readCookie(req, "sw_user");
+}
+
+function readApiKey(req) {
+  const auth = req.headers.authorization || "";
+  if (auth.toLowerCase().startsWith("bearer ")) {
+    return auth.slice(7).trim();
+  }
+  return String(req.query.api_key || req.headers["x-api-key"] || "").trim();
 }
 
 function applyForcedAlarms(alarms) {
@@ -223,6 +252,32 @@ async function requireAdmin(req, res, next) {
   return next();
 }
 
+async function requireUser(req, res, next) {
+  const token = readUserSessionToken(req);
+  const session = await getUserSession(token);
+  if (!session) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+  req.user = {
+    id: session.user_id,
+    email: session.email
+  };
+  return next();
+}
+
+async function requireApiKey(req, res, next) {
+  const apiKey = readApiKey(req);
+  if (!apiKey) {
+    return res.status(401).json({ error: "api_key_required" });
+  }
+  const key = await authenticateApiKey(apiKey);
+  if (!key) {
+    return res.status(401).json({ error: "invalid_api_key" });
+  }
+  req.apiKey = key;
+  return next();
+}
+
 async function getMaintenanceState() {
   const enabled = (await getSetting("maintenance", "false")) === "true";
   const untilRaw = await getSetting("maintenance_until", "");
@@ -271,7 +326,7 @@ async function sendStatus(_req, res) {
   });
 }
 
-async function sendEvents(_req, res) {
+async function buildEventsPayload() {
   async function readStoredAlarmState() {
     const stored = await getSetting("alarms_state", "[]");
     const storedDistricts = await getSetting("district_alarms_state", "[]");
@@ -406,26 +461,26 @@ async function sendEvents(_req, res) {
     // Serve from backend cache without touching Telegram API.
     if (now - state.lastFetch < refreshMs && state.cache.length) {
       const { alarmState, districtAlarmState } = await readStoredAlarmState();
-      return res.json({
+      return {
         events: maintenance.enabled ? [] : state.cache,
         alarms: alarmState,
         district_alarms: districtAlarmState,
         cached: true,
         maintenance: maintenance.enabled,
         maintenance_until: maintenance.enabled ? maintenance.until : null
-      });
+      };
     }
 
     if (maintenance.enabled) {
       const { alarmState, districtAlarmState } = await readStoredAlarmState();
-      return res.json({
+      return {
         events: [],
         alarms: alarmState,
         district_alarms: districtAlarmState,
         maintenance: true,
         maintenance_until: maintenance.until,
         cached: true
-      });
+      };
     }
 
     if (state.cache.length) {
@@ -435,7 +490,7 @@ async function sendEvents(_req, res) {
         });
       }
       const { alarmState, districtAlarmState } = await readStoredAlarmState();
-      return res.json({
+      return {
         events: state.cache,
         alarms: alarmState,
         district_alarms: districtAlarmState,
@@ -443,14 +498,40 @@ async function sendEvents(_req, res) {
         stale: now - state.lastFetch >= refreshMs,
         maintenance: false,
         maintenance_until: null
-      });
+      };
     }
 
     const payload = await waitForFreshPayloadOrFallback(maintenance);
-    return res.json(payload);
+    return payload;
   } catch (error) {
     console.error("Failed to load events", error);
-    res.status(500).json({ error: "failed_to_load" });
+    throw error;
+  }
+}
+
+async function sendEvents(_req, res) {
+  try {
+    const payload = await buildEventsPayload();
+    return res.json(payload);
+  } catch {
+    return res.status(500).json({ error: "failed_to_load" });
+  }
+}
+
+async function sendEmbedEvents(_req, res) {
+  try {
+    const payload = await buildEventsPayload();
+    return res.json({
+      events: Array.isArray(payload.events) ? payload.events : [],
+      alarms: Array.isArray(payload.alarms) ? payload.alarms : [],
+      district_alarms: Array.isArray(payload.district_alarms) ? payload.district_alarms : [],
+      maintenance: Boolean(payload.maintenance),
+      maintenance_until: payload.maintenance_until || null,
+      cached: Boolean(payload.cached),
+      stale: Boolean(payload.stale)
+    });
+  } catch {
+    return res.status(500).json({ error: "failed_to_load" });
   }
 }
 
@@ -460,6 +541,82 @@ app.get("/api/status", sendStatus);
 app.get("/api/v1/status", sendStatus);
 app.get("/api/events", sendEvents);
 app.get("/api/v1/events", sendEvents);
+app.get("/api/embed/events", requireApiKey, sendEmbedEvents);
+
+app.post("/api/auth/register", async (req, res) => {
+  const { email, password } = req.body || {};
+  try {
+    const user = await createUserAccount(email, password);
+    const session = await createUserSession(user);
+    res.setHeader(
+      "Set-Cookie",
+      `sw_user=${session.token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${USER_SESSION_DAYS * 86400}`
+    );
+    return res.status(201).json({
+      ok: true,
+      user: { id: user.id, email: user.email },
+      expiresAt: session.expiresAt
+    });
+  } catch (error) {
+    const code = String(error?.message || "");
+    const status = code === "user_exists" || code === "password_too_short" || code === "invalid_email" ? 400 : 500;
+    return res.status(status).json({ error: code || "failed_to_register" });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body || {};
+  const user = await verifyUser(email, password);
+  if (!user) {
+    return res.status(401).json({ error: "invalid_credentials" });
+  }
+  const session = await createUserSession(user);
+  res.setHeader(
+    "Set-Cookie",
+    `sw_user=${session.token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${USER_SESSION_DAYS * 86400}`
+  );
+  return res.json({
+    ok: true,
+    user: { id: user.id, email: user.email },
+    expiresAt: session.expiresAt
+  });
+});
+
+app.post("/api/auth/logout", async (req, res) => {
+  const token = readUserSessionToken(req);
+  await clearUserSession(token);
+  res.setHeader("Set-Cookie", "sw_user=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax");
+  return res.json({ ok: true });
+});
+
+app.get("/api/auth/me", requireUser, async (req, res) => {
+  const keys = await listUserApiKeys(req.user.id);
+  return res.json({
+    ok: true,
+    user: req.user,
+    api_keys: keys
+  });
+});
+
+app.get("/api/auth/api-keys", requireUser, async (req, res) => {
+  const keys = await listUserApiKeys(req.user.id);
+  return res.json({ ok: true, items: keys });
+});
+
+app.post("/api/auth/api-keys", requireUser, async (req, res) => {
+  const { name } = req.body || {};
+  const created = await createApiKeyForUser(req.user.id, name);
+  return res.status(201).json({
+    ok: true,
+    item: created.item,
+    api_key: created.apiKey
+  });
+});
+
+app.delete("/api/auth/api-keys/:keyId", requireUser, async (req, res) => {
+  await revokeApiKeyForUser(req.user.id, req.params.keyId);
+  return res.json({ ok: true });
+});
 
 app.post("/api/admin/login", async (req, res) => {
   const { username, password } = req.body || {};
@@ -625,6 +782,18 @@ app.post("/api/admin/locations", requireAdmin, async (req, res) => {
     parent_location_id
   });
   res.json({ ok: true, item });
+});
+
+app.get("/account/api", (_req, res) => {
+  res.sendFile(path.join(publicPath, "api.html"));
+});
+
+app.get("/developers/api", (_req, res) => {
+  res.sendFile(path.join(publicPath, "api-docs.html"));
+});
+
+app.get("/embed/map", (_req, res) => {
+  res.sendFile(path.join(publicPath, "embed.html"));
 });
 
 app.get("*", (_req, res) => {

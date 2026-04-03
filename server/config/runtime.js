@@ -20,7 +20,7 @@ function toList(value, fallback = []) {
 }
 
 export const runtime = {
-  appVersion: process.env.APP_VERSION || "2.0.2",
+  appVersion: process.env.APP_VERSION || "2.0.3",
   apiDefaultVersion: process.env.API_DEFAULT_VERSION || "v1",
   port: toNumber(process.env.PORT, 8787),
   sessionDays: toNumber(process.env.ADMIN_SESSION_DAYS, 7),

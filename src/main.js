@@ -89,6 +89,7 @@ const STALE_CRITICAL_MS = 9 * 60 * 1000;
 const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const SPAWN_ANIMATION_MS = 3000;
 const HISTORY_STORAGE_KEY = "sw_history_24h_v2";
+const SNAPSHOT_STORAGE_KEY = "sw_snapshot_v1";
 const PINNED_STORAGE_KEY = "sw_pinned_v2";
 const SAVED_VIEWS_KEY = "sw_saved_views_v2";
 const OPS_NOTES_KEY = "sw_ops_notes_v2";
@@ -194,6 +195,7 @@ const themeApply = document.getElementById("theme-apply");
 const panelToggle = document.getElementById("panel-toggle");
 const intelToggle = document.getElementById("intel-toggle");
 const panelBackdrop = document.getElementById("panel-backdrop");
+const manualRefresh = document.getElementById("manual-refresh");
 const toggleRefresh = document.getElementById("toggle-refresh");
 const toggleHistory = document.getElementById("toggle-history");
 const toggleFollow = document.getElementById("toggle-follow");
@@ -1846,9 +1848,9 @@ function deleteSavedView(id) {
   renderSavedViews();
 }
 
-async function refresh() {
+async function refresh(force = false) {
   try {
-    if (state.refreshPaused) return;
+    if (state.refreshPaused && !force) return;
     const previousIds = new Set(state.events.map((event) => event.id));
     const events = await loadEvents();
     ingestHistory(events);
@@ -1865,6 +1867,7 @@ async function refresh() {
     renderMetrics();
     renderRadarCanvas();
     await renderAlarmMap();
+    saveSnapshotStore();
     if (!state.maintenance && state.autoFollow) {
       followLatestTarget();
     }
@@ -2567,7 +2570,41 @@ function restartRefreshTimer() {
     clearInterval(refreshTimer);
     refreshTimer = null;
   }
-  refreshTimer = setInterval(refresh, state.refreshIntervalMs);
+}
+
+function saveSnapshotStore() {
+  try {
+    localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify({
+      events: state.events,
+      alarms: state.alarms,
+      districtAlarms: state.districtAlarms,
+      maintenance: state.maintenance,
+      maintenanceUntil: state.maintenanceUntil,
+      savedAt: Date.now()
+    }));
+  } catch (error) {
+    console.warn("Snapshot save failed", error);
+  }
+}
+
+function loadSnapshotStore() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    const events = Array.isArray(parsed?.events)
+      ? parsed.events.map((item) => normalizeEvent(item, item?.source || "cache")).filter(Boolean)
+      : [];
+    state.events = events.filter((event) => Number.isFinite(event.lat) && Number.isFinite(event.lng));
+    state.alarms = Array.isArray(parsed?.alarms) ? parsed.alarms : [];
+    state.districtAlarms = Array.isArray(parsed?.districtAlarms) ? parsed.districtAlarms : [];
+    state.maintenance = Boolean(parsed?.maintenance);
+    state.maintenanceUntil = parsed?.maintenanceUntil || null;
+    return state.events.length > 0;
+  } catch (error) {
+    console.warn("Snapshot load failed", error);
+    return false;
+  }
 }
 
 function applyRefreshInterval(value, persist = true) {
@@ -2580,7 +2617,6 @@ function applyRefreshInterval(value, persist = true) {
   if (persist) {
     localStorage.setItem("sw_refresh_interval", String(next));
   }
-  restartRefreshTimer();
 }
 
 function startMarkerAgingTicker() {
@@ -2665,7 +2701,12 @@ if (mapStyleSelect) {
 if (refreshModeSelect) {
   refreshModeSelect.addEventListener("change", (event) => {
     applyRefreshInterval(event.target.value);
-    refresh();
+  });
+}
+
+if (manualRefresh) {
+  manualRefresh.addEventListener("click", () => {
+    refresh(true);
   });
 }
 
@@ -2870,6 +2911,7 @@ window.addEventListener("resize", () => {
 });
 state.adminBypassMaintenance = localStorage.getItem("sw_admin_bypass") === "1";
 loadHistoryStore();
+const hasSnapshot = loadSnapshotStore();
 
 const savedTheme = localStorage.getItem("sw_theme") || "dark";
 const savedCustom = localStorage.getItem("sw_theme_custom");
@@ -2907,6 +2949,7 @@ if (toggleHistory) {
 
 const savedRefreshInterval = localStorage.getItem("sw_refresh_interval") || "12000";
 applyRefreshInterval(savedRefreshInterval, false);
+restartRefreshTimer();
 
 state.dangerRadiusKm = Number(dangerRadiusSelect?.value || 25) || 25;
 if (dangerRadiusSelect) dangerRadiusSelect.value = String(state.dangerRadiusKm);
@@ -2960,5 +3003,19 @@ if (opsNotes) {
   opsNotes.value = localStorage.getItem(OPS_NOTES_KEY) || "";
 }
 
-refresh();
+if (hasSnapshot) {
+  updateFilterSets(state.events);
+  renderFilterControls();
+  renderMarkers();
+  renderRadarList();
+  renderAlarmList();
+  renderIntelFeed();
+  renderLocalAlert();
+  renderPinnedList();
+  renderDockWatchlist();
+  renderMetrics();
+  renderRadarCanvas();
+}
+
+refresh(true);
 startMarkerAgingTicker();

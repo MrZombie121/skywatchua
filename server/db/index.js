@@ -10,12 +10,15 @@ const defaultData = {
   sessions: [],
   test_events: [],
   admin_locations: [],
-  admin_location_points: []
+  admin_location_points: [],
+  users: [],
+  api_keys: []
 };
 const db = new Low(adapter, defaultData);
 let tursoClient = null;
 let tursoSettingsReady = false;
 let initError = null;
+const USER_SESSION_DAYS = Number(process.env.USER_SESSION_DAYS || 30);
 
 const defaultAdminLocations = [
   { id: "uzyn", name: "Узин", keys: ["узин", "uzyn"], lat: 49.82, lng: 30.41, region_id: "kyivska" },
@@ -51,6 +54,12 @@ const defaultAdminLocationPoints = [
 async function init() {
   await db.read();
   db.data ||= { ...defaultData };
+  if (!Array.isArray(db.data.admins)) {
+    db.data.admins = [];
+  }
+  if (!Array.isArray(db.data.sessions)) {
+    db.data.sessions = [];
+  }
   if (!Array.isArray(db.data.test_events)) {
     db.data.test_events = [];
   }
@@ -59,6 +68,12 @@ async function init() {
   }
   if (!Array.isArray(db.data.admin_location_points)) {
     db.data.admin_location_points = [];
+  }
+  if (!Array.isArray(db.data.users)) {
+    db.data.users = [];
+  }
+  if (!Array.isArray(db.data.api_keys)) {
+    db.data.api_keys = [];
   }
   seedAdminLocations();
   await db.write();
@@ -92,6 +107,10 @@ function normalizeKeyList(values) {
 
 function normalizeLocationType(value) {
   return String(value || "").trim().toLowerCase() === "district" ? "district" : "city";
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 function slugify(value) {
@@ -236,6 +255,37 @@ async function initTursoSettings() {
       )
     `);
     await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS admins (
+        username TEXT PRIMARY KEY,
+        password_hash TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `);
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        token TEXT PRIMARY KEY,
+        subject_type TEXT NOT NULL,
+        subject_id TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
+    await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_sessions_subject ON sessions(subject_type, subject_id)");
+    await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)");
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS test_events (
+        id TEXT PRIMARY KEY,
+        message TEXT NOT NULL,
+        type TEXT,
+        direction REAL,
+        source TEXT,
+        created_at INTEGER NOT NULL,
+        is_test INTEGER NOT NULL DEFAULT 1,
+        group_count INTEGER
+      )
+    `);
+    await tursoClient.execute(`
       CREATE TABLE IF NOT EXISTS admin_locations (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -260,6 +310,28 @@ async function initTursoSettings() {
         created_at INTEGER NOT NULL
       )
     `);
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
+    await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        key_hash TEXT NOT NULL UNIQUE,
+        key_prefix TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        last_used_at INTEGER,
+        revoked_at INTEGER
+      )
+    `);
+    await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id, revoked_at)");
+    await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)");
 
     const countResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM settings");
     const settingsCount = Number(countResult.rows?.[0]?.count || 0);
@@ -274,12 +346,108 @@ async function initTursoSettings() {
       }
     }
 
+    const adminsCountResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM admins");
+    const adminsCount = Number(adminsCountResult.rows?.[0]?.count || 0);
+    if (adminsCount === 0) {
+      await db.read();
+      for (const admin of db.data?.admins || []) {
+        await tursoClient.execute({
+          sql: "INSERT INTO admins(username, password_hash, updated_at) VALUES(?, ?, ?)",
+          args: [String(admin.username), String(admin.password_hash), Date.now()]
+        });
+      }
+    }
+
+    const sessionCountResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM sessions");
+    const sessionCount = Number(sessionCountResult.rows?.[0]?.count || 0);
+    if (sessionCount === 0) {
+      await db.read();
+      for (const session of db.data?.sessions || []) {
+        await tursoClient.execute({
+          sql: "INSERT INTO sessions(token, subject_type, subject_id, display_name, expires_at, created_at) VALUES(?, ?, ?, ?, ?, ?)",
+          args: [
+            String(session.token),
+            String(session.subject_type || "admin"),
+            String(session.subject_id || session.username || ""),
+            String(session.display_name || session.username || ""),
+            Number(session.expires_at || 0),
+            Number(session.created_at || Date.now())
+          ]
+        });
+      }
+    }
+
+    const testEventCountResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM test_events");
+    const testEventCount = Number(testEventCountResult.rows?.[0]?.count || 0);
+    if (testEventCount === 0) {
+      await db.read();
+      for (const item of db.data?.test_events || []) {
+        await tursoClient.execute({
+          sql: `
+            INSERT INTO test_events(id, message, type, direction, source, created_at, is_test, group_count)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          args: [
+            String(item.id),
+            String(item.message || ""),
+            item.type ? String(item.type) : null,
+            Number.isFinite(Number(item.direction)) ? Number(item.direction) : null,
+            item.source ? String(item.source) : null,
+            Number(item.createdAt || item.created_at || Date.now()),
+            item.is_test === false ? 0 : 1,
+            Number.isFinite(Number(item.group_count)) ? Number(item.group_count) : null
+          ]
+        });
+      }
+    }
+
     const locationCountResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM admin_locations");
     const locationCount = Number(locationCountResult.rows?.[0]?.count || 0);
     if (locationCount === 0) {
       await syncAdminLocationsToTurso();
     } else {
       await loadAdminLocationsFromTurso();
+    }
+
+    const usersCountResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM users");
+    const usersCount = Number(usersCountResult.rows?.[0]?.count || 0);
+    if (usersCount === 0) {
+      await db.read();
+      for (const user of db.data?.users || []) {
+        await tursoClient.execute({
+          sql: "INSERT INTO users(id, email, password_hash, created_at) VALUES(?, ?, ?, ?)",
+          args: [
+            String(user.id),
+            normalizeEmail(user.email),
+            String(user.password_hash),
+            Number(user.created_at || Date.now())
+          ]
+        });
+      }
+    }
+
+    const apiKeyCountResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM api_keys");
+    const apiKeyCount = Number(apiKeyCountResult.rows?.[0]?.count || 0);
+    if (apiKeyCount === 0) {
+      await db.read();
+      for (const item of db.data?.api_keys || []) {
+        await tursoClient.execute({
+          sql: `
+            INSERT INTO api_keys(id, user_id, name, key_hash, key_prefix, created_at, last_used_at, revoked_at)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          args: [
+            String(item.id),
+            String(item.user_id),
+            String(item.name || "Default key"),
+            String(item.key_hash),
+            String(item.key_prefix),
+            Number(item.created_at || Date.now()),
+            item.last_used_at ? Number(item.last_used_at) : null,
+            item.revoked_at ? Number(item.revoked_at) : null
+          ]
+        });
+      }
     }
 
     tursoSettingsReady = true;
@@ -297,60 +465,171 @@ function hashPassword(password, salt) {
     .toString("hex");
 }
 
+function createPasswordHash(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = hashPassword(password, salt);
+  return `${salt}:${hash}`;
+}
+
+function verifyPasswordHash(password, storedHash) {
+  const [salt, hash] = String(storedHash || "").split(":");
+  if (!salt || !hash) return false;
+  const candidate = hashPassword(password, salt);
+  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(candidate));
+}
+
+function hashApiKey(apiKey) {
+  return crypto.createHash("sha256").update(String(apiKey || "")).digest("hex");
+}
+
+function createApiKeyValue() {
+  return `swu_${crypto.randomBytes(24).toString("hex")}`;
+}
+
+function maskApiKeyPrefix(prefix) {
+  return `${String(prefix || "").slice(0, 12)}...`;
+}
+
 async function ensureAdmin() {
   const username = process.env.ADMIN_USER || "admin26";
   const password = process.env.ADMIN_PASS || "admin26pass";
 
   await db.read();
-  const salt = crypto.randomBytes(16).toString("hex");
-  const hash = hashPassword(password, salt);
-  const nextAdmin = { username, password_hash: `${salt}:${hash}` };
+  const nextAdmin = { username, password_hash: createPasswordHash(password) };
   db.data.admins = [nextAdmin];
   await db.write();
+
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute({
+      sql: `
+        INSERT INTO admins(username, password_hash, updated_at)
+        VALUES(?, ?, ?)
+        ON CONFLICT(username) DO UPDATE SET
+          password_hash = excluded.password_hash,
+          updated_at = excluded.updated_at
+      `,
+      args: [username, nextAdmin.password_hash, Date.now()]
+    });
+  }
 }
 
 async function verifyAdmin(username, password) {
   await ensureReady();
+  if (tursoSettingsReady && tursoClient) {
+    const result = await tursoClient.execute({
+      sql: "SELECT password_hash FROM admins WHERE username = ?",
+      args: [String(username)]
+    });
+    const row = result.rows?.[0];
+    return row ? verifyPasswordHash(password, row.password_hash) : false;
+  }
+
   await db.read();
   const row = db.data.admins.find((admin) => admin.username === username);
-  if (!row) return false;
-
-  const [salt, hash] = row.password_hash.split(":");
-  const candidate = hashPassword(password, salt);
-  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(candidate));
+  return row ? verifyPasswordHash(password, row.password_hash) : false;
 }
 
-async function createSession(username, days = 7) {
+async function createScopedSession(subjectType, subjectId, displayName, days) {
   await ensureReady();
-  await db.read();
   const token = crypto.randomBytes(24).toString("hex");
+  const createdAt = Date.now();
   const expiresAt = Date.now() + days * 24 * 60 * 60 * 1000;
-  db.data.sessions.push({ token, username, expires_at: expiresAt });
+  const session = {
+    token,
+    subject_type: subjectType,
+    subject_id: subjectId,
+    display_name: displayName,
+    expires_at: expiresAt,
+    created_at: createdAt
+  };
+
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute({
+      sql: "INSERT INTO sessions(token, subject_type, subject_id, display_name, expires_at, created_at) VALUES(?, ?, ?, ?, ?, ?)",
+      args: [token, subjectType, subjectId, displayName, expiresAt, createdAt]
+    });
+  }
+
+  await db.read();
+  db.data.sessions = db.data.sessions.filter((item) => Number(item.expires_at || 0) >= createdAt);
+  db.data.sessions.push(session);
   await db.write();
   return { token, expiresAt };
 }
 
-async function getSession(token) {
+async function findScopedSession(token, subjectType) {
   await ensureReady();
   if (!token) return null;
-  await db.read();
   const now = Date.now();
-  db.data.sessions = db.data.sessions.filter((session) => session.expires_at >= now);
-  const row = db.data.sessions.find((session) => session.token === token);
-  if (!row) {
-    await db.write();
-    return null;
+
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute({
+      sql: "DELETE FROM sessions WHERE expires_at < ?",
+      args: [now]
+    });
+    const result = await tursoClient.execute({
+      sql: `
+        SELECT token, subject_type, subject_id, display_name, expires_at, created_at
+        FROM sessions
+        WHERE token = ? AND subject_type = ?
+      `,
+      args: [String(token), String(subjectType)]
+    });
+    const row = result.rows?.[0];
+    if (!row) return null;
+    return {
+      token: String(row.token),
+      subject_type: String(row.subject_type),
+      subject_id: String(row.subject_id),
+      display_name: String(row.display_name),
+      expires_at: Number(row.expires_at),
+      created_at: Number(row.created_at || 0),
+      username: subjectType === "admin" ? String(row.display_name) : undefined,
+      user_id: subjectType === "user" ? String(row.subject_id) : undefined,
+      email: subjectType === "user" ? String(row.display_name) : undefined
+    };
   }
+
+  await db.read();
+  db.data.sessions = db.data.sessions.filter((session) => session.expires_at >= now);
+  const row = db.data.sessions.find(
+    (session) => session.token === token && String(session.subject_type || "admin") === String(subjectType)
+  );
   await db.write();
-  return row;
+  return row
+    ? {
+      ...row,
+      username: subjectType === "admin" ? String(row.display_name || row.subject_id || "") : undefined,
+      user_id: subjectType === "user" ? String(row.subject_id) : undefined,
+      email: subjectType === "user" ? String(row.display_name || "") : undefined
+    }
+    : null;
 }
 
-async function clearSession(token) {
+async function clearScopedSession(token) {
   await ensureReady();
   if (!token) return;
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute({
+      sql: "DELETE FROM sessions WHERE token = ?",
+      args: [String(token)]
+    });
+  }
   await db.read();
   db.data.sessions = db.data.sessions.filter((session) => session.token !== token);
   await db.write();
+}
+
+async function createSession(username, days = 7) {
+  return createScopedSession("admin", String(username), String(username), days);
+}
+
+async function getSession(token) {
+  return findScopedSession(token, "admin");
+}
+
+async function clearSession(token) {
+  return clearScopedSession(token);
 }
 
 async function getSetting(key, fallback = null) {
@@ -397,6 +676,23 @@ async function setSetting(key, value) {
 
 async function listTestEvents() {
   await ensureReady();
+  if (tursoSettingsReady && tursoClient) {
+    const result = await tursoClient.execute(`
+      SELECT id, message, type, direction, source, created_at, is_test, group_count
+      FROM test_events
+      ORDER BY created_at ASC
+    `);
+    return (result.rows || []).map((row) => ({
+      id: String(row.id),
+      message: String(row.message || ""),
+      type: row.type ? String(row.type) : null,
+      direction: Number.isFinite(Number(row.direction)) ? Number(row.direction) : null,
+      source: row.source ? String(row.source) : null,
+      createdAt: Number(row.created_at || 0),
+      is_test: Number(row.is_test || 0) === 1,
+      group_count: Number.isFinite(Number(row.group_count)) ? Number(row.group_count) : null
+    }));
+  }
   await db.read();
   const items = Array.isArray(db.data.test_events) ? db.data.test_events : [];
   return [...items];
@@ -404,6 +700,24 @@ async function listTestEvents() {
 
 async function addTestEvent(event) {
   await ensureReady();
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute({
+      sql: `
+        INSERT INTO test_events(id, message, type, direction, source, created_at, is_test, group_count)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      args: [
+        String(event.id),
+        String(event.message || ""),
+        event.type ? String(event.type) : null,
+        Number.isFinite(Number(event.direction)) ? Number(event.direction) : null,
+        event.source ? String(event.source) : null,
+        Number(event.createdAt || Date.now()),
+        event.is_test === false ? 0 : 1,
+        Number.isFinite(Number(event.group_count)) ? Number(event.group_count) : null
+      ]
+    });
+  }
   await db.read();
   if (!Array.isArray(db.data.test_events)) {
     db.data.test_events = [];
@@ -414,6 +728,9 @@ async function addTestEvent(event) {
 
 async function clearTestEvents() {
   await ensureReady();
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute("DELETE FROM test_events");
+  }
   await db.read();
   db.data.test_events = [];
   await db.write();
@@ -538,6 +855,222 @@ async function upsertAdminLocationWithPoint(payload = {}) {
   return resultItem;
 }
 
+async function findUserByEmail(email) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  if (tursoSettingsReady && tursoClient) {
+    const result = await tursoClient.execute({
+      sql: "SELECT id, email, password_hash, created_at FROM users WHERE email = ?",
+      args: [normalizedEmail]
+    });
+    const row = result.rows?.[0];
+    return row
+      ? {
+        id: String(row.id),
+        email: String(row.email),
+        password_hash: String(row.password_hash),
+        created_at: Number(row.created_at || 0)
+      }
+      : null;
+  }
+
+  await db.read();
+  const row = (db.data.users || []).find((item) => normalizeEmail(item.email) === normalizedEmail);
+  return row ? { ...row } : null;
+}
+
+async function createUserAccount(email, password) {
+  await ensureReady();
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail || !normalizedEmail.includes("@")) {
+    throw new Error("invalid_email");
+  }
+  if (String(password || "").length < 8) {
+    throw new Error("password_too_short");
+  }
+  if (await findUserByEmail(normalizedEmail)) {
+    throw new Error("user_exists");
+  }
+
+  const user = {
+    id: `usr_${crypto.randomBytes(10).toString("hex")}`,
+    email: normalizedEmail,
+    password_hash: createPasswordHash(password),
+    created_at: Date.now()
+  };
+
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute({
+      sql: "INSERT INTO users(id, email, password_hash, created_at) VALUES(?, ?, ?, ?)",
+      args: [user.id, user.email, user.password_hash, user.created_at]
+    });
+  }
+
+  await db.read();
+  db.data.users.push(user);
+  await db.write();
+
+  return { id: user.id, email: user.email, created_at: user.created_at };
+}
+
+async function verifyUser(email, password) {
+  await ensureReady();
+  const user = await findUserByEmail(email);
+  if (!user) return null;
+  return verifyPasswordHash(password, user.password_hash)
+    ? { id: user.id, email: user.email, created_at: user.created_at }
+    : null;
+}
+
+async function createUserSession(user, days = USER_SESSION_DAYS) {
+  return createScopedSession("user", String(user.id), String(user.email), days);
+}
+
+async function getUserSession(token) {
+  return findScopedSession(token, "user");
+}
+
+async function clearUserSession(token) {
+  return clearScopedSession(token);
+}
+
+async function listUserApiKeys(userId) {
+  await ensureReady();
+
+  if (tursoSettingsReady && tursoClient) {
+    const result = await tursoClient.execute({
+      sql: `
+        SELECT id, user_id, name, key_prefix, created_at, last_used_at, revoked_at
+        FROM api_keys
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+      `,
+      args: [String(userId)]
+    });
+    return (result.rows || []).map((row) => ({
+      id: String(row.id),
+      user_id: String(row.user_id),
+      name: String(row.name),
+      key_prefix: String(row.key_prefix),
+      masked_key: maskApiKeyPrefix(row.key_prefix),
+      created_at: Number(row.created_at || 0),
+      last_used_at: row.last_used_at ? Number(row.last_used_at) : null,
+      revoked_at: row.revoked_at ? Number(row.revoked_at) : null
+    }));
+  }
+
+  await db.read();
+  return (db.data.api_keys || [])
+    .filter((item) => String(item.user_id) === String(userId))
+    .sort((a, b) => Number(b.created_at || 0) - Number(a.created_at || 0))
+    .map((item) => ({
+      ...item,
+      masked_key: maskApiKeyPrefix(item.key_prefix)
+    }));
+}
+
+async function createApiKeyForUser(userId, name = "Default key") {
+  await ensureReady();
+  const apiKey = createApiKeyValue();
+  const now = Date.now();
+  const item = {
+    id: `key_${crypto.randomBytes(8).toString("hex")}`,
+    user_id: String(userId),
+    name: String(name || "Default key").trim() || "Default key",
+    key_hash: hashApiKey(apiKey),
+    key_prefix: apiKey.slice(0, 16),
+    created_at: now,
+    last_used_at: null,
+    revoked_at: null
+  };
+
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute({
+      sql: `
+        INSERT INTO api_keys(id, user_id, name, key_hash, key_prefix, created_at, last_used_at, revoked_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      args: [item.id, item.user_id, item.name, item.key_hash, item.key_prefix, item.created_at, null, null]
+    });
+  }
+
+  await db.read();
+  db.data.api_keys.push(item);
+  await db.write();
+
+  return {
+    apiKey,
+    item: {
+      ...item,
+      masked_key: maskApiKeyPrefix(item.key_prefix)
+    }
+  };
+}
+
+async function revokeApiKeyForUser(userId, keyId) {
+  await ensureReady();
+  const revokedAt = Date.now();
+
+  if (tursoSettingsReady && tursoClient) {
+    await tursoClient.execute({
+      sql: `
+        UPDATE api_keys
+        SET revoked_at = ?
+        WHERE id = ? AND user_id = ? AND revoked_at IS NULL
+      `,
+      args: [revokedAt, String(keyId), String(userId)]
+    });
+  }
+
+  await db.read();
+  db.data.api_keys = (db.data.api_keys || []).map((item) => {
+    if (String(item.id) === String(keyId) && String(item.user_id) === String(userId) && !item.revoked_at) {
+      return { ...item, revoked_at: revokedAt };
+    }
+    return item;
+  });
+  await db.write();
+}
+
+async function authenticateApiKey(rawApiKey) {
+  await ensureReady();
+  const keyHash = hashApiKey(rawApiKey);
+  const now = Date.now();
+
+  if (tursoSettingsReady && tursoClient) {
+    const result = await tursoClient.execute({
+      sql: `
+        SELECT id, user_id, name, key_prefix, created_at
+        FROM api_keys
+        WHERE key_hash = ? AND revoked_at IS NULL
+        LIMIT 1
+      `,
+      args: [keyHash]
+    });
+    const row = result.rows?.[0];
+    if (!row) return null;
+    await tursoClient.execute({
+      sql: "UPDATE api_keys SET last_used_at = ? WHERE id = ?",
+      args: [now, String(row.id)]
+    });
+    return {
+      id: String(row.id),
+      user_id: String(row.user_id),
+      name: String(row.name),
+      key_prefix: String(row.key_prefix),
+      created_at: Number(row.created_at || 0)
+    };
+  }
+
+  await db.read();
+  const row = (db.data.api_keys || []).find((item) => item.key_hash === keyHash && !item.revoked_at);
+  if (!row) return null;
+  row.last_used_at = now;
+  await db.write();
+  return { ...row };
+}
+
 export {
   db,
   verifyAdmin,
@@ -552,5 +1085,14 @@ export {
   listAdminLocations,
   upsertAdminLocationWithPoint,
   getAdminLocationsSync,
-  getAdminLocationPointsSync
+  getAdminLocationPointsSync,
+  createUserAccount,
+  verifyUser,
+  createUserSession,
+  getUserSession,
+  clearUserSession,
+  listUserApiKeys,
+  createApiKeyForUser,
+  revokeApiKeyForUser,
+  authenticateApiKey
 };
