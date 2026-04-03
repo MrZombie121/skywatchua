@@ -788,7 +788,15 @@ app.get("/account/api", (_req, res) => {
   res.sendFile(path.join(publicPath, "api.html"));
 });
 
+app.get("/api-menu", (_req, res) => {
+  res.sendFile(path.join(publicPath, "api.html"));
+});
+
 app.get("/developers/api", (_req, res) => {
+  res.sendFile(path.join(publicPath, "api-docs.html"));
+});
+
+app.get("/api-docs", (_req, res) => {
   res.sendFile(path.join(publicPath, "api-docs.html"));
 });
 

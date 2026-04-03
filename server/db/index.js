@@ -20,6 +20,80 @@ let tursoSettingsReady = false;
 let initError = null;
 const USER_SESSION_DAYS = Number(process.env.USER_SESSION_DAYS || 30);
 
+async function tursoTableExists(tableName) {
+  if (!tursoClient) return false;
+  const result = await tursoClient.execute({
+    sql: "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+    args: [String(tableName)]
+  });
+  return Boolean(result.rows?.[0]?.name);
+}
+
+async function tursoTableColumns(tableName) {
+  if (!tursoClient) return [];
+  const result = await tursoClient.execute(`PRAGMA table_info(${tableName})`);
+  return (result.rows || []).map((row) => String(row.name || ""));
+}
+
+async function ensureTursoSessionsSchema() {
+  if (!tursoClient) return;
+
+  const exists = await tursoTableExists("sessions");
+  if (!exists) {
+    await tursoClient.execute(`
+      CREATE TABLE sessions (
+        token TEXT PRIMARY KEY,
+        subject_type TEXT NOT NULL,
+        subject_id TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
+    return;
+  }
+
+  const columns = await tursoTableColumns("sessions");
+  const requiredColumns = ["token", "subject_type", "subject_id", "display_name", "expires_at", "created_at"];
+  const isReady = requiredColumns.every((column) => columns.includes(column));
+  if (isReady) return;
+
+  await tursoClient.execute("DROP TABLE IF EXISTS sessions_migrated");
+  await tursoClient.execute(`
+    CREATE TABLE sessions_migrated (
+      token TEXT PRIMARY KEY,
+      subject_type TEXT NOT NULL,
+      subject_id TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+
+  const hasCreatedAt = columns.includes("created_at");
+  const coalesceExpr = (...candidates) => {
+    const available = candidates.filter((candidate) => columns.includes(candidate));
+    return available.length ? `COALESCE(${available.join(", ")}, '')` : "''";
+  };
+  const subjectIdExpr = coalesceExpr("subject_id", "username", "display_name");
+  const displayNameExpr = coalesceExpr("display_name", "username", "subject_id");
+  const createdAtExpr = hasCreatedAt ? "COALESCE(created_at, expires_at)" : "expires_at";
+
+  await tursoClient.execute(`
+    INSERT INTO sessions_migrated(token, subject_type, subject_id, display_name, expires_at, created_at)
+    SELECT
+      token,
+      'admin',
+      ${subjectIdExpr},
+      ${displayNameExpr},
+      expires_at,
+      ${createdAtExpr}
+    FROM sessions
+  `);
+  await tursoClient.execute("DROP TABLE sessions");
+  await tursoClient.execute("ALTER TABLE sessions_migrated RENAME TO sessions");
+}
+
 const defaultAdminLocations = [
   { id: "uzyn", name: "Узин", keys: ["узин", "uzyn"], lat: 49.82, lng: 30.41, region_id: "kyivska" },
   { id: "kyiv-city", name: "Київ", keys: ["київ", "киев", "kyiv", "kiev"], lat: 50.4501, lng: 30.5234, region_id: "kyiv", location_type: "city", parent_location_id: null },
@@ -261,16 +335,8 @@ async function initTursoSettings() {
         updated_at INTEGER NOT NULL
       )
     `);
-    await tursoClient.execute(`
-      CREATE TABLE IF NOT EXISTS sessions (
-        token TEXT PRIMARY KEY,
-        subject_type TEXT NOT NULL,
-        subject_id TEXT NOT NULL,
-        display_name TEXT NOT NULL,
-        expires_at INTEGER NOT NULL,
-        created_at INTEGER NOT NULL
-      )
-    `);
+    await tursoClient.execute("ALTER TABLE admins ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0").catch(() => {});
+    await ensureTursoSessionsSchema();
     await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_sessions_subject ON sessions(subject_type, subject_id)");
     await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)");
     await tursoClient.execute(`
@@ -285,6 +351,8 @@ async function initTursoSettings() {
         group_count INTEGER
       )
     `);
+    await tursoClient.execute("ALTER TABLE test_events ADD COLUMN is_test INTEGER NOT NULL DEFAULT 1").catch(() => {});
+    await tursoClient.execute("ALTER TABLE test_events ADD COLUMN group_count INTEGER").catch(() => {});
     await tursoClient.execute(`
       CREATE TABLE IF NOT EXISTS admin_locations (
         id TEXT PRIMARY KEY,
@@ -318,6 +386,7 @@ async function initTursoSettings() {
         created_at INTEGER NOT NULL
       )
     `);
+    await tursoClient.execute("ALTER TABLE users ADD COLUMN created_at INTEGER").catch(() => {});
     await tursoClient.execute(`
       CREATE TABLE IF NOT EXISTS api_keys (
         id TEXT PRIMARY KEY,
@@ -330,6 +399,10 @@ async function initTursoSettings() {
         revoked_at INTEGER
       )
     `);
+    await tursoClient.execute("ALTER TABLE api_keys ADD COLUMN name TEXT NOT NULL DEFAULT 'Default key'").catch(() => {});
+    await tursoClient.execute("ALTER TABLE api_keys ADD COLUMN key_prefix TEXT NOT NULL DEFAULT ''").catch(() => {});
+    await tursoClient.execute("ALTER TABLE api_keys ADD COLUMN last_used_at INTEGER").catch(() => {});
+    await tursoClient.execute("ALTER TABLE api_keys ADD COLUMN revoked_at INTEGER").catch(() => {});
     await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id, revoked_at)");
     await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)");
 

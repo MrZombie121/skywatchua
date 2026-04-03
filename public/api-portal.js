@@ -11,9 +11,23 @@ const logoutBtn = document.getElementById("logout-btn");
 const newKeyBox = document.getElementById("new-key-box");
 const newKeyValue = document.getElementById("new-key-value");
 
+const errorLabels = {
+  invalid_email: "Некоректний email.",
+  password_too_short: "Пароль має містити щонайменше 8 символів.",
+  user_exists: "Користувач з таким email вже існує.",
+  invalid_credentials: "Невірний email або пароль.",
+  unauthorized: "Потрібна авторизація.",
+  request_failed: "Запит завершився помилкою."
+};
+
 function setStatus(node, message, type = "") {
+  if (!node) return;
   node.textContent = message || "";
   node.className = `status ${type}`.trim();
+}
+
+function humanizeError(message) {
+  return errorLabels[message] || message || "Сталася помилка.";
 }
 
 async function request(url, options = {}) {
@@ -24,7 +38,7 @@ async function request(url, options = {}) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || "request_failed");
+    throw new Error(humanizeError(data.error || "request_failed"));
   }
   return data;
 }
@@ -35,7 +49,9 @@ function keySnippet(key) {
 }
 
 function renderKeys(items) {
+  if (!keysList) return;
   keysList.innerHTML = "";
+
   if (!items.length) {
     keysList.innerHTML = "<div class=\"key-item\">Ключів ще немає.</div>";
     return;
@@ -53,7 +69,7 @@ function renderKeys(items) {
           <strong>${item.name}</strong>
           <div class="meta">${item.masked_key}</div>
         </div>
-        ${item.revoked_at ? "" : `<button type="button" class="secondary" data-revoke="${item.id}">Відкликати</button>`}
+        ${item.revoked_at ? "" : `<button type="button" data-revoke="${item.id}">Відкликати</button>`}
       </div>
       <div class="meta">Створено: ${createdAt}</div>
       <div class="meta">Останнє використання: ${lastUsed}</div>
@@ -66,13 +82,13 @@ function renderKeys(items) {
 async function loadMe() {
   try {
     const data = await request("/api/auth/me", { method: "GET" });
-    authCard.classList.add("hidden");
-    dashboardCard.classList.remove("hidden");
-    userEmail.textContent = data.user.email;
+    authCard?.classList.add("hidden");
+    dashboardCard?.classList.remove("hidden");
+    if (userEmail) userEmail.textContent = data.user.email;
     renderKeys(data.api_keys || []);
   } catch {
-    dashboardCard.classList.add("hidden");
-    authCard.classList.remove("hidden");
+    dashboardCard?.classList.add("hidden");
+    authCard?.classList.remove("hidden");
   }
 }
 
@@ -123,8 +139,10 @@ createKeyForm?.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify({ name: form.get("name") })
     });
-    newKeyBox.classList.remove("hidden");
-    newKeyValue.textContent = `${data.api_key}\n\n${keySnippet(data.api_key)}`;
+    newKeyBox?.classList.remove("hidden");
+    if (newKeyValue) {
+      newKeyValue.textContent = `${data.api_key}\n\n${keySnippet(data.api_key)}`;
+    }
     setStatus(dashboardStatus, "Ключ створено.", "ok");
     createKeyForm.reset();
     await loadMe();
@@ -136,6 +154,7 @@ createKeyForm?.addEventListener("submit", async (event) => {
 keysList?.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-revoke]");
   if (!button) return;
+
   try {
     await request(`/api/auth/api-keys/${button.dataset.revoke}`, { method: "DELETE" });
     setStatus(dashboardStatus, "Ключ відкликано.", "ok");
@@ -147,9 +166,9 @@ keysList?.addEventListener("click", async (event) => {
 
 logoutBtn?.addEventListener("click", async () => {
   await request("/api/auth/logout", { method: "POST" });
-  dashboardCard.classList.add("hidden");
-  authCard.classList.remove("hidden");
-  newKeyBox.classList.add("hidden");
+  dashboardCard?.classList.add("hidden");
+  authCard?.classList.remove("hidden");
+  newKeyBox?.classList.add("hidden");
   setStatus(authStatus, "Ви вийшли з акаунта.", "ok");
 });
 

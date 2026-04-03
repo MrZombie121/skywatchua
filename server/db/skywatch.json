@@ -9,7 +9,7 @@
   "admins": [
     {
       "username": "adminka",
-      "password_hash": "89099bbc07b968c13f77d443f885d061:49c135d58b3da66645504f219e90a4aa71db1f6533fb7bf17cefd37d0b0f381ca3ced1b97caf4a850b5ce822446e12873ced16f80f13300f2392d11d3fcd813a"
+      "password_hash": "9380b82528e67796ef5cd6cc090e9ab9:74f4cb6bfb110f4721615a156921fafe14edeb3f429c613faeebaa291454bd114471f25e0ce7429230ef4ff966bf90a0b1571e5bdaabdeb252e65e58e886440b"
     }
   ],
   "sessions": [
@@ -289,6 +289,21 @@
       "location_type": "district",
       "parent_location_id": "одеса",
       "created_at": 1775117594440
+    },
+    {
+      "id": "затока",
+      "name": "Затока",
+      "keys": [
+        "затока",
+        "затоки",
+        "затоку"
+      ],
+      "lat": 46.0637,
+      "lng": 30.4505,
+      "region_id": "odeska",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775146043637
     }
   ],
   "admin_location_points": [
@@ -753,6 +768,40 @@
       "lng": 30.646,
       "types": [],
       "created_at": 1775117683899
+    },
+    {
+      "id": "pt-затока-1775146043637-7o9q",
+      "location_id": "затока",
+      "lat": 46.0496,
+      "lng": 30.4902,
+      "types": [],
+      "created_at": 1775146043637
+    },
+    {
+      "id": "pt-затока-1775146054959-hct6",
+      "location_id": "затока",
+      "lat": 46.0775,
+      "lng": 30.5544,
+      "types": [],
+      "created_at": 1775146054959
+    },
+    {
+      "id": "pt-затока-1775146064042-yzs2",
+      "location_id": "затока",
+      "lat": 45.9693,
+      "lng": 30.3786,
+      "types": [],
+      "created_at": 1775146064042
+    },
+    {
+      "id": "pt-затока-1775146098747-hvyy",
+      "location_id": "затока",
+      "lat": 46.271,
+      "lng": 30.4761,
+      "types": [],
+      "created_at": 1775146098747
     }
-  ]
+  ],
+  "users": [],
+  "api_keys": []
 }
