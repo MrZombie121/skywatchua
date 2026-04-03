@@ -1,11 +1,13 @@
 import "dotenv/config";
 import express from "express";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runtime } from "./config/runtime.js";
 import { loadTelegramEvents } from "./telegram.js";
 import { loadRssEvents } from "./rss.js";
 import { loadOpenEvents } from "./open.js";
+import { generateRecentMapReport } from "./map-report.js";
 import { parseMessageToEvents } from "./transform.js";
 import {
   verifyAdmin,
@@ -76,6 +78,7 @@ const announceMaxAgeMs = Math.max(60 * 1000, Number(process.env.TG_ANNOUNCE_MAX_
 const announceRecentLimit = Math.max(100, Number(process.env.TG_ANNOUNCE_RECENT_LIMIT || 1000));
 const announcePointRadiusKm = Math.max(1, Number(process.env.TG_ANNOUNCE_POINT_RADIUS_KM || 18));
 const announceLocationRadiusKm = Math.max(1, Number(process.env.TG_ANNOUNCE_LOCATION_RADIUS_KM || 35));
+const announcePhotoEnabled = /^(1|true|yes|on)$/i.test(String(process.env.TG_ANNOUNCE_PHOTO_ENABLED || "true"));
 
 if (announceEnabled && (!announceBotToken || !announceChatId)) {
   console.warn("Telegram announce is enabled, but TG_ANNOUNCE_BOT_TOKEN or TG_ANNOUNCE_CHAT_ID is missing.");
@@ -279,6 +282,24 @@ async function sendTelegramAnnouncement(text) {
   return true;
 }
 
+async function sendTelegramPhoto(photoPath, caption = "") {
+  if (!announceEnabled || !announceBotToken || !announceChatId || !photoPath || !announcePhotoEnabled) return false;
+  const fileBuffer = await fs.promises.readFile(photoPath);
+  const form = new FormData();
+  form.set("chat_id", announceChatId);
+  form.set("caption", caption);
+  form.set("photo", new Blob([fileBuffer], { type: "image/png" }), path.basename(photoPath));
+  const response = await fetch(`https://api.telegram.org/bot${announceBotToken}/sendPhoto`, {
+    method: "POST",
+    body: form
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`telegram_send_photo_failed:${response.status}:${body}`);
+  }
+  return true;
+}
+
 function shouldAnnounceEvent(event, previousIds = new Set(), announcedSet = new Set(), now = Date.now()) {
   const id = String(event?.id || "").trim();
   if (!id || previousIds.has(id) || announcedSet.has(id)) return false;
@@ -334,6 +355,15 @@ async function announceNewEvents(events, previousEvents = []) {
 
   if (announcedNow.length > 0) {
     await writeAnnouncedEventIds([...announcedIds, ...announcedNow]);
+    try {
+      const report = await generateRecentMapReport(events);
+      if (report?.path) {
+        await sendTelegramPhoto(report.path, report.caption || "");
+        await fs.promises.unlink(report.path).catch(() => {});
+      }
+    } catch (error) {
+      console.warn("Failed to send map report", error?.message || error);
+    }
   }
 }
 
