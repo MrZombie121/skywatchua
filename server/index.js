@@ -377,6 +377,23 @@ async function persistEventCacheToStore(events, updatedAt = Date.now()) {
   }
 }
 
+function isServerEventAlive(event, now = Date.now()) {
+  const ts = Date.parse(event?.timestamp);
+  if (!Number.isFinite(ts)) return false;
+  const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
+  return now - ts <= ttlMs;
+}
+
+async function pruneServerEventCache(now = Date.now()) {
+  const current = Array.isArray(state.cache) ? state.cache : [];
+  const next = current.filter((event) => isServerEventAlive(event, now));
+  if (next.length !== current.length) {
+    state.cache = next;
+    await persistEventCacheToStore(next, state.lastFetch || now);
+  }
+  return state.cache;
+}
+
 function deduplicateEvents(events) {
   const clusters = [];
   const windowMs = Math.max(1, dedupWindowMin) * 60 * 1000;
@@ -624,8 +641,9 @@ async function buildEventsPayload() {
 
   async function buildFastFallbackPayload(maintenance = { enabled: false, until: null }) {
     const { alarmState, districtAlarmState } = await readStoredAlarmState();
+    const liveCache = await pruneServerEventCache();
     return {
-      events: maintenance.enabled ? [] : state.cache,
+      events: maintenance.enabled ? [] : liveCache,
       alarms: alarmState,
       district_alarms: districtAlarmState,
       cached: true,
@@ -655,12 +673,13 @@ async function buildEventsPayload() {
     await hydrateEventCacheFromStore();
     const maintenance = await getMaintenanceState();
     const now = Date.now();
+    const liveCache = await pruneServerEventCache(now);
 
     // Serve from backend cache without touching Telegram API.
-    if (now - state.lastFetch < refreshMs && state.cache.length) {
+    if (now - state.lastFetch < refreshMs && liveCache.length) {
       const { alarmState, districtAlarmState } = await readStoredAlarmState();
       return {
-        events: maintenance.enabled ? [] : state.cache,
+        events: maintenance.enabled ? [] : liveCache,
         alarms: alarmState,
         district_alarms: districtAlarmState,
         cached: true,
@@ -681,7 +700,7 @@ async function buildEventsPayload() {
       };
     }
 
-    if (state.cache.length) {
+    if (liveCache.length) {
       if (!state.inFlight) {
         state.inFlight = fetchFreshPayload().finally(() => {
           state.inFlight = null;
@@ -689,7 +708,7 @@ async function buildEventsPayload() {
       }
       const { alarmState, districtAlarmState } = await readStoredAlarmState();
       return {
-        events: state.cache,
+        events: liveCache,
         alarms: alarmState,
         district_alarms: districtAlarmState,
         cached: true,
