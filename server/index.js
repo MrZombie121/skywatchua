@@ -77,6 +77,10 @@ const announceRecentLimit = Math.max(100, Number(process.env.TG_ANNOUNCE_RECENT_
 const announcePointRadiusKm = Math.max(1, Number(process.env.TG_ANNOUNCE_POINT_RADIUS_KM || 18));
 const announceLocationRadiusKm = Math.max(1, Number(process.env.TG_ANNOUNCE_LOCATION_RADIUS_KM || 35));
 
+if (announceEnabled && (!announceBotToken || !announceChatId)) {
+  console.warn("Telegram announce is enabled, but TG_ANNOUNCE_BOT_TOKEN or TG_ANNOUNCE_CHAT_ID is missing.");
+}
+
 const state = {
   lastFetch: 0,
   cache: [],
