@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { pathToFileURL } from "node:url";
 import { runtime } from "./config/runtime.js";
 
 const execFileAsync = promisify(execFile);
@@ -100,34 +101,79 @@ function parseCalibrationPoints(raw) {
   }
 }
 
+function solveLinear3x3(matrix, vector) {
+  const m = matrix.map((row) => [...row]);
+  const v = [...vector];
+
+  for (let col = 0; col < 3; col += 1) {
+    let pivot = col;
+    for (let row = col + 1; row < 3; row += 1) {
+      if (Math.abs(m[row][col]) > Math.abs(m[pivot][col])) {
+        pivot = row;
+      }
+    }
+    if (Math.abs(m[pivot][col]) < 1e-9) return null;
+    if (pivot !== col) {
+      [m[col], m[pivot]] = [m[pivot], m[col]];
+      [v[col], v[pivot]] = [v[pivot], v[col]];
+    }
+
+    const pivotValue = m[col][col];
+    for (let inner = col; inner < 3; inner += 1) {
+      m[col][inner] /= pivotValue;
+    }
+    v[col] /= pivotValue;
+
+    for (let row = 0; row < 3; row += 1) {
+      if (row === col) continue;
+      const factor = m[row][col];
+      for (let inner = col; inner < 3; inner += 1) {
+        m[row][inner] -= factor * m[col][inner];
+      }
+      v[row] -= factor * v[col];
+    }
+  }
+
+  return v;
+}
+
 function solveAffineLatLng(points, valueKey) {
   if (points.length < 3) return null;
-  const [p1, p2, p3] = points;
-  const x1 = p1.lat;
-  const y1 = p1.lng;
-  const x2 = p2.lat;
-  const y2 = p2.lng;
-  const x3 = p3.lat;
-  const y3 = p3.lng;
-  const v1 = p1[valueKey];
-  const v2 = p2[valueKey];
-  const v3 = p3[valueKey];
 
-  const det =
-    x1 * (y2 - y3) -
-    y1 * (x2 - x3) +
-    (x2 * y3 - x3 * y2);
-  if (!Number.isFinite(det) || Math.abs(det) < 1e-6) return null;
+  let sumLatLat = 0;
+  let sumLatLng = 0;
+  let sumLat = 0;
+  let sumLngLng = 0;
+  let sumLng = 0;
+  let sumValueLat = 0;
+  let sumValueLng = 0;
+  let sumValue = 0;
 
-  const a =
-    (v1 * (y2 - y3) - y1 * (v2 - v3) + (v2 * y3 - v3 * y2)) / det;
-  const b =
-    (x1 * (v2 - v3) - v1 * (x2 - x3) + (x2 * v3 - x3 * v2)) / det;
-  const c =
-    (x1 * (y3 * v2 - y2 * v3) -
-      y1 * (x3 * v2 - x2 * v3) +
-      v1 * (x3 * y2 - x2 * y3)) / det;
+  points.forEach((point) => {
+    const lat = Number(point.lat);
+    const lng = Number(point.lng);
+    const value = Number(point[valueKey]);
+    sumLatLat += lat * lat;
+    sumLatLng += lat * lng;
+    sumLat += lat;
+    sumLngLng += lng * lng;
+    sumLng += lng;
+    sumValueLat += value * lat;
+    sumValueLng += value * lng;
+    sumValue += value;
+  });
 
+  const solved = solveLinear3x3(
+    [
+      [sumLatLat, sumLatLng, sumLat],
+      [sumLatLng, sumLngLng, sumLng],
+      [sumLat, sumLng, points.length]
+    ],
+    [sumValueLat, sumValueLng, sumValue]
+  );
+
+  if (!solved) return null;
+  const [a, b, c] = solved;
   return { a, b, c };
 }
 
@@ -142,21 +188,18 @@ function buildLatLngProjector(points) {
   });
 }
 
-async function toDataUri(filePath) {
-  const buffer = await fs.readFile(filePath);
-  const ext = path.extname(filePath).toLowerCase();
-  const mime = ext === ".png" ? "image/png" : "application/octet-stream";
-  return `data:${mime};base64,${buffer.toString("base64")}`;
+function toSvgFileHref(filePath) {
+  return pathToFileURL(filePath).href;
 }
 
 async function loadAssets() {
   if (!assetsPromise) {
     assetsPromise = (async () => {
-      const background = await toDataUri(TEMPLATE_PATH);
-      const watermark = await toDataUri(WATERMARK_PATH);
+      const background = toSvgFileHref(TEMPLATE_PATH);
+      const watermark = toSvgFileHref(WATERMARK_PATH);
       const icons = {};
       for (const [key, filePath] of Object.entries(ICON_PATHS)) {
-        icons[key] = await toDataUri(filePath);
+        icons[key] = toSvgFileHref(filePath);
       }
       const calibrationPoints = parseCalibrationPoints(
         process.env.MAP_REPORT_CALIBRATION_POINTS || ""
@@ -234,7 +277,6 @@ function renderEvents(project, icons, events) {
     placed.push({ x, y });
 
     const type = normalizeReportType(event.type);
-    const iconHref = icons[type] || icons.other;
     const color = TYPE_COLORS[type];
     const arrow = buildArrow({ x, y }, event);
     const ageMin = Math.max(0, Math.floor((Date.now() - Date.parse(event.timestamp)) / 60000));
@@ -248,8 +290,6 @@ function renderEvents(project, icons, events) {
     nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="18" fill="rgba(15,23,42,0.78)" stroke="${color}" stroke-width="2.8" />`);
     nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="23" fill="none" stroke="${color}" stroke-width="1.4" opacity="0.30" />`);
     nodes.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${color}" />`);
-    nodes.push(`<image href="${iconHref}" x="${(x - 14).toFixed(1)}" y="${(y - 14).toFixed(1)}" width="28" height="28" />`);
-
     if (location) {
       nodes.push(`
         <g>
@@ -265,20 +305,18 @@ function renderEvents(project, icons, events) {
   return nodes.join("");
 }
 
-function buildSvg(background, watermark, icons, project, events) {
+function buildSvg(icons, project, events) {
   const nowLabel = formatKyivDate();
   const legend = renderLegend(events);
   const eventLayer = renderEvents(project, icons, events);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${TEMPLATE_WIDTH}" height="${TEMPLATE_HEIGHT}" viewBox="0 0 ${TEMPLATE_WIDTH} ${TEMPLATE_HEIGHT}">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${TEMPLATE_WIDTH}" height="${TEMPLATE_HEIGHT}" viewBox="0 0 ${TEMPLATE_WIDTH} ${TEMPLATE_HEIGHT}">
   <defs>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#020617" flood-opacity="0.46" />
     </filter>
   </defs>
-
-  <image href="${background}" x="0" y="0" width="${TEMPLATE_WIDTH}" height="${TEMPLATE_HEIGHT}" />
 
   <g filter="url(#shadow)">
     <rect x="18" y="18" width="330" height="80" rx="18" fill="rgba(2,6,23,0.82)" stroke="rgba(34,211,238,0.22)" />
@@ -297,14 +335,14 @@ function buildSvg(background, watermark, icons, project, events) {
   <g>
     ${eventLayer}
   </g>
-
-  <image href="${watermark}" x="${(TEMPLATE_WIDTH / 2 - 130).toFixed(1)}" y="${(TEMPLATE_HEIGHT - 72).toFixed(1)}" width="260" height="46" opacity="0.28" />
-  <image href="${watermark}" x="${(TEMPLATE_WIDTH - 162).toFixed(1)}" y="10" width="144" height="26" opacity="0.42" />
 </svg>`;
 }
 
 async function svgToPng(svgPath, pngPath) {
-  await execFileAsync("convert", [svgPath, pngPath], { timeout: 30000 });
+  const overlayPath = pngPath.replace(/\.png$/i, ".overlay.png");
+  await execFileAsync("convert", ["-background", "none", svgPath, overlayPath], { timeout: 30000 });
+  await execFileAsync("convert", [TEMPLATE_PATH, overlayPath, "-compose", "over", "-composite", pngPath], { timeout: 30000 });
+  await fs.unlink(overlayPath).catch(() => {});
 }
 
 export async function generateRecentMapReport(events) {
@@ -325,8 +363,8 @@ export async function generateRecentMapReport(events) {
     return null;
   }
 
-  const { background, watermark, icons, project } = await loadAssets();
-  const svg = buildSvg(background, watermark, icons, project, active);
+  const { icons, project } = await loadAssets();
+  const svg = buildSvg(icons, project, active);
   const reportId = `airwatcher-report-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const tmpDir = path.resolve("server", "tmp");
   const svgPath = path.join(tmpDir, `${reportId}.svg`);

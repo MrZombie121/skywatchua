@@ -103,6 +103,7 @@ const MARKER_AGING_TICK_MS = 30000;
 
 const state = {
   events: [],
+  invalidEvents: [],
   types: new Set(),
   sources: new Set(),
   selectedTypes: new Set(),
@@ -135,6 +136,7 @@ const lastUpdated = document.getElementById("last-updated");
 const visibleCount = document.getElementById("visible-count");
 const sourceCount = document.getElementById("source-count");
 const maintenanceBanner = document.getElementById("maintenance-banner");
+const mapNotice = document.getElementById("map-notice");
 const maintenanceScreen = document.getElementById("maintenance-screen");
 const maintenanceScreenText = document.getElementById("maintenance-screen-text");
 const maintenanceAdminOpen = document.getElementById("maintenance-admin-open");
@@ -328,6 +330,8 @@ function normalizeEvent(raw, sourceId) {
   const rawDirection = raw.direction ?? raw.heading;
   const parsedDirection = Number(rawDirection);
   const direction = Number.isFinite(parsedDirection) ? parsedDirection : null;
+  const lat = Number(raw.lat ?? raw.latitude ?? raw.location?.lat ?? NaN);
+  const lng = Number(raw.lng ?? raw.longitude ?? raw.location?.lng ?? NaN);
   const rawId =
     raw.id || `${sourceId}-${raw.timestamp || raw.time || Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const type = normalizeType(raw.type || raw.target_type || raw.category);
@@ -335,8 +339,8 @@ function normalizeEvent(raw, sourceId) {
     id: rawId,
     type,
     marker_variant: raw.marker_variant || null,
-    lat: Number(raw.lat ?? raw.latitude ?? raw.location?.lat ?? 0),
-    lng: Number(raw.lng ?? raw.longitude ?? raw.location?.lng ?? 0),
+    lat,
+    lng,
     direction,
     fallbackDirection: deterministicDirection(rawId),
     source: raw.source || sourceId,
@@ -422,7 +426,17 @@ async function loadEvents() {
       console.warn("Source failed", sources[index].id, result.reason);
     }
   });
-  return merged.filter((event) => Number.isFinite(event.lat) && Number.isFinite(event.lng));
+  const validEvents = [];
+  const invalidEvents = [];
+  merged.forEach((event) => {
+    if (Number.isFinite(event.lat) && Number.isFinite(event.lng)) {
+      validEvents.push(event);
+    } else {
+      invalidEvents.push(event);
+    }
+  });
+  state.invalidEvents = invalidEvents;
+  return validEvents;
 }
 
 function updateFilterSets(events) {
@@ -900,12 +914,25 @@ function renderMarkers() {
     maintenanceScreen.classList.remove("active");
   }
   if (state.maintenance) {
+    if (mapNotice) mapNotice.hidden = true;
     renderHeaderStats();
     return;
   }
 
   const filtered = getVisibleEvents();
   renderHeaderStats();
+
+  if (mapNotice) {
+    if (state.invalidEvents.length > 0) {
+      const sampleSources = [...new Set(state.invalidEvents.map((event) => event.source).filter(Boolean))].slice(0, 2);
+      const sourceHint = sampleSources.length > 0 ? ` Джерела: ${sampleSources.join(", ")}.` : "";
+      mapNotice.textContent =
+        `Частину цілей приховано: ${state.invalidEvents.length} без координат, тому вони не можуть бути показані на карті.${sourceHint}`;
+      mapNotice.hidden = false;
+    } else {
+      mapNotice.hidden = true;
+    }
+  }
 
   const nextIds = new Set(filtered.map((event) => event.id));
 

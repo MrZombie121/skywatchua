@@ -472,6 +472,73 @@ function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function inflectLocationWord(word) {
+  const normalized = normalizeText(word);
+  const variants = new Set([normalized]);
+  if (!/^[\p{L}'-]+$/u.test(normalized) || normalized.length < 3) {
+    return variants;
+  }
+
+  const addAll = (items) => items.filter(Boolean).forEach((item) => variants.add(item));
+
+  if (normalized.endsWith("а")) {
+    const base = normalized.slice(0, -1);
+    addAll([`${base}и`, `${base}і`, `${base}у`, `${base}ою`, `${base}е`, `${base}о`, `${base}ої`]);
+    return variants;
+  }
+
+  if (normalized.endsWith("я")) {
+    const base = normalized.slice(0, -1);
+    addAll([`${base}і`, `${base}ю`, `${base}єю`, `${base}е`, `${base}ї`]);
+    return variants;
+  }
+
+  if (normalized.endsWith("й")) {
+    const base = normalized.slice(0, -1);
+    addAll([`${base}я`, `${base}ю`, `${base}єм`, `${base}єві`, `${base}ї`, `${base}є`]);
+    return variants;
+  }
+
+  if (normalized.endsWith("ь")) {
+    const base = normalized.slice(0, -1);
+    addAll([`${base}я`, `${base}ю`, `${base}ем`, `${base}єві`, `${base}і`]);
+    return variants;
+  }
+
+  if (normalized.endsWith("ий") || normalized.endsWith("ій")) {
+    const base = normalized.slice(0, -2);
+    addAll([`${base}ого`, `${base}ому`, `${base}им`, `${base}ім`, `${base}ій`]);
+    return variants;
+  }
+
+  addAll([
+    `${normalized}а`,
+    `${normalized}у`,
+    `${normalized}ом`,
+    `${normalized}е`,
+    `${normalized}і`,
+    `${normalized}ові`,
+    `${normalized}еві`
+  ]);
+  return variants;
+}
+
+function expandLocationKeyVariants(key) {
+  const normalized = normalizeText(key);
+  if (!normalized) return [];
+
+  const variants = new Set([normalized]);
+  const words = normalized.split(" ").filter(Boolean);
+  words.forEach((word, index) => {
+    inflectLocationWord(word).forEach((form) => {
+      const next = [...words];
+      next[index] = form;
+      variants.add(next.join(" "));
+    });
+  });
+  return Array.from(variants);
+}
+
 function containsWholeKey(text, key) {
   const escaped = escapeRegex(normalizeText(key));
   const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`, "u");
@@ -739,23 +806,24 @@ function extractLocationHits(text) {
       if (!hasContext) return;
     }
     hint.keys.forEach((key) => {
-      if (!containsWholeKey(lower, key)) return;
-      const keyNorm = normalizeText(key);
-      const idx = lower.indexOf(keyNorm);
-      if (idx === -1) return;
-      const before = lower.slice(Math.max(0, idx - 30), idx);
-      const countMatch = before.match(
-        /(\\+?\\d{1,2})\\s*(?:x|шт\\.?|од\\.?|штук)?\\s*(?:повз|біля|поблизу|над|у напрямку|в направлении|в районі|в р-ні|в р-не|курс на|в сторону|по|через)?\\s*$/
-      );
-      const count = countMatch ? Number(String(countMatch[1]).replace("+", "")) : null;
-      hits.push({
-        label: hint.name,
-        lat: hint.lat,
-        lng: hint.lng,
-        exact: false,
-        location_id: hint.id || null,
-        count: Number.isFinite(count) ? count : null,
-        index: idx
+      expandLocationKeyVariants(key).forEach((variant) => {
+        if (!containsWholeKey(lower, variant)) return;
+        const idx = lower.indexOf(variant);
+        if (idx === -1) return;
+        const before = lower.slice(Math.max(0, idx - 30), idx);
+        const countMatch = before.match(
+          /(\\+?\\d{1,2})\\s*(?:x|шт\\.?|од\\.?|штук)?\\s*(?:повз|біля|поблизу|над|у напрямку|в направлении|в районі|в р-ні|в р-не|курс на|в сторону|по|через)?\\s*$/
+        );
+        const count = countMatch ? Number(String(countMatch[1]).replace("+", "")) : null;
+        hits.push({
+          label: hint.name,
+          lat: hint.lat,
+          lng: hint.lng,
+          exact: false,
+          location_id: hint.id || null,
+          count: Number.isFinite(count) ? count : null,
+          index: idx
+        });
       });
     });
   });

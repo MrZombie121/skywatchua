@@ -424,6 +424,29 @@ textarea {
   min-height: 0;
 }
 
+.map-notice {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 700;
+  transform: translateX(-50%);
+  max-width: min(640px, calc(100% - 32px));
+  padding: 10px 14px;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: 14px;
+  background: rgba(25, 16, 4, 0.9);
+  color: #fde68a;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: center;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+}
+
+.map-notice[hidden] {
+  display: none;
+}
+
 #radar-map {
   width: 100%;
   height: 520px;
