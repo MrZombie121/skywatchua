@@ -67,7 +67,15 @@ function parseSourceWeights(raw) {
 const sourceWeights = parseSourceWeights(process.env.TG_SOURCE_WEIGHTS || "");
 const EVENTS_CACHE_KEY = "events_cache_v1";
 const EVENTS_CACHE_UPDATED_AT_KEY = "events_cache_updated_at_v1";
+const ANNOUNCED_EVENT_IDS_KEY = "announced_event_ids_v1";
 const USER_SESSION_DAYS = Number(process.env.USER_SESSION_DAYS || 30);
+const announceBotToken = String(process.env.TG_ANNOUNCE_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "").trim();
+const announceChatId = String(process.env.TG_ANNOUNCE_CHAT_ID || "@airwatcher").trim();
+const announceEnabled = /^(1|true|yes|on)$/i.test(String(process.env.TG_ANNOUNCE_ENABLED || "true"));
+const announceMaxAgeMs = Math.max(60 * 1000, Number(process.env.TG_ANNOUNCE_MAX_AGE_MS || 10 * 60 * 1000));
+const announceRecentLimit = Math.max(100, Number(process.env.TG_ANNOUNCE_RECENT_LIMIT || 1000));
+const announcePointRadiusKm = Math.max(1, Number(process.env.TG_ANNOUNCE_POINT_RADIUS_KM || 18));
+const announceLocationRadiusKm = Math.max(1, Number(process.env.TG_ANNOUNCE_LOCATION_RADIUS_KM || 35));
 
 const state = {
   lastFetch: 0,
@@ -139,6 +147,144 @@ function haversineKm(a, b) {
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function normalizeAnnouncedIds(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(-announceRecentLimit);
+}
+
+async function readAnnouncedEventIds() {
+  try {
+    const raw = await getSetting(ANNOUNCED_EVENT_IDS_KEY, "[]");
+    return normalizeAnnouncedIds(JSON.parse(raw));
+  } catch {
+    return [];
+  }
+}
+
+async function writeAnnouncedEventIds(ids) {
+  await setSetting(ANNOUNCED_EVENT_IDS_KEY, JSON.stringify(normalizeAnnouncedIds(ids)));
+}
+
+function announcementTypeLabel(event) {
+  const type = String(event?.type || "").toLowerCase();
+  if (type === "missile") return "Ракета";
+  if (type === "shahed") return "БпЛА";
+  if (type === "kab") return "КАБ";
+  if (type === "airplane") return "Літак";
+  if (type === "recon") return "Розвідка";
+  return null;
+}
+
+function formatAnnouncementLocation(location, byId) {
+  if (!location) return null;
+  if (location.location_type === "district") {
+    const parent = location.parent_location_id ? byId.get(location.parent_location_id) : null;
+    return parent ? `${location.name} м. ${parent.name}` : location.name;
+  }
+  return location.name || null;
+}
+
+async function resolveAnnouncementLocation(event) {
+  const lat = Number(event?.lat);
+  const lng = Number(event?.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  const locations = await listAdminLocations();
+  if (!Array.isArray(locations) || locations.length === 0) return null;
+  const byId = new Map(locations.map((item) => [item.id, item]));
+  const type = String(event?.type || "").toLowerCase();
+
+  let nearestPoint = null;
+  for (const location of locations) {
+    const points = Array.isArray(location.points) ? location.points : [];
+    for (const point of points) {
+      const pointTypes = Array.isArray(point.types) ? point.types.map((item) => String(item).toLowerCase()) : [];
+      if (pointTypes.length > 0 && !pointTypes.includes(type)) continue;
+      const distanceKm = haversineKm({ lat, lng }, { lat: Number(point.lat), lng: Number(point.lng) });
+      if (!Number.isFinite(distanceKm)) continue;
+      if (!nearestPoint || distanceKm < nearestPoint.distanceKm) {
+        nearestPoint = { location, distanceKm };
+      }
+    }
+  }
+
+  if (nearestPoint && nearestPoint.distanceKm <= announcePointRadiusKm) {
+    return formatAnnouncementLocation(nearestPoint.location, byId);
+  }
+
+  let nearestLocation = null;
+  for (const location of locations) {
+    const distanceKm = haversineKm({ lat, lng }, { lat: Number(location.lat), lng: Number(location.lng) });
+    if (!Number.isFinite(distanceKm)) continue;
+    if (!nearestLocation || distanceKm < nearestLocation.distanceKm) {
+      nearestLocation = { location, distanceKm };
+    }
+  }
+
+  if (nearestLocation && nearestLocation.distanceKm <= announceLocationRadiusKm) {
+    return formatAnnouncementLocation(nearestLocation.location, byId);
+  }
+
+  return String(event?.target_label || event?.comment || "").trim() || null;
+}
+
+async function sendTelegramAnnouncement(text) {
+  if (!announceEnabled || !announceBotToken || !announceChatId || !text) return false;
+  const response = await fetch(`https://api.telegram.org/bot${announceBotToken}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: announceChatId,
+      text,
+      disable_web_page_preview: true
+    })
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`telegram_send_failed:${response.status}:${body}`);
+  }
+  return true;
+}
+
+async function announceNewEvents(events, previousEvents = []) {
+  if (!announceEnabled) return;
+
+  const previousIds = new Set((Array.isArray(previousEvents) ? previousEvents : []).map((item) => String(item?.id || "")));
+  const announcedIds = await readAnnouncedEventIds();
+  const announcedSet = new Set(announcedIds);
+  const now = Date.now();
+  const candidates = (Array.isArray(events) ? events : []).filter((event) => {
+    const id = String(event?.id || "").trim();
+    if (!id || previousIds.has(id) || announcedSet.has(id)) return false;
+    if (event?.is_test) return false;
+    const ts = Date.parse(event?.timestamp);
+    return Number.isFinite(ts) && now - ts <= announceMaxAgeMs;
+  });
+
+  if (candidates.length === 0) return;
+
+  const announcedNow = [];
+  for (const event of candidates) {
+    const typeLabel = announcementTypeLabel(event);
+    if (!typeLabel) continue;
+    const locationLabel = await resolveAnnouncementLocation(event);
+    if (!locationLabel) continue;
+    try {
+      await sendTelegramAnnouncement(`${typeLabel} на ${locationLabel}`);
+      announcedNow.push(String(event.id));
+    } catch (error) {
+      console.warn("Failed to announce event", event?.id, error?.message || error);
+    }
+  }
+
+  if (announcedNow.length > 0) {
+    await writeAnnouncedEventIds([...announcedIds, ...announcedNow]);
+  }
 }
 
 function withConfidence(event) {
@@ -352,6 +498,7 @@ async function buildEventsPayload() {
   }
 
   async function fetchFreshPayload() {
+    const previousCache = [...state.cache];
     const tgPayload = await loadTelegramEvents();
     let alarmState = tgPayload.alarms || [];
     let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
@@ -413,6 +560,7 @@ async function buildEventsPayload() {
     state.cache = combined;
     state.lastFetch = nowTs;
     await persistEventCacheToStore(combined, nowTs);
+    await announceNewEvents(combined, previousCache);
 
     return {
       events: combined,
