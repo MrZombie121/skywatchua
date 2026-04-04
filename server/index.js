@@ -71,6 +71,7 @@ const EVENTS_CACHE_KEY = "events_cache_v1";
 const EVENTS_CACHE_UPDATED_AT_KEY = "events_cache_updated_at_v1";
 const ANNOUNCED_EVENT_IDS_KEY = "announced_event_ids_v1";
 const USER_SESSION_DAYS = Number(process.env.USER_SESSION_DAYS || 30);
+const backgroundRefreshMs = Math.max(5000, Number(process.env.BACKGROUND_REFRESH_MS || 15000));
 const announceBotToken = String(process.env.TG_ANNOUNCE_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const announceChatId = String(process.env.TG_ANNOUNCE_CHAT_ID || "@airwatcher").trim();
 const announceEnabled = /^(1|true|yes|on)$/i.test(String(process.env.TG_ANNOUNCE_ENABLED || "true"));
@@ -87,7 +88,8 @@ if (announceEnabled && (!announceBotToken || !announceChatId)) {
 const state = {
   lastFetch: 0,
   cache: [],
-  inFlight: null
+  inFlight: null,
+  backgroundWarmRunning: false
 };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -823,6 +825,18 @@ async function sendEmbedEvents(_req, res) {
   }
 }
 
+async function warmEventCacheInBackground() {
+  if (state.backgroundWarmRunning) return;
+  state.backgroundWarmRunning = true;
+  try {
+    await buildEventsPayload();
+  } catch (error) {
+    console.warn("Background event warm failed", error?.message || error);
+  } finally {
+    state.backgroundWarmRunning = false;
+  }
+}
+
 app.get("/api/meta", sendMeta);
 app.get("/api/v1/meta", sendMeta);
 app.get("/api/status", sendStatus);
@@ -1114,3 +1128,10 @@ app.listen(port, () => {
 hydrateEventCacheFromStore().catch((error) => {
   console.warn("Initial event cache hydrate failed", error?.message || error);
 });
+
+setTimeout(() => {
+  warmEventCacheInBackground().catch(() => {});
+  setInterval(() => {
+    warmEventCacheInBackground().catch(() => {});
+  }, backgroundRefreshMs);
+}, 1500);
