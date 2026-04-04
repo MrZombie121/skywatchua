@@ -210,6 +210,10 @@ function extractAnnouncementCommentLabel(event) {
   return match?.[1]?.trim() || null;
 }
 
+function extractEventMarkerLabel(event) {
+  return String(event?.marker_label || "").trim() || extractAnnouncementCommentLabel(event) || String(event?.target_label || "").trim() || null;
+}
+
 function matchAnnouncementLocationByLabel(label, locations, byId) {
   const normalizedLabel = normalizeAnnouncementLookup(label);
   if (!normalizedLabel) return null;
@@ -238,7 +242,7 @@ async function resolveAnnouncementLocation(event) {
   if (!Array.isArray(locations) || locations.length === 0) return null;
   const byId = new Map(locations.map((item) => [item.id, item]));
   const type = String(event?.type || "").toLowerCase();
-  const explicitLabel = extractAnnouncementCommentLabel(event) || String(event?.target_label || "").trim() || null;
+  const explicitLabel = extractEventMarkerLabel(event);
 
   if (explicitLabel) {
     return matchAnnouncementLocationByLabel(explicitLabel, locations, byId);

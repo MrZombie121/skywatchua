@@ -1185,7 +1185,12 @@ export function parseMessageToEvents(text, meta = {}) {
   const sea = pickSea(baseText);
   const hasRouteGuidance = hasRouteCue(baseText);
   const guidedTargets = extractGuidedTargets(baseText, locationHitsRaw);
-  const locationHits = guidedTargets.length > 0 ? guidedTargets : locationHitsRaw;
+  const transitTargets = extractTransitTargets(baseText, locationHitsRaw);
+  const locationHits = transitTargets.length > 0
+    ? transitTargets
+    : guidedTargets.length > 0
+      ? guidedTargets
+      : locationHitsRaw;
 
   let type = pickTypeWithContext(baseText, mergedText, meta);
   const hasCount = locationHits.some((hit) => Number.isFinite(hit.count) && hit.count > 0);
@@ -1288,9 +1293,14 @@ export function parseMessageToEvents(text, meta = {}) {
     const targetLat = target.lat;
     const targetLng = target.lng;
     const targetLabel = target.label;
-    let lat = target.lat;
-    let lng = target.lng;
-    let label = target.label;
+    const explicitSpawnLat = Number(target.spawn_lat);
+    const explicitSpawnLng = Number(target.spawn_lng);
+    const hasExplicitSpawn =
+      Number.isFinite(explicitSpawnLat) &&
+      Number.isFinite(explicitSpawnLng);
+    let lat = hasExplicitSpawn ? explicitSpawnLat : target.lat;
+    let lng = hasExplicitSpawn ? explicitSpawnLng : target.lng;
+    let label = hasExplicitSpawn ? String(target.spawn_label || target.label) : target.label;
 
     if (isTlk && locationHits.length === 0) {
       const center = regionCenters.kharkivska;
@@ -1337,8 +1347,11 @@ export function parseMessageToEvents(text, meta = {}) {
         : (sea || forceSea)
           ? "sea_black"
           : resolvedRegionId;
-    const customPointPool = !target.exact ? getCustomPointsForLocation(target.location_id, type) : [];
-    let spawnCandidate = customPointPool.length > 0
+    const customPointLocationId = target.spawn_location_id || target.location_id || null;
+    const customPointPool = !target.exact ? getCustomPointsForLocation(customPointLocationId, type) : [];
+    let spawnCandidate = hasExplicitSpawn
+      ? null
+      : customPointPool.length > 0
       ? pickSpawnPoint({
         regionId: null,
         type,
@@ -1369,7 +1382,7 @@ export function parseMessageToEvents(text, meta = {}) {
       !target.exact &&
       Number.isFinite(targetLat) &&
       Number.isFinite(targetLng) &&
-      (hasRouteGuidance || meta.allow_bearing_from_base === true || sea || forceSea);
+      (hasRouteGuidance || hasExplicitSpawn || meta.allow_bearing_from_base === true || sea || forceSea);
     const fallbackDirection = !Number.isFinite(direction) &&
       Number.isFinite(targetLat) &&
       Number.isFinite(targetLng) &&
@@ -1402,6 +1415,8 @@ export function parseMessageToEvents(text, meta = {}) {
       hasTrackKey: Boolean(trackKey),
       contextCount: contextTexts.length
     });
+    const markerLabel = String(label || "").trim() || String(targetLabel || "").trim() || null;
+    const markerLocationId = customPointLocationId || null;
 
     return {
       id: idSeed,
@@ -1415,12 +1430,22 @@ export function parseMessageToEvents(text, meta = {}) {
       is_test: isTest,
       confidence,
       marker_variant: markerVariant,
+      marker_action: "place",
+      marker_label: markerLabel,
+      marker_location_id: markerLocationId,
       group_count_min: effectiveCount?.min || null,
       group_count_max: effectiveCount?.max || null,
       target_lat: shouldTrackToTarget ? Number(targetLat.toFixed(4)) : null,
       target_lng: shouldTrackToTarget ? Number(targetLng.toFixed(4)) : null,
       target_label: shouldTrackToTarget ? targetLabel : null,
       target_location_id: shouldTrackToTarget ? (target.location_id || null) : null,
+      bot_meta: {
+        action: "place_marker",
+        marker_label: markerLabel,
+        marker_location_id: markerLocationId,
+        target_label: shouldTrackToTarget ? targetLabel : null,
+        track_target: shouldTrackToTarget
+      },
       region_id: resolvedRegionId,
       raw_text: meta.raw_text || text
     };

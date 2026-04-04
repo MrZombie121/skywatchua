@@ -351,10 +351,14 @@ function normalizeEvent(raw, sourceId) {
     confidence: Number(raw.confidence ?? 0.5),
     group_count_min: Number(raw.group_count_min ?? 0),
     group_count_max: Number(raw.group_count_max ?? 0),
+    marker_action: raw.marker_action ?? null,
+    marker_label: raw.marker_label ?? "",
+    marker_location_id: raw.marker_location_id ?? "",
     target_lat: Number(raw.target_lat ?? raw.target?.lat ?? NaN),
     target_lng: Number(raw.target_lng ?? raw.target?.lng ?? NaN),
     target_label: raw.target_label ?? raw.target?.label ?? "",
     target_location_id: raw.target_location_id ?? raw.target?.location_id ?? "",
+    bot_meta: raw.bot_meta ?? null,
     evidence_count: Number(raw.evidence_count ?? 1),
     evidence_sources: Array.isArray(raw.evidence_sources) ? raw.evidence_sources : []
   };
