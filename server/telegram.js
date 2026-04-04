@@ -16,7 +16,7 @@ const testChannels = new Set(
 const limit = Number(process.env.TG_LIMIT || 100);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 10);
-const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 2));
+const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 8));
 const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 4000));
 const clientStartTimeoutMs = Math.max(1000, Number(process.env.TG_CLIENT_START_TIMEOUT_MS || 8000));
 const disabledChannels = new Set();
@@ -239,34 +239,45 @@ export async function loadTelegramEvents() {
   }
 
   try {
-    for (let start = 0; start < channels.length; start += channelConcurrency) {
-      const batch = channels.slice(start, start + channelConcurrency);
-      const results = await Promise.all(batch.map(readChannel));
-      for (const { channel, ordered } of results) {
-        channelMessages.set(channel, ordered);
-        ordered.forEach((msg) => {
-          allMessages.push({ channel, msg });
+    const results = [];
+    let cursor = 0;
+
+    async function worker() {
+      while (cursor < channels.length) {
+        const index = cursor;
+        cursor += 1;
+        results[index] = await readChannel(channels[index]);
+      }
+    }
+
+    await Promise.all(
+      Array.from({ length: Math.min(channelConcurrency, channels.length) }, () => worker())
+    );
+
+    for (const { channel, ordered } of results.filter(Boolean)) {
+      channelMessages.set(channel, ordered);
+      ordered.forEach((msg) => {
+        allMessages.push({ channel, msg });
+      });
+      for (const msg of ordered) {
+        if (!msg.message) continue;
+        const signal = extractAlarmSignals(msg.message);
+        if (!signal) continue;
+        alarmsUpdated = true;
+        signal.regions.forEach((region) => {
+          if (signal.status === "off") {
+            alarmSet.delete(region);
+          } else {
+            alarmSet.add(region);
+          }
         });
-        for (const msg of ordered) {
-          if (!msg.message) continue;
-          const signal = extractAlarmSignals(msg.message);
-          if (!signal) continue;
-          alarmsUpdated = true;
-          signal.regions.forEach((region) => {
-            if (signal.status === "off") {
-              alarmSet.delete(region);
-            } else {
-              alarmSet.add(region);
-            }
-          });
-          (signal.districts || []).forEach((district) => {
-            if (signal.status === "off") {
-              districtAlarmMap.delete(district.id);
-            } else {
-              districtAlarmMap.set(district.id, district);
-            }
-          });
-        }
+        (signal.districts || []).forEach((district) => {
+          if (signal.status === "off") {
+            districtAlarmMap.delete(district.id);
+          } else {
+            districtAlarmMap.set(district.id, district);
+          }
+        });
       }
     }
 

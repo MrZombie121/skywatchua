@@ -570,6 +570,8 @@ async function sendStatus(_req, res) {
 }
 
 async function buildEventsPayload() {
+  const coldStartResponseTimeoutMs = Math.max(apiResponseTimeoutMs * 4, 15000);
+
   async function readStoredAlarmState() {
     const stored = await getSetting("alarms_state", "[]");
     const storedDistricts = await getSetting("district_alarms_state", "[]");
@@ -596,7 +598,11 @@ async function buildEventsPayload() {
 
   async function fetchFreshPayload() {
     const previousCache = [...state.cache];
-    const tgPayload = await loadTelegramEvents();
+    const tgPromise = loadTelegramEvents();
+    const rssPromise = loadRssEvents();
+    const openPromise = loadOpenEvents();
+    const storedTestsPromise = listTestEvents();
+    const tgPayload = await tgPromise;
     let alarmState = tgPayload.alarms || [];
     let districtAlarmState = Array.isArray(tgPayload.district_alarms) ? tgPayload.district_alarms : [];
     alarmState = applyForcedAlarms(alarmState);
@@ -614,8 +620,11 @@ async function buildEventsPayload() {
       }
     }
 
-    const [rssEvents, openEvents] = await Promise.all([loadRssEvents(), loadOpenEvents()]);
-    const storedTests = await listTestEvents();
+    const [rssEvents, openEvents, storedTests] = await Promise.all([
+      rssPromise,
+      openPromise,
+      storedTestsPromise
+    ]);
     const testEvents = storedTests
       .flatMap((item) =>
         parseMessageToEvents(item.message, {
@@ -683,7 +692,7 @@ async function buildEventsPayload() {
     };
   }
 
-  async function waitForFreshPayloadOrFallback(maintenance) {
+  async function waitForFreshPayloadOrFallback(maintenance, timeoutMs = apiResponseTimeoutMs) {
     if (!state.inFlight) {
       state.inFlight = fetchFreshPayload().finally(() => {
         state.inFlight = null;
@@ -693,7 +702,7 @@ async function buildEventsPayload() {
     const timeout = new Promise((resolve) => {
       setTimeout(async () => {
         resolve(await buildFastFallbackPayload(maintenance));
-      }, apiResponseTimeoutMs);
+      }, timeoutMs);
     });
 
     return Promise.race([state.inFlight, timeout]);
@@ -748,7 +757,7 @@ async function buildEventsPayload() {
       };
     }
 
-    const payload = await waitForFreshPayloadOrFallback(maintenance);
+    const payload = await waitForFreshPayloadOrFallback(maintenance, coldStartResponseTimeoutMs);
     return payload;
   } catch (error) {
     console.error("Failed to load events", error);
