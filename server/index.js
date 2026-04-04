@@ -94,10 +94,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicPath = path.resolve(__dirname, "..", "public");
 const distPath = path.resolve(__dirname, "..", "dist");
+const rootIndexPath = path.resolve(__dirname, "..", "index.html");
+const srcPath = path.resolve(__dirname, "..", "src");
+const distIndexPath = path.join(distPath, "index.html");
+const hasDistBuild = fs.existsSync(distIndexPath);
 
 app.use(express.json({ limit: "200kb" }));
 app.use(express.static(publicPath));
-app.use(express.static(distPath));
+if (hasDistBuild) {
+  app.use(express.static(distPath));
+} else {
+  app.use("/src", express.static(srcPath));
+}
 
 function readCookie(req, cookieName) {
   const cookie = req.headers.cookie || "";
@@ -1076,7 +1084,7 @@ app.get("/embed/map", (_req, res) => {
 });
 
 app.get("*", (_req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
+  res.sendFile(hasDistBuild ? distIndexPath : rootIndexPath);
 });
 
 app.listen(port, () => {
