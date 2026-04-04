@@ -604,7 +604,7 @@ async function sendStatus(_req, res) {
 }
 
 async function buildEventsPayload() {
-  const coldStartResponseTimeoutMs = Math.max(apiResponseTimeoutMs * 4, 15000);
+  const coldStartResponseTimeoutMs = Math.max(apiResponseTimeoutMs, 4000);
 
   async function readStoredAlarmState() {
     const stored = await getSetting("alarms_state", "[]");

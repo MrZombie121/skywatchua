@@ -12,7 +12,7 @@ function normalizeChannel(value) {
   return text.startsWith("@") ? text : `@${text}`;
 }
 
-const presetTelegramChannels = [
+const coreTelegramChannels = [
   "@kpszsu",
   "@air_alert_ua",
   "@war_monitor",
@@ -23,7 +23,10 @@ const presetTelegramChannels = [
   "@kyivoperat",
   "@ChernigivOperative",
   "@dnipro_alerts",
-  "@onemaster_kr",
+  "@onemaster_kr"
+];
+
+const extendedTelegramChannels = [
   "@povitryanatrivogaaa",
   "@Ukrainian_Intelligence",
   "@kudy_letyt",
@@ -43,7 +46,9 @@ const presetTelegramChannels = [
 export function getTelegramChannels() {
   const fromEnv = toList(process.env.TG_CHANNELS).map(normalizeChannel).filter(Boolean);
   const usePresets = String(process.env.TG_USE_PRESET_CHANNELS || "true").toLowerCase() !== "false";
-  const combined = usePresets ? [...presetTelegramChannels, ...fromEnv] : fromEnv;
+  const useExtended = String(process.env.TG_USE_EXTENDED_CHANNELS || "false").toLowerCase() === "true";
+  const presetChannels = useExtended ? [...coreTelegramChannels, ...extendedTelegramChannels] : coreTelegramChannels;
+  const combined = usePresets ? [...presetChannels, ...fromEnv] : fromEnv;
   return Array.from(new Set(combined.map(normalizeChannel).filter(Boolean)));
 }
 

@@ -13,11 +13,11 @@ const testChannels = new Set(
     .map((item) => item.trim().toLowerCase().replace(/^@/, ""))
     .filter(Boolean)
 );
-const limit = Number(process.env.TG_LIMIT || 35);
+const limit = Number(process.env.TG_LIMIT || 25);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
-const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 6);
-const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 12));
-const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 2500));
+const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 4);
+const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 6));
+const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 6000));
 const clientStartTimeoutMs = Math.max(1000, Number(process.env.TG_CLIENT_START_TIMEOUT_MS || 8000));
 const disabledChannels = new Set();
 
