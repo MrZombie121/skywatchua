@@ -53,6 +53,78 @@ const typeRules = [
   }
 ];
 
+const directTypeMatchers = [
+  { type: "recon", pattern: /\b(орлан|supercam|zala|розвіддрон|разведдрон|розвідник|разведчик)\b/u },
+  { type: "shahed", pattern: /\b(shahed|шахед|шахеди|герань|герани|дрон|дрони|бпла|uav)\b/u },
+  { type: "missile", pattern: /\b(ракета|ракети|ракет|крылат|крилат|баліст|баллист|ballistic|missile)\b/u },
+  { type: "kab", pattern: /\b(kab|каб|каби)\b/u },
+  { type: "airplane", pattern: /\b(авіація|авиация|літак|самол[её]т|борти|борт)\b/u }
+];
+
+const directTrackKeywords = [
+  "шахед",
+  "шахеди",
+  "дрон",
+  "дрони",
+  "бпла",
+  "ракета",
+  "ракети",
+  "літак",
+  "авіація",
+  "авиация",
+  "курс на",
+  "в напрямку",
+  "у напрямку",
+  "в сторону",
+  "летить",
+  "летят",
+  "рухається",
+  "движется",
+  "над ",
+  "через ",
+  "повз ",
+  "біля ",
+  "район"
+];
+
+const directRegionKeywords = new Map([
+  ["kyiv", ["київ", "kyiv", "kiev"]],
+  ["kyivska", ["київська", "киевская", "київщина"]],
+  ["kharkivska", ["харківська", "харьковская", "харківщина", "харьковщина"]],
+  ["odeska", ["одеська", "одесская", "одеса", "одесса", "одещина"]],
+  ["dniprovska", ["дніпропетровська", "днепропетровская", "дніпро", "днепр"]],
+  ["sumyska", ["сумська", "сумская", "суми", "сумы"]],
+  ["chernihivska", ["чернігівська", "черниговская", "чернігівщина", "черниговщина"]],
+  ["zaporizka", ["запорізька", "запорожская", "запоріжжя", "запорожье"]],
+  ["donetska", ["донецька", "донецкая"]],
+  ["luhanska", ["луганська", "луганская"]],
+  ["khersonska", ["херсонська", "херсонская"]],
+  ["mykolaivska", ["миколаївська", "николаевская", "миколаївщина", "николаевщина"]],
+  ["lvivska", ["львівська", "львовская", "львівщина", "львовщина"]],
+  ["poltavska", ["полтавська", "полтавская"]],
+  ["crimea", ["крим", "крым"]],
+  ["sevastopol", ["севастополь"]]
+]);
+
+const regionDisplayNames = {
+  kyiv: "Київ",
+  kyivska: "Київська область",
+  kharkivska: "Харківська область",
+  odeska: "Одеська область",
+  dniprovska: "Дніпропетровська область",
+  sumyska: "Сумська область",
+  chernihivska: "Чернігівська область",
+  zaporizka: "Запорізька область",
+  donetska: "Донецька область",
+  luhanska: "Луганська область",
+  khersonska: "Херсонська область",
+  mykolaivska: "Миколаївська область",
+  lvivska: "Львівська область",
+  poltavska: "Полтавська область",
+  crimea: "АР Крим",
+  sevastopol: "Севастополь"
+};
+
 const locationHints = [
   { name: "Київ", keys: ["kyiv", "київ", "kiev"], lat: 50.45, lng: 30.52 },
   { name: "Харків", keys: ["kharkiv", "харків"], lat: 49.98, lng: 36.25 },
@@ -297,6 +369,11 @@ const spawnPoints = loadSpawnPoints();
 
 function pickType(text) {
   const lower = normalizeText(text);
+  for (const matcher of directTypeMatchers) {
+    if (matcher.pattern.test(lower)) {
+      return matcher.type;
+    }
+  }
   if (lower.includes("йде на") && (lower.includes("район") || lower.includes("р-н"))) {
     return "shahed";
   }
@@ -658,12 +735,17 @@ function parseDirection(text) {
 
 function resolveRegionId(text, label) {
   const lower = normalizeText(text);
+  const labelLower = normalizeText(label);
+  for (const [regionId, keys] of directRegionKeywords.entries()) {
+    if (keys.some((key) => lower.includes(key) || labelLower.includes(key))) {
+      return regionId;
+    }
+  }
   for (const region of alarmRegions) {
     if (region.keys.some((key) => lower.includes(key))) {
       return region.id;
     }
   }
-  const labelLower = normalizeText(label);
   for (const region of alarmRegions) {
     if (region.keys.some((key) => labelLower.includes(key))) {
       return region.id;
@@ -849,6 +931,9 @@ function extractLocationHits(text) {
 
 function hasTrackContext(text) {
   const lower = normalizeText(text);
+  if (directTrackKeywords.some((key) => lower.includes(key))) {
+    return true;
+  }
   return [
     "бпла",
     "бпл",
@@ -1262,7 +1347,12 @@ export function parseMessageToEvents(text, meta = {}) {
   if (isTlk) {
     regionId = "kharkivska";
   }
-  const regionCenter = regionId && regionCenters[regionId] ? regionCenters[regionId] : null;
+  const regionCenter = regionId && regionCenters[regionId]
+    ? {
+      ...regionCenters[regionId],
+      name: regionDisplayNames[regionId] || regionCenters[regionId].name
+    }
+    : null;
 
   if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !hasBasePoint && !(isTlk && type === "shahed")) {
     return [];
