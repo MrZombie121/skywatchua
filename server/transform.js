@@ -1200,6 +1200,9 @@ export function parseMessageToEvents(text, meta = {}) {
   if (!type && locationHits.length > 0 && isLooseTrackSource(sourceLower)) {
     type = "shahed";
   }
+  if (!type && (meta.preferred_region_id || meta.region_id) && (hasTrackContext(trackContextText) || isLooseTrackSource(sourceLower))) {
+    type = "shahed";
+  }
   if (!type && shouldInferTrackFromSea({
     sea,
     forceSea: false,
@@ -1244,6 +1247,12 @@ export function parseMessageToEvents(text, meta = {}) {
     Number.isFinite(Number(meta.base_lng));
 
   let regionId = resolveRegionId(text, "");
+  if (!regionId && meta.preferred_region_id) {
+    regionId = String(meta.preferred_region_id);
+  }
+  if (!regionId && meta.region_id) {
+    regionId = String(meta.region_id);
+  }
   if (!regionId && (sourceLower.includes("xydessa_live") || sourceLower.includes("pivdenmedia"))) {
     regionId = "odeska";
   }
@@ -1253,7 +1262,7 @@ export function parseMessageToEvents(text, meta = {}) {
   if (isTlk) {
     regionId = "kharkivska";
   }
-  const regionCenter = isTlk && regionId ? regionCenters[regionId] : null;
+  const regionCenter = regionId && regionCenters[regionId] ? regionCenters[regionId] : null;
 
   if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !hasBasePoint && !(isTlk && type === "shahed")) {
     return [];

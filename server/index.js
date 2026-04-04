@@ -222,6 +222,22 @@ function extractEventMarkerLabel(event) {
   return String(event?.marker_label || "").trim() || extractAnnouncementCommentLabel(event) || String(event?.target_label || "").trim() || null;
 }
 
+function buildAnnouncementText(event, resolvedLocationLabel) {
+  const typeLabel = announcementTypeLabel(event);
+  if (!typeLabel || !resolvedLocationLabel) return null;
+
+  const markerLabel = extractEventMarkerLabel(event);
+  const targetLabel = String(event?.target_label || "").trim() || null;
+
+  if (markerLabel && targetLabel && markerLabel !== targetLabel) {
+    return `${typeLabel} з ${markerLabel} в напрямку ${targetLabel}`;
+  }
+  if (targetLabel) {
+    return `${typeLabel} на ${targetLabel}`;
+  }
+  return `${typeLabel} на ${resolvedLocationLabel}`;
+}
+
 function matchAnnouncementLocationByLabel(label, locations, byId) {
   const normalizedLabel = normalizeAnnouncementLookup(label);
   if (!normalizedLabel) return null;
@@ -333,7 +349,9 @@ async function announceSingleEvent(event, options = {}) {
   const locationLabel = await resolveAnnouncementLocation(event);
   if (!locationLabel) return false;
 
-  await sendTelegramAnnouncement(`${typeLabel} на ${locationLabel}`);
+  const announcementText = buildAnnouncementText(event, locationLabel);
+  if (!announcementText) return false;
+  await sendTelegramAnnouncement(announcementText);
   await writeAnnouncedEventIds([...announcedIds, String(event.id)]);
   return true;
 }
@@ -358,7 +376,9 @@ async function announceNewEvents(events, previousEvents = []) {
     const locationLabel = await resolveAnnouncementLocation(event);
     if (!locationLabel) continue;
     try {
-      await sendTelegramAnnouncement(`${typeLabel} на ${locationLabel}`);
+      const announcementText = buildAnnouncementText(event, locationLabel);
+      if (!announcementText) continue;
+      await sendTelegramAnnouncement(announcementText);
       announcedNow.push(String(event.id));
     } catch (error) {
       console.warn("Failed to announce event", event?.id, error?.message || error);

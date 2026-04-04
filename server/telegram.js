@@ -367,6 +367,7 @@ export async function loadTelegramEvents() {
         timestamp: msg.date * 1000,
         raw_text: msg.message,
         is_test: isTestChannel,
+        preferred_region_id: regionPreference,
         context_texts: contextTexts,
         has_reply: replyContext.hasReply,
         base_lat: baseEvent?.lat,
