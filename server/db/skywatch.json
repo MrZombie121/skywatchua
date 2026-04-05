@@ -9,7 +9,7 @@
   "admins": [
     {
       "username": "adminka",
-      "password_hash": "9380b82528e67796ef5cd6cc090e9ab9:74f4cb6bfb110f4721615a156921fafe14edeb3f429c613faeebaa291454bd114471f25e0ce7429230ef4ff966bf90a0b1571e5bdaabdeb252e65e58e886440b"
+      "password_hash": "d34dbdf313ff211b885bc64fc3467e65:de026145a2584aa50f46bb96ad5f9735e21b5898eaf7094aec09e813f321754cfa7a8475d52f276c3b9ce2793c31bb0dd0b85e157ccd044ef3f576a0a8974bcc"
     }
   ],
   "sessions": [

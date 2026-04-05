@@ -594,6 +594,14 @@ function sendMeta(_req, res) {
   res.json(apiMetaPayload);
 }
 
+function sendHealth(_req, res) {
+  res.json({
+    ok: true,
+    service: "skywatch-ua",
+    uptime_sec: Math.round(process.uptime())
+  });
+}
+
 async function sendStatus(_req, res) {
   const state = await getMaintenanceState();
   res.json({
@@ -604,8 +612,6 @@ async function sendStatus(_req, res) {
 }
 
 async function buildEventsPayload() {
-  const coldStartResponseTimeoutMs = Math.max(apiResponseTimeoutMs, 10000);
-
   async function readStoredAlarmState() {
     const stored = await getSetting("alarms_state", "[]");
     const storedDistricts = await getSetting("district_alarms_state", "[]");
@@ -726,22 +732,6 @@ async function buildEventsPayload() {
     };
   }
 
-  async function waitForFreshPayloadOrFallback(maintenance, timeoutMs = apiResponseTimeoutMs) {
-    if (!state.inFlight) {
-      state.inFlight = fetchFreshPayload().finally(() => {
-        state.inFlight = null;
-      });
-    }
-
-    const timeout = new Promise((resolve) => {
-      setTimeout(async () => {
-        resolve(await buildFastFallbackPayload(maintenance));
-      }, timeoutMs);
-    });
-
-    return Promise.race([state.inFlight, timeout]);
-  }
-
   try {
     await hydrateEventCacheFromStore();
     const maintenance = await getMaintenanceState();
@@ -791,8 +781,17 @@ async function buildEventsPayload() {
       };
     }
 
-    const payload = await waitForFreshPayloadOrFallback(maintenance, coldStartResponseTimeoutMs);
-    return payload;
+    if (!state.inFlight) {
+      state.inFlight = fetchFreshPayload().finally(() => {
+        state.inFlight = null;
+      });
+    }
+
+    const fallback = await buildFastFallbackPayload(maintenance);
+    return {
+      ...fallback,
+      warming: true
+    };
   } catch (error) {
     console.error("Failed to load events", error);
     throw error;
@@ -818,7 +817,8 @@ async function sendEmbedEvents(_req, res) {
       maintenance: Boolean(payload.maintenance),
       maintenance_until: payload.maintenance_until || null,
       cached: Boolean(payload.cached),
-      stale: Boolean(payload.stale)
+      stale: Boolean(payload.stale),
+      warming: Boolean(payload.warming)
     });
   } catch {
     return res.status(500).json({ error: "failed_to_load" });
@@ -839,6 +839,7 @@ async function warmEventCacheInBackground() {
 
 app.get("/api/meta", sendMeta);
 app.get("/api/v1/meta", sendMeta);
+app.get("/healthz", sendHealth);
 app.get("/api/status", sendStatus);
 app.get("/api/v1/status", sendStatus);
 app.get("/api/events", sendEvents);
@@ -1129,9 +1130,7 @@ hydrateEventCacheFromStore().catch((error) => {
   console.warn("Initial event cache hydrate failed", error?.message || error);
 });
 
-setTimeout(() => {
+warmEventCacheInBackground().catch(() => {});
+setInterval(() => {
   warmEventCacheInBackground().catch(() => {});
-  setInterval(() => {
-    warmEventCacheInBackground().catch(() => {});
-  }, backgroundRefreshMs);
-}, 1500);
+}, backgroundRefreshMs);
