@@ -102,6 +102,17 @@ const directRegionKeywords = new Map([
   ["mykolaivska", ["миколаївська", "николаевская", "миколаївщина", "николаевщина"]],
   ["lvivska", ["львівська", "львовская", "львівщина", "львовщина"]],
   ["poltavska", ["полтавська", "полтавская"]],
+  ["rivnenska", ["рівненська", "ровенская", "рівненщина", "ровенщина"]],
+  ["volynska", ["волинська", "волынская", "волинь"]],
+  ["ternopilska", ["тернопільська", "тернопольская", "тернопільщина", "тернопольщина"]],
+  ["ivano-frankivska", ["івано-франківська", "ивано-франковская", "прикарпаття"]],
+  ["chernivetska", ["чернівецька", "черновицкая", "буковина"]],
+  ["zakarpatska", ["закарпатська", "закарпатская", "закарпаття"]],
+  ["khmelnytska", ["хмельницька", "хмельницкая", "хмельниччина"]],
+  ["vinnytska", ["вінницька", "винницкая", "вінниччина", "винниччина"]],
+  ["zhytomyrska", ["житомирська", "житомирская", "житомирщина"]],
+  ["cherkaska", ["черкаська", "черкасская", "черкащина"]],
+  ["kirovohradska", ["кіровоградська", "кировоградская", "кіровоградщина", "кировоградщина", "кропивниччина"]],
   ["crimea", ["крим", "крым"]],
   ["sevastopol", ["севастополь"]]
 ]);
@@ -121,6 +132,17 @@ const regionDisplayNames = {
   mykolaivska: "Миколаївська область",
   lvivska: "Львівська область",
   poltavska: "Полтавська область",
+  rivnenska: "Рівненська область",
+  volynska: "Волинська область",
+  ternopilska: "Тернопільська область",
+  "ivano-frankivska": "Івано-Франківська область",
+  chernivetska: "Чернівецька область",
+  zakarpatska: "Закарпатська область",
+  khmelnytska: "Хмельницька область",
+  vinnytska: "Вінницька область",
+  zhytomyrska: "Житомирська область",
+  cherkaska: "Черкаська область",
+  kirovohradska: "Кіровоградська область",
   crimea: "АР Крим",
   sevastopol: "Севастополь"
 };
@@ -293,6 +315,17 @@ const regionCenters = {
   chernihivska: { lat: 51.5, lng: 31.3, name: "Чернігівська" },
   sumyska: { lat: 50.91, lng: 34.8, name: "Сумська" },
   poltavska: { lat: 49.59, lng: 34.55, name: "Полтавська" },
+  rivnenska: { lat: 50.62, lng: 26.25, name: "Рівненська" },
+  volynska: { lat: 50.75, lng: 25.34, name: "Волинська" },
+  ternopilska: { lat: 49.55, lng: 25.59, name: "Тернопільська" },
+  "ivano-frankivska": { lat: 48.92, lng: 24.71, name: "Івано-Франківська" },
+  chernivetska: { lat: 48.29, lng: 25.94, name: "Чернівецька" },
+  zakarpatska: { lat: 48.62, lng: 22.3, name: "Закарпатська" },
+  khmelnytska: { lat: 49.42, lng: 26.99, name: "Хмельницька" },
+  vinnytska: { lat: 49.23, lng: 28.47, name: "Вінницька" },
+  zhytomyrska: { lat: 50.25, lng: 28.66, name: "Житомирська" },
+  cherkaska: { lat: 49.44, lng: 32.06, name: "Черкаська" },
+  kirovohradska: { lat: 48.51, lng: 32.26, name: "Кіровоградська" },
   crimea: { lat: 45.3, lng: 34.2, name: "АР Крим" },
   sevastopol: { lat: 44.6, lng: 33.5, name: "Севастополь" }
 };
@@ -752,6 +785,29 @@ function resolveRegionId(text, label) {
     }
   }
   return null;
+}
+
+function extractRegionIds(text, label = "") {
+  const lower = normalizeText(text);
+  const labelLower = normalizeText(label);
+  const out = [];
+  const seen = new Set();
+
+  for (const [regionId, keys] of directRegionKeywords.entries()) {
+    if (!keys.some((key) => lower.includes(key) || labelLower.includes(key))) continue;
+    if (seen.has(regionId)) continue;
+    seen.add(regionId);
+    out.push(regionId);
+  }
+
+  for (const region of alarmRegions) {
+    if (!region.keys.some((key) => lower.includes(key) || labelLower.includes(key))) continue;
+    if (seen.has(region.id)) continue;
+    seen.add(region.id);
+    out.push(region.id);
+  }
+
+  return out;
 }
 
 function inferRegionIdFromCoords(lat, lng) {
@@ -1353,8 +1409,31 @@ export function parseMessageToEvents(text, meta = {}) {
       name: regionDisplayNames[regionId] || regionCenters[regionId].name
     }
     : null;
+  const regionTargets = locationHits.length === 0
+    ? extractRegionIds(baseText, "")
+        .map((id) => {
+          const center = regionCenters[id];
+          if (!center) return null;
+          return {
+            lat: center.lat,
+            lng: center.lng,
+            label: regionDisplayNames[id] || center.name,
+            exact: false,
+            region_id: id
+          };
+        })
+        .filter(Boolean)
+    : [];
 
-  if (locationHits.length === 0 && !sea && !forceSea && !regionCenter && !hasBasePoint && !(isTlk && type === "shahed")) {
+  if (
+    locationHits.length === 0 &&
+    regionTargets.length === 0 &&
+    !sea &&
+    !forceSea &&
+    !regionCenter &&
+    !hasBasePoint &&
+    !(isTlk && type === "shahed")
+  ) {
     return [];
   }
 
@@ -1362,6 +1441,8 @@ export function parseMessageToEvents(text, meta = {}) {
 
   let targets = locationHits.length > 0
     ? locationHits.slice(0, 3)
+    : regionTargets.length > 0
+      ? regionTargets.slice(0, 3)
     : regionCenter
       ? [{ lat: regionCenter.lat, lng: regionCenter.lng, label: regionCenter.name, exact: false }]
       : hasBasePoint
