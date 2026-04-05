@@ -1,7 +1,6 @@
 
 import { sources } from "./data/sources.js";
 import { oblasts } from "./data/oblasts.js";
-import "./styles.css";
 
 const L = window.L;
 
@@ -950,11 +949,6 @@ function renderMarkers() {
       const sourceHint = sampleSources.length > 0 ? ` Джерела: ${sampleSources.join(", ")}.` : "";
       mapNotice.textContent =
         `Частину цілей приховано: ${state.invalidEvents.length} без координат, тому вони не можуть бути показані на карті.${sourceHint}`;
-      mapNotice.hidden = false;
-    } else if (filtered.length === 0) {
-      const ttlMin = Math.max(1, Math.round(state.markerTtlMs / 60000));
-      mapNotice.textContent =
-        `Активних цілей за останні ${ttlMin} хв не знайдено. Це означає, що зараз API не віддало жодної свіжої цілі, а не те, що карта втратила підключення.`;
       mapNotice.hidden = false;
     } else {
       mapNotice.hidden = true;
