@@ -82,6 +82,8 @@ let radarTileLayer = null;
 let radarUserLayer = null;
 let radarTargetLayer = null;
 let oblastGeoPromise = null;
+let radarStyleKey = null;
+let filterRenderSignature = "";
 
 const DEFAULT_MARKER_TTL_MS = 10 * 60 * 1000;
 const STALE_WARN_MS = 5 * 60 * 1000;
@@ -444,6 +446,8 @@ async function loadEvents() {
 }
 
 function updateFilterSets(events) {
+  const previousTypes = new Set(state.types);
+  const previousSources = new Set(state.sources);
   state.types = new Set(events.map((event) => event.type || "other"));
   state.sources = new Set(events.map((event) => event.source).filter(Boolean));
 
@@ -460,6 +464,25 @@ function updateFilterSets(events) {
   if (state.selectedSources.size === 0) {
     state.selectedSources = new Set(state.sources);
   }
+
+  return !setsEqual(previousTypes, state.types) || !setsEqual(previousSources, state.sources);
+}
+
+function setsEqual(left, right) {
+  if (left.size !== right.size) return false;
+  for (const value of left) {
+    if (!right.has(value)) return false;
+  }
+  return true;
+}
+
+function getFilterRenderSignature() {
+  return JSON.stringify({
+    types: Array.from(state.types).sort(),
+    sources: Array.from(state.sources).sort(),
+    selectedTypes: Array.from(state.selectedTypes).sort(),
+    selectedSources: Array.from(state.selectedSources).sort()
+  });
 }
 
 function createFilterChip({ id, label, checked, onChange }) {
@@ -481,6 +504,8 @@ function createFilterChip({ id, label, checked, onChange }) {
 
 function renderFilterControls() {
   if (!typeContainer || !sourceContainer) return;
+  const nextSignature = getFilterRenderSignature();
+  if (filterRenderSignature === nextSignature) return;
   typeContainer.innerHTML = "";
   sourceContainer.innerHTML = "";
 
@@ -534,6 +559,7 @@ function renderFilterControls() {
       });
       sourceContainer.appendChild(chip);
     });
+  filterRenderSignature = nextSignature;
 }
 
 function formatTime(value) {
@@ -1321,6 +1347,8 @@ function isRadarModalOpen() {
 
 function ensureRadarMap() {
   if (!radarMapNode || radarMap || !isRadarModalOpen()) return;
+  const styleKey = mapStyleSelect?.value || "carto-dark";
+  const style = mapStyleCatalog[styleKey] || mapStyleCatalog["carto-dark"];
   radarMap = L.map(radarMapNode, {
     zoomControl: false,
     attributionControl: true,
@@ -1334,7 +1362,8 @@ function ensureRadarMap() {
     keyboard: false,
     tap: false
   }).setView([49.0, 31.0], 9);
-  radarTileLayer = L.tileLayer(mapStyleCatalog["carto-dark"].url, mapStyleCatalog["carto-dark"].options).addTo(radarMap);
+  radarTileLayer = L.tileLayer(style.url, style.options).addTo(radarMap);
+  radarStyleKey = styleKey;
   radarUserLayer = L.layerGroup().addTo(radarMap);
   radarTargetLayer = L.layerGroup().addTo(radarMap);
 }
@@ -1398,12 +1427,14 @@ function lockRadarViewport(centerLat, centerLng, radiusKm = 100) {
 
 function syncRadarMapStyle() {
   if (!radarMap) return;
+  const styleKey = mapStyleSelect?.value || "carto-dark";
+  if (radarStyleKey === styleKey && radarTileLayer) return;
   if (radarTileLayer) {
     radarMap.removeLayer(radarTileLayer);
   }
-  const styleKey = mapStyleSelect?.value || "carto-dark";
   const style = mapStyleCatalog[styleKey] || mapStyleCatalog["carto-dark"];
   radarTileLayer = L.tileLayer(style.url, style.options).addTo(radarMap);
+  radarStyleKey = styleKey;
 }
 
 function renderRadarCanvas() {
@@ -1675,6 +1706,22 @@ async function renderAlarmMap() {
     return;
   }
   const active = new Set(state.alarms || []);
+  if (active.size === 0 && (!Array.isArray(state.districtAlarms) || state.districtAlarms.length === 0)) {
+    districtAlarmLayer.clearLayers();
+    if (oblastGeoReady && oblastGeoLayer) {
+      oblastGeoLayer.eachLayer((layer) => {
+        layer.setStyle({
+          color: "transparent",
+          opacity: 0,
+          weight: 0,
+          fill: true,
+          fillColor: "transparent",
+          fillOpacity: 0
+        });
+      });
+    }
+    return;
+  }
   districtAlarmLayer.clearLayers();
   (state.districtAlarms || []).forEach((district) => {
     if (!Number.isFinite(Number(district.lat)) || !Number.isFinite(Number(district.lng))) return;
@@ -1905,8 +1952,10 @@ async function refresh(force = false) {
     const events = await loadEvents();
     ingestHistory(events);
     state.events = events;
-    updateFilterSets(events);
-    renderFilterControls();
+    const filtersChanged = updateFilterSets(events);
+    if (filtersChanged) {
+      renderFilterControls();
+    }
     renderMarkers();
     renderRadarList();
     renderAlarmList();
