@@ -19,13 +19,20 @@ const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 4);
 const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 12));
 const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 3500));
 const clientStartTimeoutMs = Math.max(1000, Number(process.env.TG_CLIENT_START_TIMEOUT_MS || 8000));
+const entityResolveTimeoutMs = Math.max(channelTimeoutMs, Number(process.env.TG_ENTITY_RESOLVE_TIMEOUT_MS || 8000));
 const disabledChannels = new Set();
+const entityCache = new Map();
+let dialogPeerIndex = null;
 
 let client = null;
 let clientReady = false;
 
 function normalizeChannelKey(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function bareChannelKey(value) {
+  return normalizeChannelKey(value).replace(/^@/, "");
 }
 
 function isPermanentChannelError(error) {
@@ -166,6 +173,7 @@ async function disconnectClient() {
   } catch {}
   client = null;
   clientReady = false;
+  dialogPeerIndex = null;
 }
 
 async function getClient() {
@@ -203,6 +211,52 @@ async function getClient() {
   }
 }
 
+async function buildDialogPeerIndex(tgClient) {
+  if (dialogPeerIndex) return dialogPeerIndex;
+  const dialogs = await withTimeout(
+    tgClient.getDialogs({ limit: 300 }),
+    entityResolveTimeoutMs,
+    "telegram dialogs"
+  );
+  const index = new Map();
+  for (const dialog of dialogs || []) {
+    const entity = dialog?.entity;
+    if (!entity) continue;
+    const username = bareChannelKey(entity.username || "");
+    if (username) {
+      index.set(username, entity);
+    }
+  }
+  dialogPeerIndex = index;
+  return dialogPeerIndex;
+}
+
+async function resolveChannelPeer(tgClient, channel) {
+  const key = normalizeChannelKey(channel);
+  if (!key) return null;
+  if (entityCache.has(key)) {
+    return entityCache.get(key);
+  }
+
+  try {
+    const entity = await withTimeout(
+      tgClient.getEntity(channel),
+      entityResolveTimeoutMs,
+      `telegram entity ${channel}`
+    );
+    entityCache.set(key, entity);
+    return entity;
+  } catch (error) {
+    const dialogs = await buildDialogPeerIndex(tgClient).catch(() => null);
+    const dialogEntity = dialogs?.get(bareChannelKey(channel)) || null;
+    if (dialogEntity) {
+      entityCache.set(key, dialogEntity);
+      return dialogEntity;
+    }
+    throw error;
+  }
+}
+
 export async function loadTelegramEvents() {
   const tgClient = await getClient();
   if (!tgClient || channels.length === 0) {
@@ -221,8 +275,12 @@ export async function loadTelegramEvents() {
       return { channel, ordered: [] };
     }
     try {
+      const peer = await resolveChannelPeer(tgClient, channel);
+      if (!peer) {
+        throw new Error(`Unable to resolve peer for ${channel}`);
+      }
       const messages = await withTimeout(
-        tgClient.getMessages(channel, { limit }),
+        tgClient.getMessages(peer, { limit }),
         channelTimeoutMs,
         `telegram channel ${channel}`
       );
