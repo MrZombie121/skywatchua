@@ -82,6 +82,7 @@ let radarMap = null;
 let radarTileLayer = null;
 let radarUserLayer = null;
 let radarTargetLayer = null;
+let oblastGeoPromise = null;
 
 const DEFAULT_MARKER_TTL_MS = 10 * 60 * 1000;
 const STALE_WARN_MS = 5 * 60 * 1000;
@@ -98,7 +99,7 @@ const SOUND_COOLDOWN_MS = 4000;
 const MAP_HEIGHT_STORAGE_KEY = "sw_map_height_v1";
 const MAP_MIN_HEIGHT = 360;
 const DOCK_MIN_HEIGHT = 160;
-const SOURCE_FETCH_TIMEOUT_MS = 5000;
+const SOURCE_FETCH_TIMEOUT_MS = 12000;
 const MARKER_AGING_TICK_MS = 30000;
 
 const state = {
@@ -683,30 +684,47 @@ function matchRegionId(name) {
 }
 
 async function ensureOblastLayer() {
-  if (oblastGeoReady) return;
-  try {
-    const response = await fetch(ADM1_GEOJSON_URL, { cache: "force-cache" });
-    if (!response.ok) throw new Error("geojson fetch failed");
-    const geojson = await response.json();
-    oblastGeoLayer = L.geoJSON(geojson, {
-      style: { color: "transparent", weight: 0, fillOpacity: 0 },
-      onEachFeature: (feature, layer) => {
-        const props = feature.properties || {};
-        const name =
-          props.shapeName || props.NAME_1 || props.name || props.shapeName || props.shapeNameEnglish;
-        const iso = props.shapeISO || props.ISO_3166_2 || props.iso;
-        const id = isoToRegionId[iso] || matchRegionId(name);
-        if (id) {
-          feature.properties._regionId = id;
-        }
-        layer.addTo(alarmLayer);
+  if (oblastGeoReady) return true;
+  if (!oblastGeoPromise) {
+    oblastGeoPromise = (async () => {
+      try {
+        const response = await fetch(ADM1_GEOJSON_URL, { cache: "force-cache" });
+        if (!response.ok) throw new Error("geojson fetch failed");
+        const geojson = await response.json();
+        oblastGeoLayer = L.geoJSON(geojson, {
+          style: { color: "transparent", weight: 0, fillOpacity: 0 },
+          onEachFeature: (feature, layer) => {
+            const props = feature.properties || {};
+            const name =
+              props.shapeName || props.NAME_1 || props.name || props.shapeName || props.shapeNameEnglish;
+            const iso = props.shapeISO || props.ISO_3166_2 || props.iso;
+            const id = isoToRegionId[iso] || matchRegionId(name);
+            if (id) {
+              feature.properties._regionId = id;
+            }
+            layer.addTo(alarmLayer);
+          }
+        });
+        oblastGeoReady = true;
+        return true;
+      } catch (error) {
+        console.warn("Failed to load oblast geojson", error);
+        oblastGeoReady = false;
+        return false;
+      } finally {
+        oblastGeoPromise = null;
       }
-    });
-    oblastGeoReady = true;
-  } catch (error) {
-    console.warn("Failed to load oblast geojson", error);
-    oblastGeoReady = false;
+    })();
   }
+  return oblastGeoPromise;
+}
+
+function renderAlarmMapSoon() {
+  requestAnimationFrame(() => {
+    renderAlarmMap().catch((error) => {
+      console.warn("Failed to render alarm map", error);
+    });
+  });
 }
 
 function makeMarkerIcon(event) {
@@ -932,6 +950,11 @@ function renderMarkers() {
       const sourceHint = sampleSources.length > 0 ? ` Джерела: ${sampleSources.join(", ")}.` : "";
       mapNotice.textContent =
         `Частину цілей приховано: ${state.invalidEvents.length} без координат, тому вони не можуть бути показані на карті.${sourceHint}`;
+      mapNotice.hidden = false;
+    } else if (filtered.length === 0) {
+      const ttlMin = Math.max(1, Math.round(state.markerTtlMs / 60000));
+      mapNotice.textContent =
+        `Активних цілей за останні ${ttlMin} хв не знайдено. Це означає, що зараз API не віддало жодної свіжої цілі, а не те, що карта втратила підключення.`;
       mapNotice.hidden = false;
     } else {
       mapNotice.hidden = true;
@@ -1672,7 +1695,8 @@ async function renderAlarmMap() {
     marker.addTo(districtAlarmLayer);
   });
   if (!oblastGeoReady) {
-    await ensureOblastLayer();
+    const loaded = await ensureOblastLayer();
+    if (!loaded) return;
   }
 
   if (oblastGeoReady && oblastGeoLayer) {
@@ -1898,7 +1922,7 @@ async function refresh(force = false) {
     renderDockWatchlist();
     renderMetrics();
     renderRadarCanvas();
-    await renderAlarmMap();
+    renderAlarmMapSoon();
     saveSnapshotStore();
     if (!state.maintenance && state.autoFollow) {
       followLatestTarget();
@@ -3047,7 +3071,15 @@ if (hasSnapshot) {
   renderDockWatchlist();
   renderMetrics();
   renderRadarCanvas();
+  renderAlarmMapSoon();
 }
 
-refresh(true);
+if (mapNotice) {
+  mapNotice.textContent = "Завантаження даних карти…";
+  mapNotice.hidden = false;
+}
+
+setTimeout(() => {
+  refresh(true);
+}, 0);
 startMarkerAgingTicker();
