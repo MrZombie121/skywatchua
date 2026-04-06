@@ -1306,6 +1306,180 @@ function shouldInferTrackFromSea({ sea, forceSea, locationHits, mergedText, regi
   return false;
 }
 
+const liveFallbackLocationHints = [
+  { id: "kyiv-city-fallback", name: "Київ", lat: 50.4501, lng: 30.5234, keys: ["київ", "києва", "києву", "киев", "киева", "kyiv", "kiev"], region_id: "kyiv" },
+  { id: "odesa-city-fallback", name: "Одеса", lat: 46.4825, lng: 30.7233, keys: ["одеса", "одеси", "одесу", "одесса", "одессы", "одессу", "odesa", "odessa"], region_id: "odeska" },
+  { id: "kharkiv-city-fallback", name: "Харків", lat: 49.9935, lng: 36.2304, keys: ["харків", "харкова", "харков", "харьков", "kharkiv", "kharkov"], region_id: "kharkivska" },
+  { id: "dnipro-city-fallback", name: "Дніпро", lat: 48.4647, lng: 35.0462, keys: ["дніпро", "днепр", "dnipro", "dnepr"], region_id: "dniprovska" },
+  { id: "mykolaiv-city-fallback", name: "Миколаїв", lat: 46.975, lng: 31.9946, keys: ["миколаїв", "миколаєва", "николаев", "николаева", "mykolaiv", "nikolaev"], region_id: "mykolaivska" },
+  { id: "kherson-city-fallback", name: "Херсон", lat: 46.6354, lng: 32.6169, keys: ["херсон", "херсона", "kherson"], region_id: "khersonska" },
+  { id: "zaporizhzhia-city-fallback", name: "Запоріжжя", lat: 47.8388, lng: 35.1396, keys: ["запоріжжя", "запорожье", "запоріжжя", "zaporizhzhia", "zaporizhia"], region_id: "zaporizka" },
+  { id: "chernihiv-city-fallback", name: "Чернігів", lat: 51.4982, lng: 31.2893, keys: ["чернігів", "чернигов", "chernihiv", "chernigov"], region_id: "chernihivska" },
+  { id: "sumy-city-fallback", name: "Суми", lat: 50.9077, lng: 34.7981, keys: ["суми", "сумы", "sumy"], region_id: "sumyska" },
+  { id: "kryvyi-rih-fallback", name: "Кривий Ріг", lat: 47.9105, lng: 33.3918, keys: ["кривий ріг", "кривого рогу", "кривой рог", "kryvyi rih"], region_id: "dniprovska" }
+];
+
+const liveFallbackRegionCenters = {
+  kyiv: { name: "Київ", lat: 50.4501, lng: 30.5234 },
+  kyivska: { name: "Київська область", lat: 50.4501, lng: 30.5234 },
+  odeska: { name: "Одеська область", lat: 46.4825, lng: 30.7233 },
+  kharkivska: { name: "Харківська область", lat: 49.9935, lng: 36.2304 },
+  dniprovska: { name: "Дніпропетровська область", lat: 48.4647, lng: 35.0462 },
+  mykolaivska: { name: "Миколаївська область", lat: 46.975, lng: 31.9946 },
+  khersonska: { name: "Херсонська область", lat: 46.6354, lng: 32.6169 },
+  zaporizka: { name: "Запорізька область", lat: 47.8388, lng: 35.1396 },
+  chernihivska: { name: "Чернігівська область", lat: 51.4982, lng: 31.2893 },
+  sumyska: { name: "Сумська область", lat: 50.9077, lng: 34.7981 }
+};
+
+function normalizeLiveText(text) {
+  return ` ${String(text || "")
+    .toLowerCase()
+    .replace(/['’`]/g, "'")
+    .replace(/[.,;:!?()[\]{}"]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()} `;
+}
+
+function includesLiveKey(text, key) {
+  return text.includes(` ${String(key || "").toLowerCase().trim()} `);
+}
+
+function pickLiveFallbackType(text) {
+  const lower = normalizeLiveText(text);
+  if (/\b(шахед|шахеди|shahed|герань|герани|бпла|дрон|дрони|uav)\b/u.test(lower)) return "shahed";
+  if (/\b(ракета|ракети|ракет|missile|бал[іи]ст|крылат|крилат)\b/u.test(lower)) return "missile";
+  if (/\b(kab|каб|каби)\b/u.test(lower)) return "kab";
+  if (/\b(літак|літаки|самол[её]т|самолеты|авіаці[яї]|авиаци[яи])\b/u.test(lower)) return "airplane";
+  if (/\b(розвіддрон|розвідник|разведдрон|разведчик|orlan|supercam|zala)\b/u.test(lower)) return "recon";
+  return null;
+}
+
+function getLiveFallbackLocations() {
+  const adminLocations = getAdminLocationsSync()
+    .filter((item) => Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lng)))
+    .map((item) => ({
+      id: String(item.id),
+      name: String(item.name || item.id),
+      lat: Number(item.lat),
+      lng: Number(item.lng),
+      keys: Array.isArray(item.keys) ? item.keys.map((key) => String(key).toLowerCase()) : [],
+      region_id: item.region_id ? String(item.region_id) : null
+    }));
+
+  const combined = [...adminLocations, ...liveFallbackLocationHints];
+  const unique = new Map();
+  combined.forEach((item) => {
+    const key = String(item.id || item.name).toLowerCase();
+    if (!unique.has(key)) unique.set(key, item);
+  });
+  return Array.from(unique.values());
+}
+
+function findLiveFallbackTargets(text) {
+  const lower = normalizeLiveText(text);
+  const matches = [];
+
+  for (const item of getLiveFallbackLocations()) {
+    if (!Array.isArray(item.keys) || item.keys.length === 0) continue;
+    if (!item.keys.some((key) => includesLiveKey(lower, key))) continue;
+    matches.push({
+      lat: Number(item.lat),
+      lng: Number(item.lng),
+      label: item.name,
+      location_id: item.id,
+      region_id: item.region_id || null,
+      exact: true
+    });
+  }
+
+  const unique = new Map();
+  matches.forEach((item) => {
+    const key = `${item.location_id}:${item.lat}:${item.lng}`;
+    if (!unique.has(key)) unique.set(key, item);
+  });
+  if (unique.size > 0) return Array.from(unique.values()).slice(0, 3);
+
+  if (/\b(київська область|київщина|киевская область)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.kyivska, label: liveFallbackRegionCenters.kyivska.name, region_id: "kyivska", exact: false }];
+  }
+  if (/\b(одеська область|одесская область|одещина)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.odeska, label: liveFallbackRegionCenters.odeska.name, region_id: "odeska", exact: false }];
+  }
+  if (/\b(харківська область|харьковская область|харківщина)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.kharkivska, label: liveFallbackRegionCenters.kharkivska.name, region_id: "kharkivska", exact: false }];
+  }
+  if (/\b(сумська область|сумская область|сумщина)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.sumyska, label: liveFallbackRegionCenters.sumyska.name, region_id: "sumyska", exact: false }];
+  }
+  if (/\b(чернігівська область|черниговская область|чернігівщина)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.chernihivska, label: liveFallbackRegionCenters.chernihivska.name, region_id: "chernihivska", exact: false }];
+  }
+  if (/\b(миколаївська область|николаевская область|миколаївщина)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.mykolaivska, label: liveFallbackRegionCenters.mykolaivska.name, region_id: "mykolaivska", exact: false }];
+  }
+  if (/\b(херсонська область|херсонская область|херсонщина)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.khersonska, label: liveFallbackRegionCenters.khersonska.name, region_id: "khersonska", exact: false }];
+  }
+  if (/\b(запорізька область|запорожская область|запоріжжя область)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.zaporizka, label: liveFallbackRegionCenters.zaporizka.name, region_id: "zaporizka", exact: false }];
+  }
+  if (/\b(дніпропетровська область|днепропетровская область)\b/u.test(lower)) {
+    return [{ ...liveFallbackRegionCenters.dniprovska, label: liveFallbackRegionCenters.dniprovska.name, region_id: "dniprovska", exact: false }];
+  }
+
+  return [];
+}
+
+function parseLiveFallbackEvents(text, meta = {}) {
+  const type = pickLiveFallbackType(text);
+  if (!type) return [];
+
+  const targets = findLiveFallbackTargets(text);
+  if (targets.length === 0) return [];
+
+  const direction = Number.isFinite(meta.direction) ? meta.direction : parseDirection(text);
+  const groupCount = extractGroupCount(text, type);
+  const isTest = typeof meta.is_test === "boolean" ? meta.is_test : /\b(тест|test)\b/u.test(String(text || "").toLowerCase());
+
+  return targets.map((target, index) => {
+    const label = String(target.label || target.name || "Локація");
+    const idSeed = `${meta.source || "tg"}-${meta.timestamp || ""}-live-${type}-${label}-${index}`;
+    const effectiveDirection = Number.isFinite(direction) ? direction : deterministicDirection(idSeed);
+
+    return {
+      id: idSeed,
+      type,
+      lat: Number(target.lat),
+      lng: Number(target.lng),
+      direction: effectiveDirection,
+      source: meta.source || "tg",
+      timestamp: meta.timestamp ? new Date(meta.timestamp).toISOString() : new Date().toISOString(),
+      comment: `Джерело: ${meta.source || "tg"}. Локація: ${label}.`,
+      is_test: isTest,
+      confidence: target.exact ? 0.78 : 0.58,
+      marker_variant: groupCount?.max > 1 && (type === "shahed" || type === "missile") ? `${type}-multi` : null,
+      marker_action: "place",
+      marker_label: label,
+      marker_location_id: target.location_id || null,
+      group_count_min: groupCount?.min || null,
+      group_count_max: groupCount?.max || null,
+      target_lat: null,
+      target_lng: null,
+      target_label: null,
+      target_location_id: null,
+      bot_meta: {
+        action: "place_marker",
+        marker_label: label,
+        marker_location_id: target.location_id || null,
+        track_target: false
+      },
+      region_id: target.region_id || inferRegionIdFromCoords(Number(target.lat), Number(target.lng)),
+      raw_text: meta.raw_text || text
+    };
+  });
+}
+
 export function parseMessageToEvents(text, meta = {}) {
   const baseText = String(text || "");
   const sourceLower = String(meta.source || "").toLowerCase();
@@ -1318,6 +1492,10 @@ export function parseMessageToEvents(text, meta = {}) {
     : [baseText, ...contextTexts].filter(Boolean).join(" ");
 
   if (isDowned(mergedText)) return [];
+  const liveFallbackEvents = parseLiveFallbackEvents(baseText, meta);
+  if (liveFallbackEvents.length > 0) {
+    return liveFallbackEvents;
+  }
   const allowContextForType = shouldUseContextForType(meta, baseText);
   const trackContextText = allowContextForType ? mergedText : baseText;
   // Parse locations only from the original message to avoid marker explosions from context.
