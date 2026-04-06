@@ -6,11 +6,21 @@
     <meta name="sw-version" content="2.0.4" />
     <title>Skywatch UA — Моніторинг 2.0</title>
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+      />
+    </noscript>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body class="v3">

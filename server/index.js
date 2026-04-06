@@ -100,6 +100,7 @@ const rootIndexPath = path.resolve(__dirname, "..", "index.html");
 const srcPath = path.resolve(__dirname, "..", "src");
 const distIndexPath = path.join(distPath, "index.html");
 const hasDistBuild = fs.existsSync(distIndexPath);
+console.log(`Frontend mode: ${hasDistBuild ? "dist" : "source"}.`);
 
 app.use(express.json({ limit: "200kb" }));
 app.use(express.static(publicPath));
