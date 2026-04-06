@@ -153,19 +153,29 @@ async function init() {
   await db.write();
 }
 
-const initPromise = (async () => {
+const localInitPromise = (async () => {
   try {
     await init();
-    await initTursoSettings();
     await ensureAdmin();
   } catch (error) {
     initError = error;
-    console.error("DB init failed:", error?.message || error);
+    console.error("Local DB init failed:", error?.message || error);
+  }
+})();
+
+const remoteInitPromise = (async () => {
+  await localInitPromise;
+  if (initError) return;
+  try {
+    await initTursoSettings();
+    await ensureAdmin();
+  } catch (error) {
+    console.error("Remote DB init failed:", error?.message || error);
   }
 })();
 
 async function ensureReady() {
-  await initPromise;
+  await localInitPromise;
   if (initError) {
     throw initError;
   }

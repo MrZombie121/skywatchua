@@ -8,8 +8,8 @@
   },
   "admins": [
     {
-      "username": "adminka",
-      "password_hash": "d34dbdf313ff211b885bc64fc3467e65:de026145a2584aa50f46bb96ad5f9735e21b5898eaf7094aec09e813f321754cfa7a8475d52f276c3b9ce2793c31bb0dd0b85e157ccd044ef3f576a0a8974bcc"
+      "username": "admin26",
+      "password_hash": "1358c466d8e5c04b13c2a95cc611999e:8839a93dfc2001aa2bbfd98cadc892e6a25eda010d4f146d0c164592f1b8f4dd218533822555e6939e5e2c3d04026a8f5bf49acddde8977318d6e56040a25990"
     }
   ],
   "sessions": [
@@ -304,6 +304,85 @@
       "location_type": "city",
       "parent_location_id": null,
       "created_at": 1775146043637
+    },
+    {
+      "id": "kyiv-city",
+      "name": "Київ",
+      "keys": [
+        "київ",
+        "киев",
+        "kyiv",
+        "kiev"
+      ],
+      "lat": 50.4501,
+      "lng": 30.5234,
+      "region_id": "kyiv",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775460473782
+    },
+    {
+      "id": "odesa-city",
+      "name": "Одеса",
+      "keys": [
+        "одеса",
+        "одесса",
+        "odesa",
+        "odessa"
+      ],
+      "lat": 46.4825,
+      "lng": 30.7233,
+      "region_id": "odeska",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775460473782
+    },
+    {
+      "id": "kharkiv-city",
+      "name": "Харків",
+      "keys": [
+        "харків",
+        "харьков",
+        "kharkiv",
+        "kharkov"
+      ],
+      "lat": 49.9935,
+      "lng": 36.2304,
+      "region_id": "kharkivska",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775460473782
+    },
+    {
+      "id": "dnipro-city",
+      "name": "Дніпро",
+      "keys": [
+        "дніпро",
+        "днепр",
+        "dnipro",
+        "dnepr"
+      ],
+      "lat": 48.4647,
+      "lng": 35.0462,
+      "region_id": "dniprovska",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775460473782
+    },
+    {
+      "id": "lviv-city",
+      "name": "Львів",
+      "keys": [
+        "львів",
+        "львов",
+        "lviv"
+      ],
+      "lat": 49.8397,
+      "lng": 24.0297,
+      "region_id": "lvivska",
+      "location_type": "city",
+      "parent_location_id": null,
+      "created_at": 1775460473782
     }
   ],
   "admin_location_points": [

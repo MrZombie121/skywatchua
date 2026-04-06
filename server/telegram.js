@@ -16,10 +16,10 @@ const testChannels = new Set(
 const limit = Number(process.env.TG_LIMIT || 25);
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 4);
-const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 12));
-const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 3500));
-const clientStartTimeoutMs = Math.max(1000, Number(process.env.TG_CLIENT_START_TIMEOUT_MS || 8000));
-const entityResolveTimeoutMs = Math.max(channelTimeoutMs, Number(process.env.TG_ENTITY_RESOLVE_TIMEOUT_MS || 8000));
+const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 4));
+const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 8000));
+const clientStartTimeoutMs = Math.max(1000, Number(process.env.TG_CLIENT_START_TIMEOUT_MS || 20000));
+const entityResolveTimeoutMs = Math.max(channelTimeoutMs, Number(process.env.TG_ENTITY_RESOLVE_TIMEOUT_MS || 15000));
 const disabledChannels = new Set();
 const entityCache = new Map();
 let dialogPeerIndex = null;
@@ -189,7 +189,7 @@ async function getClient() {
 
   try {
     if (sessionString) {
-      await client.connect();
+      await withTimeout(client.connect(), clientStartTimeoutMs, "telegram connect");
     } else {
       await withTimeout(
         client.start({
@@ -203,6 +203,7 @@ async function getClient() {
       );
     }
     clientReady = true;
+    console.log(`Telegram client ready. Channels configured: ${channels.length}.`);
     return client;
   } catch (error) {
     console.warn("Telegram client init failed", error?.message || error);
@@ -467,8 +468,12 @@ export async function loadTelegramEvents() {
       });
     }
 
+    const refinedEvents = refineEventsByConsensus(events);
+    console.log(
+      `Telegram load result: ${refinedEvents.length} events, ${alarmSet.size} region alarms, ${districtAlarmMap.size} district alarms.`
+    );
     return {
-      events: refineEventsByConsensus(events),
+      events: refinedEvents,
       alarms: Array.from(alarmSet),
       district_alarms: Array.from(districtAlarmMap.values()),
       alarms_updated: alarmsUpdated
