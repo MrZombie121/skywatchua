@@ -2,14 +2,17 @@
   "settings": {
     "maintenance": "false",
     "maintenance_until": "",
-    "alarms_state": "[\"zhytomyrska\",\"ternopilska\",\"ivano-frankivska\",\"donetska\",\"zaporizka\",\"kyiv\",\"sumyska\",\"khersonska\",\"dniprovska\",\"chernihivska\",\"kharkivska\",\"crimea\",\"luhanska\"]",
-    "district_alarms_state": "[{\"id\":\"dniprovska:synelnykivskyi\",\"region_id\":\"dniprovska\",\"name\":\"Синельниківський район\",\"lat\":48.32,\"lng\":35.52},{\"id\":\"donetska:kramatorskyi\",\"region_id\":\"donetska\",\"name\":\"Краматорський район\",\"lat\":48.72,\"lng\":37.56},{\"id\":\"kharkivska:kharkivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Харківський район\",\"lat\":49.95,\"lng\":36.3},{\"id\":\"kharkivska:izyumskyi\",\"region_id\":\"kharkivska\",\"name\":\"Ізюмський район\",\"lat\":49.21,\"lng\":37.28},{\"id\":\"kharkivska:chuhuivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Чугуївський район\",\"lat\":49.83,\"lng\":36.68},{\"id\":\"kharkivska:lozivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Лозівський район\",\"lat\":48.89,\"lng\":36.32},{\"id\":\"zaporizka:vasylivskyi\",\"region_id\":\"zaporizka\",\"name\":\"Василівський район\",\"lat\":47.45,\"lng\":35.28},{\"id\":\"zaporizka:melitopolskyi\",\"region_id\":\"zaporizka\",\"name\":\"Мелітопольський район\",\"lat\":46.85,\"lng\":35.37},{\"id\":\"zaporizka:berdianskyi\",\"region_id\":\"zaporizka\",\"name\":\"Бердянський район\",\"lat\":46.77,\"lng\":36.79},{\"id\":\"zaporizka:polohivskyi\",\"region_id\":\"zaporizka\",\"name\":\"Пологівський район\",\"lat\":47.49,\"lng\":36.25},{\"id\":\"kharkivska:kupianskyi\",\"region_id\":\"kharkivska\",\"name\":\"Куп'янський район\",\"lat\":49.72,\"lng\":37.62},{\"id\":\"sumyska:shostkynskyi\",\"region_id\":\"sumyska\",\"name\":\"Шосткинський район\",\"lat\":51.87,\"lng\":33.48},{\"id\":\"chernihivska:novhorod-siverskyi\",\"region_id\":\"chernihivska\",\"name\":\"Новгород-Сіверський район\",\"lat\":52,\"lng\":33.3}]",
-    "alarms_updated_at": "1775069947573"
+    "alarms_state": "[\"khersonska\",\"kyiv\",\"dniprovska\",\"donetska\",\"crimea\",\"zaporizka\",\"luhanska\",\"chernihivska\"]",
+    "district_alarms_state": "[{\"id\":\"dniprovska:synelnykivskyi\",\"region_id\":\"dniprovska\",\"name\":\"Синельниківський район\",\"lat\":48.32,\"lng\":35.52},{\"id\":\"kharkivska:kupianskyi\",\"region_id\":\"kharkivska\",\"name\":\"Куп'янський район\",\"lat\":49.72,\"lng\":37.62},{\"id\":\"kharkivska:izyumskyi\",\"region_id\":\"kharkivska\",\"name\":\"Ізюмський район\",\"lat\":49.21,\"lng\":37.28},{\"id\":\"kharkivska:bohodukhivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Богодухівський район\",\"lat\":50.16,\"lng\":35.53},{\"id\":\"donetska:kramatorskyi\",\"region_id\":\"donetska\",\"name\":\"Краматорський район\",\"lat\":48.72,\"lng\":37.56},{\"id\":\"donetska:pokrovskyi\",\"region_id\":\"donetska\",\"name\":\"Покровський район\",\"lat\":48.28,\"lng\":37.18},{\"id\":\"donetska:volnovaskyi\",\"region_id\":\"donetska\",\"name\":\"Волноваський район\",\"lat\":47.6,\"lng\":37.5},{\"id\":\"kharkivska:chuhuivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Чугуївський район\",\"lat\":49.83,\"lng\":36.68},{\"id\":\"kharkivska:kharkivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Харківський район\",\"lat\":49.95,\"lng\":36.3}]",
+    "alarms_updated_at": "1775676191008",
+    "events_cache_v1": "[{\"id\":\"@tlknewsua:89526-kab-0\",\"type\":\"kab\",\"lat\":49.9688,\"lng\":36.4161,\"direction\":109.42588200997193,\"source\":\"@tlknewsua\",\"timestamp\":\"2026-04-08T19:08:39.000Z\",\"comment\":\"Джерело: @tlknewsua. Локація: Куп'янськ.\",\"is_test\":false,\"confidence\":0.62,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Куп'янськ\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":49.72,\"target_lng\":37.61,\"target_label\":\"Куп'янськ\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Куп'янськ\",\"marker_location_id\":null,\"target_label\":\"Куп'янськ\",\"track_target\":true},\"region_id\":\"kharkivska\",\"raw_text\":\"КАБ на Купянск/район⚠️\\n\\n📷TlkInst  \\n🎞Канал со стримами\",\"evidence_count\":1,\"evidence_sources\":[\"@tlknewsua\"]},{\"id\":\"@UkraineAlarmSignal:475480-shahed-0\",\"type\":\"shahed\",\"lat\":50.91,\"lng\":34.8,\"direction\":0,\"source\":\"@UkraineAlarmSignal\",\"timestamp\":\"2026-04-08T19:13:52.000Z\",\"comment\":\"Джерело: @UkraineAlarmSignal. Локація: Суми.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Суми\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":null,\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Суми\",\"marker_location_id\":null,\"target_label\":null,\"track_target\":false},\"region_id\":\"sumyska\",\"raw_text\":\"⚠️ Суми (Сумська обл.)\\nЗМІ повідомляють про вибухи. Будьте обережні!\",\"evidence_count\":1,\"evidence_sources\":[\"@UkraineAlarmSignal\"]},{\"id\":\"@tlknewsua:89526-kab-0\",\"type\":\"kab\",\"lat\":49.957,\"lng\":36.5902,\"direction\":109.42588200997193,\"source\":\"@tlknewsua\",\"timestamp\":\"2026-04-08T19:15:27.000Z\",\"comment\":\"Джерело: @tlknewsua. Локація: Куп'янськ.\",\"is_test\":false,\"confidence\":0.62,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Куп'янськ\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":49.72,\"target_lng\":37.61,\"target_label\":\"Куп'янськ\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Куп'янськ\",\"marker_location_id\":null,\"target_label\":\"Куп'янськ\",\"track_target\":true},\"region_id\":\"kharkivska\",\"raw_text\":\"Повторные пуски КАБ на Купянск/район⚠️\\n\\n📷TlkInst  \\n🎞Канал со стримами\",\"evidence_count\":1,\"evidence_sources\":[\"@tlknewsua\"]}]",
+    "events_cache_updated_at_v1": "1775676099149",
+    "announced_event_ids_v1": "[\"@UkraineAlarmSignal:475475-shahed-0\",\"@UkraineAlarmSignal:475477-kab-0\",\"@UkraineAlarmSignal:475477-kab-1\",\"@UkraineAlarmSignal:475478-kab-0\",\"@UkraineAlarmSignal:475479-kab-0\",\"@xydessa_live:60601-shahed-0\",\"@tlknewsua:89526-kab-0\",\"@UkraineAlarmSignal:475480-shahed-0\"]"
   },
   "admins": [
     {
-      "username": "admin26",
-      "password_hash": "1358c466d8e5c04b13c2a95cc611999e:8839a93dfc2001aa2bbfd98cadc892e6a25eda010d4f146d0c164592f1b8f4dd218533822555e6939e5e2c3d04026a8f5bf49acddde8977318d6e56040a25990"
+      "username": "adminka",
+      "password_hash": "84c8a28c6b633b7763979cddf2c88e31:1d01f35ca9ab8e982a9d203472fdb1d668de237a4db9816436ecbe90e5e6e9e07f54d73844a63499b125fcf313f543a8360a04942a1c5fb6d34541690b38acc6"
     }
   ],
   "sessions": [
@@ -304,85 +307,6 @@
       "location_type": "city",
       "parent_location_id": null,
       "created_at": 1775146043637
-    },
-    {
-      "id": "kyiv-city",
-      "name": "Київ",
-      "keys": [
-        "київ",
-        "киев",
-        "kyiv",
-        "kiev"
-      ],
-      "lat": 50.4501,
-      "lng": 30.5234,
-      "region_id": "kyiv",
-      "location_type": "city",
-      "parent_location_id": null,
-      "created_at": 1775460473782
-    },
-    {
-      "id": "odesa-city",
-      "name": "Одеса",
-      "keys": [
-        "одеса",
-        "одесса",
-        "odesa",
-        "odessa"
-      ],
-      "lat": 46.4825,
-      "lng": 30.7233,
-      "region_id": "odeska",
-      "location_type": "city",
-      "parent_location_id": null,
-      "created_at": 1775460473782
-    },
-    {
-      "id": "kharkiv-city",
-      "name": "Харків",
-      "keys": [
-        "харків",
-        "харьков",
-        "kharkiv",
-        "kharkov"
-      ],
-      "lat": 49.9935,
-      "lng": 36.2304,
-      "region_id": "kharkivska",
-      "location_type": "city",
-      "parent_location_id": null,
-      "created_at": 1775460473782
-    },
-    {
-      "id": "dnipro-city",
-      "name": "Дніпро",
-      "keys": [
-        "дніпро",
-        "днепр",
-        "dnipro",
-        "dnepr"
-      ],
-      "lat": 48.4647,
-      "lng": 35.0462,
-      "region_id": "dniprovska",
-      "location_type": "city",
-      "parent_location_id": null,
-      "created_at": 1775460473782
-    },
-    {
-      "id": "lviv-city",
-      "name": "Львів",
-      "keys": [
-        "львів",
-        "львов",
-        "lviv"
-      ],
-      "lat": 49.8397,
-      "lng": 24.0297,
-      "region_id": "lvivska",
-      "location_type": "city",
-      "parent_location_id": null,
-      "created_at": 1775460473782
     }
   ],
   "admin_location_points": [

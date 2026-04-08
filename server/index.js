@@ -1133,6 +1133,17 @@ app.get("*", (_req, res) => {
 
 app.listen(port, () => {
   console.log(`Skywatch UA backend running on http://localhost:${port}`);
+  
+  // Start warming cache in background after server starts
+  setTimeout(async () => {
+    try {
+      console.log("Starting background event cache warm...");
+      await warmEventCacheInBackground();
+      console.log("Background event cache warm completed");
+    } catch (error) {
+      console.warn("Background event cache warm failed", error?.message || error);
+    }
+  }, 1000);
 });
 
 hydrateEventCacheFromStore().catch((error) => {

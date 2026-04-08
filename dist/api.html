@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Меню Skywatch UA API</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #071019;
+        --panel: #101b28;
+        --panel-soft: #132536;
+        --line: #244055;
+        --text: #edf6ff;
+        --muted: #94aec3;
+        --accent: #47d9ff;
+        --accent-2: #1ff0b7;
+        --success: #83e6a1;
+        --danger: #ff8d8d;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 0% 0%, rgba(71, 217, 255, 0.16), transparent 28%),
+          radial-gradient(circle at 100% 0%, rgba(31, 240, 183, 0.12), transparent 24%),
+          linear-gradient(180deg, #08131d 0%, var(--bg) 72%);
+      }
+
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      .hero,
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(16, 27, 40, 0.94);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.26);
+      }
+
+      .hero {
+        padding: 28px;
+        margin-bottom: 18px;
+      }
+
+      .hero h1,
+      .card h2,
+      .card h3 {
+        margin: 0 0 12px;
+      }
+
+      .hero p,
+      .card p,
+      .card li {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .hero-actions,
+      .inline-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      .btn,
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        text-decoration: none;
+        background: rgba(148, 174, 195, 0.08);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .btn.primary,
+      button.primary {
+        color: #04131a;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        padding: 22px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        min-height: 46px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #0a141d;
+        color: var(--text);
+        font: inherit;
+      }
+
+      .status {
+        min-height: 24px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .status.ok { color: var(--success); }
+      .status.error { color: var(--danger); }
+      .hidden { display: none !important; }
+
+      .panel {
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--panel-soft);
+      }
+
+      .keys {
+        display: grid;
+        gap: 12px;
+      }
+
+      .key-item {
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #0c1722;
+      }
+
+      .key-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      code,
+      pre {
+        font-family: Consolas, monospace;
+      }
+
+      pre {
+        margin: 0;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #09131d;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <h1>Меню Skywatch UA API</h1>
+        <p>
+          Кабінет API для реєстрації, входу, створення ключів та швидкого переходу до документації.
+          Дані користувачів, сесії та API-ключі зберігаються в Turso, якщо підключення активне.
+        </p>
+        <div class="hero-actions">
+          <a class="btn" href="/api-docs">Документація</a>
+          <a class="btn" href="/">На карту</a>
+        </div>
+      </section>
+
+      <div class="grid">
+        <section class="card" id="auth-card">
+          <h2>Вхід або реєстрація</h2>
+          <p>Спочатку створіть акаунт або увійдіть. Після цього можна генерувати API-ключі.</p>
+
+          <form id="register-form">
+            <h3>Реєстрація</h3>
+            <input type="email" name="email" placeholder="you@example.com" required />
+            <input type="password" name="password" placeholder="Пароль від 8 символів" minlength="8" required />
+            <button class="primary" type="submit">Створити акаунт</button>
+          </form>
+
+          <div class="panel">або</div>
+
+          <form id="login-form">
+            <h3>Вхід</h3>
+            <input type="email" name="email" placeholder="you@example.com" required />
+            <input type="password" name="password" placeholder="Пароль" required />
+            <button type="submit">Увійти</button>
+          </form>
+
+          <div class="status" id="auth-status"></div>
+        </section>
+
+        <section class="card hidden" id="dashboard-card">
+          <div class="key-top">
+            <div>
+              <h2>Кабінет API</h2>
+              <p id="user-email"></p>
+            </div>
+            <button id="logout-btn" type="button">Вийти</button>
+          </div>
+
+          <form id="create-key-form">
+            <h3>Створити ключ</h3>
+            <input type="text" name="name" placeholder="Наприклад: бойовий iframe" />
+            <button class="primary" type="submit">Згенерувати API-ключ</button>
+          </form>
+
+          <div class="status" id="dashboard-status"></div>
+
+          <div class="panel hidden" id="new-key-box">
+            <h3>Новий ключ</h3>
+            <p>Ключ показується один раз. Збережіть його у себе.</p>
+            <pre id="new-key-value"></pre>
+          </div>
+
+          <div class="keys" id="keys-list"></div>
+        </section>
+
+        <section class="card">
+          <h2>Швидка документація</h2>
+          <div class="stack">
+            <div class="panel">
+              <h3>Вбудована карта</h3>
+              <pre>&lt;iframe
+  src="https://your-domain.example/embed/map?api_key=YOUR_API_KEY"
+  width="100%"
+  height="640"
+  style="border:0;border-radius:16px"
+&gt;&lt;/iframe&gt;</pre>
+            </div>
+
+            <div class="panel">
+              <h3>Основні endpoint'и</h3>
+              <ul>
+                <li><code>GET /api/meta</code></li>
+                <li><code>GET /api/status</code></li>
+                <li><code>GET /api/events</code></li>
+                <li><code>GET /api/embed/events</code></li>
+                <li><code>GET /api/auth/me</code></li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h3>Передача API-ключа</h3>
+              <ul>
+                <li><code>?api_key=YOUR_API_KEY</code></li>
+                <li><code>x-api-key: YOUR_API_KEY</code></li>
+                <li><code>Authorization: Bearer YOUR_API_KEY</code></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script type="module" src="/api-portal.js"></script>
+  </body>
+</html>

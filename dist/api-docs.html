@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Документація Skywatch UA API</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #071018;
+        --panel: #0f1b27;
+        --panel-soft: #132536;
+        --line: #244156;
+        --text: #edf7ff;
+        --muted: #93aec3;
+        --accent: #46d7ff;
+        --accent-2: #20f0b6;
+        --danger: #ff8b8b;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(70, 215, 255, 0.15), transparent 28%),
+          radial-gradient(circle at top right, rgba(32, 240, 182, 0.12), transparent 24%),
+          linear-gradient(180deg, #08131d 0%, var(--bg) 72%);
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      .hero,
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(15, 27, 39, 0.94);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+      }
+
+      .hero {
+        padding: 28px;
+        margin-bottom: 18px;
+      }
+
+      .hero h1,
+      .card h2,
+      .card h3 {
+        margin: 0 0 12px;
+      }
+
+      .hero p,
+      .card p,
+      .card li {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .hero-actions,
+      .inline-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 999px;
+        text-decoration: none;
+        border: 1px solid var(--line);
+        color: var(--text);
+        background: rgba(147, 174, 195, 0.08);
+        font-weight: 600;
+      }
+
+      .btn.primary {
+        color: #04131b;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        padding: 22px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(70, 215, 255, 0.08);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      code,
+      pre {
+        font-family: Consolas, monospace;
+      }
+
+      pre {
+        margin: 0;
+        overflow: auto;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #09131d;
+        color: #dff4ff;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .endpoint {
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--panel-soft);
+      }
+
+      .endpoint strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .note {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 139, 139, 0.28);
+        background: rgba(255, 139, 139, 0.08);
+        color: #ffd5d5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <span class="pill">Skywatch UA API</span>
+        <h1>Документація та API-меню</h1>
+        <p>
+          Тут зібрано все, що потрібно для інтеграції: отримання API-ключа, основні endpoint'и,
+          приклад embed-карти та авторизація користувача. Документація доступна за адресами
+          <code>/api-docs</code> і <code>/developers/api</code>.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="/account/api">Отримати API-ключ</a>
+          <a class="btn" href="/api-menu">Відкрити API-меню</a>
+          <a class="btn" href="/">Повернутись на карту</a>
+        </div>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <h2>1. Як почати</h2>
+          <div class="stack">
+            <div class="endpoint">
+              <strong>Крок 1. Реєстрація або вхід</strong>
+              <p>Відкрийте <code>/account/api</code>, створіть акаунт або увійдіть в існуючий.</p>
+            </div>
+            <div class="endpoint">
+              <strong>Крок 2. Створення ключа</strong>
+              <p>У кабінеті створіть API-ключ. Ключ показується один раз під час генерації.</p>
+            </div>
+            <div class="endpoint">
+              <strong>Крок 3. Інтеграція</strong>
+              <p>Використовуйте ключ для <code>/api/embed/events</code> або для <code>/embed/map</code>.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>2. Швидкі посилання</h2>
+          <div class="stack">
+            <div class="endpoint">
+              <strong>Кабінет API</strong>
+              <p><code>/account/api</code> або <code>/api-menu</code></p>
+            </div>
+            <div class="endpoint">
+              <strong>Документація</strong>
+              <p><code>/api-docs</code> або <code>/developers/api</code></p>
+            </div>
+            <div class="endpoint">
+              <strong>Вбудована карта</strong>
+              <p><code>/embed/map?api_key=YOUR_API_KEY</code></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>3. Приклад вбудовування</h2>
+          <pre>&lt;iframe
+  src="https://your-domain.example/embed/map?api_key=YOUR_API_KEY"
+  width="100%"
+  height="640"
+  style="border:0;border-radius:16px"
+  loading="lazy"
+  referrerpolicy="strict-origin-when-cross-origin"
+&gt;&lt;/iframe&gt;</pre>
+          <div class="inline-actions">
+            <a class="btn" href="/embed/map" target="_blank" rel="noreferrer">Відкрити вбудовану карту</a>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>4. Авторизація і ключі</h2>
+          <div class="stack">
+            <div class="endpoint">
+              <strong>POST /api/auth/register</strong>
+              <p>Реєстрація користувача. Після успіху сервер створює сесію в базі.</p>
+            </div>
+            <div class="endpoint">
+              <strong>POST /api/auth/login</strong>
+              <p>Вхід користувача. Сесія зберігається через cookie <code>sw_user</code>.</p>
+            </div>
+            <div class="endpoint">
+              <strong>GET /api/auth/me</strong>
+              <p>Поточний користувач і список його API-ключів.</p>
+            </div>
+            <div class="endpoint">
+              <strong>POST /api/auth/api-keys</strong>
+              <p>Створення нового API-ключа для поточного користувача.</p>
+            </div>
+            <div class="endpoint">
+              <strong>DELETE /api/auth/api-keys/:keyId</strong>
+              <p>Відкликання ключа без видалення історії.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>5. Дані карти</h2>
+          <div class="stack">
+            <div class="endpoint">
+              <strong>GET /api/meta</strong>
+              <p>Версія API, підтримувані версії та прапорці функцій.</p>
+            </div>
+            <div class="endpoint">
+              <strong>GET /api/status</strong>
+              <p>Статус технічних робіт та TTL подій.</p>
+            </div>
+            <div class="endpoint">
+              <strong>GET /api/events</strong>
+              <p>Публічний стрім подій для основної карти.</p>
+            </div>
+            <div class="endpoint">
+              <strong>GET /api/embed/events</strong>
+              <p>Події для embed-режиму. Потрібен валідний API-ключ.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>6. Передача API-ключа</h2>
+          <ul>
+            <li><code>?api_key=YOUR_API_KEY</code></li>
+            <li><code>x-api-key: YOUR_API_KEY</code></li>
+            <li><code>Authorization: Bearer YOUR_API_KEY</code></li>
+          </ul>
+          <pre>curl "https://your-domain.example/api/embed/events?api_key=YOUR_API_KEY"</pre>
+          <div class="note">
+            Якщо ключ невалідний, сервер повертає <code>401</code> з помилкою
+            <code>invalid_api_key</code> або <code>api_key_required</code>.
+          </div>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

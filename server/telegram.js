@@ -259,8 +259,10 @@ async function resolveChannelPeer(tgClient, channel) {
 }
 
 export async function loadTelegramEvents() {
+  const startTime = Date.now();
   const tgClient = await getClient();
   if (!tgClient || channels.length === 0) {
+    console.warn(`Telegram not ready or no channels. Client: ${!!tgClient}, Channels: ${channels.length}`);
     return { events: [], alarms: [], district_alarms: [], alarms_updated: false };
   }
 
@@ -270,11 +272,14 @@ export async function loadTelegramEvents() {
   let alarmsUpdated = false;
   const channelMessages = new Map();
   const allMessages = [];
+  let successCount = 0;
+  let failureCount = 0;
 
   async function readChannel(channel) {
     if (disabledChannels.has(normalizeChannelKey(channel))) {
       return { channel, ordered: [] };
     }
+    const chStartTime = Date.now();
     try {
       const peer = await resolveChannelPeer(tgClient, channel);
       if (!peer) {
@@ -285,11 +290,15 @@ export async function loadTelegramEvents() {
         channelTimeoutMs,
         `telegram channel ${channel}`
       );
+      const chDuration = Date.now() - chStartTime;
+      const msgCount = [...messages].filter(Boolean).length;
+      console.log(`  ${channel}: ${msgCount} msgs in ${chDuration}ms`);
       return { channel, ordered: [...messages].filter(Boolean).reverse() };
     } catch (error) {
+      const chDuration = Date.now() - chStartTime;
       if (isPermanentChannelError(error)) {
         disabledChannels.add(normalizeChannelKey(channel));
-        console.warn("Disabled invalid Telegram channel", channel, error?.message || error);
+        console.warn(`  ${channel}: DISABLED after ${chDuration}ms - ${error?.message || error}`);
         return { channel, ordered: [] };
       }
       console.warn("Failed to read channel", channel, error?.message || error);
@@ -314,6 +323,11 @@ export async function loadTelegramEvents() {
     );
 
     for (const { channel, ordered } of results.filter(Boolean)) {
+      if (ordered.length > 0) {
+        successCount++;
+      } else {
+        failureCount++;
+      }
       channelMessages.set(channel, ordered);
       ordered.forEach((msg) => {
         allMessages.push({ channel, msg });
@@ -469,8 +483,10 @@ export async function loadTelegramEvents() {
     }
 
     const refinedEvents = refineEventsByConsensus(events);
+    const duration = Date.now() - startTime;
     console.log(
-      `Telegram load result: ${refinedEvents.length} events, ${alarmSet.size} region alarms, ${districtAlarmMap.size} district alarms.`
+      `Telegram load: ${refinedEvents.length} events (${successCount}/${channels.length} channels, ${failureCount} failed), ` +
+      `${alarmSet.size} region alarms, ${districtAlarmMap.size} district alarms, ${duration}ms`
     );
     return {
       events: refinedEvents,

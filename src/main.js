@@ -328,14 +328,27 @@ function deterministicDirection(seedInput) {
   return positive % 360;
 }
 
+function buildStableEventId(raw, sourceId, lat, lng) {
+  const parts = [
+    sourceId,
+    raw.timestamp || raw.time || "",
+    raw.type || raw.target_type || raw.category || "",
+    raw.marker_label || raw.location?.label || "",
+    raw.target_label || raw.target?.label || "",
+    Number.isFinite(lat) ? lat.toFixed(4) : "",
+    Number.isFinite(lng) ? lng.toFixed(4) : "",
+    raw.comment || raw.note || raw.message || raw.raw_text || ""
+  ];
+  return `evt-${parts.map((part) => String(part).trim()).join("|")}`;
+}
+
 function normalizeEvent(raw, sourceId) {
   const rawDirection = raw.direction ?? raw.heading;
   const parsedDirection = Number(rawDirection);
   const direction = Number.isFinite(parsedDirection) ? parsedDirection : null;
   const lat = Number(raw.lat ?? raw.latitude ?? raw.location?.lat ?? NaN);
   const lng = Number(raw.lng ?? raw.longitude ?? raw.location?.lng ?? NaN);
-  const rawId =
-    raw.id || `${sourceId}-${raw.timestamp || raw.time || Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const rawId = raw.id || buildStableEventId(raw, sourceId, lat, lng);
   const type = normalizeType(raw.type || raw.target_type || raw.category);
   return {
     id: rawId,
@@ -2669,6 +2682,9 @@ function restartRefreshTimer() {
     clearInterval(refreshTimer);
     refreshTimer = null;
   }
+  refreshTimer = setInterval(() => {
+    refresh();
+  }, state.refreshIntervalMs);
 }
 
 function saveSnapshotStore() {
