@@ -18,19 +18,13 @@ export default defineConfig({
     // Report compressed size
     reportCompressedSize: true,
     
-    // Chunk size threshold (warn if larger)
+    // Chunk size threshold
     chunkSizeWarningLimit: 1000,
     
     // Rollup options for better bundling
     rollupOptions: {
       output: {
-        // Manual chunking for better caching
-        manualChunks: {
-          // Separate large libraries into their own chunks
-          leaflet: ['leaflet'],
-          vendor: ['dotenv']
-        },
-        // Preload critical chunks
+        // Asset naming with hashes for cache busting
         entryFileNames: 'js/[name]-[hash].js',
         chunkFileNames: 'js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
