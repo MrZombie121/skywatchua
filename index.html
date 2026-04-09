@@ -490,5 +490,15 @@
       </div>
     </div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+      // Register Service Worker for offline caching
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').then((registration) => {
+          console.log('[App] Service Worker registered:', registration);
+        }).catch((error) => {
+          console.warn('[App] Service Worker registration failed:', error);
+        });
+      }
+    </script>
   </body>
 </html>

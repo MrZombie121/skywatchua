@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import compression from "compression";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -101,6 +102,63 @@ const srcPath = path.resolve(__dirname, "..", "src");
 const distIndexPath = path.join(distPath, "index.html");
 const hasDistBuild = fs.existsSync(distIndexPath);
 console.log(`Frontend mode: ${hasDistBuild ? "dist" : "source"}.`);
+
+// Enable GZIP compression for all responses
+app.use(compression({
+  level: 6, // balance between compression ratio and performance
+  threshold: 1024, // only compress responses larger than 1KB
+  filter: (req, res) => {
+    // compress everything except images
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  }
+}));
+
+// Better cache control headers
+const oneYear = 31536000; // 1 year in seconds
+
+// Cache static versioned assets for 1 year
+app.use((req, res, next) => {
+  if (req.path.match(/\.(js|css|woff2|woff|ttf|eot|svg|png|jpg|jpeg|gif|ico)$/i)) {
+    // Check if file has hash/version in name
+    if (req.path.match(/\.[a-f0-9]{8}\.(js|css)$/i) || req.path.includes('-')) {
+      res.set('Cache-Control', `public, max-age=${oneYear}, immutable`);
+    } else {
+      res.set('Cache-Control', `public, max-age=3600, must-revalidate`);
+    }
+  }
+  next();
+});
+
+// API Cache control headers
+app.use((req, res, next) => {
+  // Override json() to set cache headers before sending
+  const originalJson = res.json.bind(res);
+  res.json = function(data) {
+    // Meta endpoint - cache for 5 minutes
+    if (req.path.includes('/meta')) {
+      res.set('Cache-Control', 'public, max-age=300');
+    }
+    // Status endpoint - cache for 1 minute
+    else if (req.path.includes('/status')) {
+      res.set('Cache-Control', 'public, max-age=60');
+    }
+    // Events endpoint - cache for 15 seconds (matching REFRESH_MS)
+    else if (req.path.includes('/events')) {
+      res.set('Cache-Control', 'public, max-age=15');
+    }
+    // Admin/auth endpoints - no cache
+    else if (req.path.includes('/admin') || req.path.includes('/auth')) {
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+    // Default: cache for 300 seconds
+    else {
+      res.set('Cache-Control', 'public, max-age=300');
+    }
+    return originalJson(data);
+  };
+  next();
+});
 
 app.use(express.json({ limit: "200kb" }));
 app.use(express.static(publicPath));
