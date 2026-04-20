@@ -1,9 +1,17 @@
-const CACHE_VERSION = "skywatch-v2-2";
+const CACHE_VERSION = "skywatch-v2-3";
 const STATIC_ASSET_RE = /\.(?:js|css|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i;
 const CACHEABLE_PREFIXES = ["/css/", "/js/", "/assets/", "/ico/", "/data/"];
+const DOCUMENT_FALLBACK_TIMEOUT_MS = 2500;
+const PRECACHE_URLS = ["/", "/about.html", "/api.html", "/api-docs.html", "/embed.html"];
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_VERSION);
+      await cache.addAll(PRECACHE_URLS).catch(() => {});
+      await self.skipWaiting();
+    })()
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -29,7 +37,7 @@ self.addEventListener("fetch", (event) => {
   if (shouldBypass(url.pathname)) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request));
+    event.respondWith(navigationNetworkFirst(request));
     return;
   }
 
@@ -77,6 +85,33 @@ async function networkFirst(request) {
   }
 }
 
+async function navigationNetworkFirst(request) {
+  const cache = await caches.open(CACHE_VERSION);
+  const cacheKey = new Request("/", { method: "GET" });
+  const cachedNavigation = (await cache.match(request)) || (await cache.match(cacheKey));
+
+  const networkPromise = fetch(request)
+    .then(async (response) => {
+      if (isSuccessful(response)) {
+        await cache.put(request, response.clone());
+        if (new URL(request.url).pathname === "/") {
+          await cache.put(cacheKey, response.clone());
+        }
+      }
+      return response;
+    });
+
+  if (!cachedNavigation) {
+    return networkPromise.catch(() => new Response("Offline", { status: 503 }));
+  }
+
+  try {
+    return await withTimeout(networkPromise, DOCUMENT_FALLBACK_TIMEOUT_MS);
+  } catch {
+    return cachedNavigation;
+  }
+}
+
 async function staleWhileRevalidate(request, event) {
   const cache = await caches.open(CACHE_VERSION);
   const cached = await cache.match(request);
@@ -100,4 +135,14 @@ async function staleWhileRevalidate(request, event) {
 
 function isSuccessful(response) {
   return Boolean(response) && response.ok && response.type !== "error";
+}
+
+function withTimeout(promise, timeoutMs) {
+  let timer = null;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error("timeout")), timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
 }
