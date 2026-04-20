@@ -26,7 +26,7 @@ export const runtime = {
   sessionDays: toNumber(process.env.ADMIN_SESSION_DAYS, 7),
   refreshMs: toNumber(process.env.REFRESH_MS, 5000),
   apiResponseTimeoutMs: toNumber(process.env.API_RESPONSE_TIMEOUT_MS, 3500),
-  eventTtlMin: toNumber(process.env.EVENT_TTL_MIN, 8),
+  eventTtlMin: toNumber(process.env.EVENT_TTL_MIN, 10),
   eventStaleKeepMin: toNumber(process.env.EVENT_STALE_KEEP_MIN, 90),
   dedupRadiusKm: toNumber(process.env.EVENT_DEDUP_RADIUS_KM, 5),
   dedupWindowMin: toNumber(process.env.EVENT_DEDUP_WINDOW_MIN, 5),

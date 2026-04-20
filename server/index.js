@@ -9,7 +9,7 @@ import { loadTelegramEvents } from "./telegram.js";
 import { loadRssEvents } from "./rss.js";
 import { loadOpenEvents } from "./open.js";
 import { generateRecentMapReport } from "./map-report.js";
-import { parseMessageToEvents } from "./transform.js";
+import { parseMessageToEvents, resolveRegionToCity } from "./transform.js";
 import {
   verifyAdmin,
   createSession,
@@ -20,6 +20,8 @@ import {
   listTestEvents,
   addTestEvent,
   clearTestEvents,
+  listActiveMarkerEvents,
+  upsertMarkerEvents,
   listAdminLocations,
   upsertAdminLocationWithPoint,
   createUserAccount,
@@ -81,16 +83,29 @@ const announceRecentLimit = Math.max(100, Number(process.env.TG_ANNOUNCE_RECENT_
 const announcePointRadiusKm = Math.max(1, Number(process.env.TG_ANNOUNCE_POINT_RADIUS_KM || 18));
 const announceLocationRadiusKm = Math.max(1, Number(process.env.TG_ANNOUNCE_LOCATION_RADIUS_KM || 35));
 const announcePhotoEnabled = /^(1|true|yes|on)$/i.test(String(process.env.TG_ANNOUNCE_PHOTO_ENABLED || "true"));
+const reportBotToken = String(process.env.TG_REPORT_BOT_TOKEN || "").trim();
+const reportBotEnabled = /^(1|true|yes|on)$/i.test(String(process.env.TG_REPORT_BOT_ENABLED || "true"));
+const reportBotPollMs = Math.max(3000, Number(process.env.TG_REPORT_BOT_POLL_MS || 5000));
+const reportEventTtlMs = Math.max(5 * 60 * 1000, Number(process.env.TG_REPORT_EVENT_TTL_MS || Math.max(1, eventTtlMin) * 60 * 1000));
+const pendingReportsKey = "pending_reports_v1";
+const reportReviewChatKey = "tg_report_review_chat_id_v1";
 
 if (announceEnabled && (!announceBotToken || !announceChatId)) {
   console.warn("Telegram announce is enabled, but TG_ANNOUNCE_BOT_TOKEN or TG_ANNOUNCE_CHAT_ID is missing.");
+}
+if (reportBotEnabled && !reportBotToken) {
+  console.warn("Telegram report moderation bot is enabled, but TG_REPORT_BOT_TOKEN is missing.");
 }
 
 const state = {
   lastFetch: 0,
   cache: [],
   inFlight: null,
-  backgroundWarmRunning: false
+  backgroundWarmRunning: false,
+  alarmState: [],
+  districtAlarmState: [],
+  reportBotOffset: 0,
+  reportBotPolling: false
 };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -256,11 +271,41 @@ function announcementTypeLabel(event) {
   return null;
 }
 
+function cleanLocationLabelForDisplay(label) {
+  if (!label) return null;
+  const str = String(label).trim();
+  // Удаляем названия областей из label для отображения на сайте и в сообщениях
+  return str
+    .replace(/\b(область|oblast|область|область|cyberspace|київська|харківська|одеська|дніпропетровська|сумська|чернігівська|запорізька|донецька|луганська|ужгородська|волинська|хмельницька|кіровоградська|крим|свобода|симферополь)\b/iu, "")
+    .replace(/\s+/g, " ")
+    .trim() || null;
+}
+
+function isRegionLabel(label) {
+  const lower = String(label || "").toLowerCase();
+  const regionKeywords = ["область", "oblast", "cyberspace", "київська", "харківська", "одеська", "дніпропетровська", "сумська", "чернігівська", "запорізька", "донецька", "луганська", "ужгородська", "волинська", "хмельницька", "кіровоградська"];
+  return regionKeywords.some(keyword => lower.includes(keyword));
+}
+
+function cleanEventForDisplay(event) {
+  if (!event) return event;
+  return {
+    ...event,
+    marker_label: cleanLocationLabelForDisplay(event.marker_label),
+    target_label: cleanLocationLabelForDisplay(event.target_label)
+  };
+}
+
 function formatAnnouncementLocation(location, byId) {
   if (!location) return null;
+  // Не возвращаем области, только города и районы
+  if (location.location_type === "region") return null;
   if (location.location_type === "district") {
     const parent = location.parent_location_id ? byId.get(location.parent_location_id) : null;
     return parent ? `${location.name} м. ${parent.name}` : location.name;
+  }
+  if (location.location_type === "city") {
+    return location.name || null;
   }
   return location.name || null;
 }
@@ -276,7 +321,49 @@ function normalizeAnnouncementLookup(value) {
 function extractAnnouncementCommentLabel(event) {
   const comment = String(event?.comment || "");
   const match = comment.match(/Локація:\s*([^.;]+?)(?:[.;]|$)/u);
-  return match?.[1]?.trim() || null;
+  if (!match) return null;
+  let fullLocation = match[1].trim();
+  
+  // Если там написано "Город, Область" - берём город (часть до запятой)
+  if (fullLocation.includes(",")) {
+    const parts = fullLocation.split(",").map(p => p.trim());
+    const firstPart = parts[0];
+    
+    // Если первая часть - это город (не область и не очень длинное название)
+    if (!isRegionLabel(firstPart)) {
+      return firstPart;
+    }
+    
+    // Если первая часть - область, но есть вторая часть - может она город?
+    if (parts.length > 1 && !isRegionLabel(parts[1])) {
+      return parts[1];
+    }
+  }
+  
+  return fullLocation;
+}
+
+function getRegionIdFromLabel(label, locations) {
+  if (!label) return null;
+  const lower = String(label).toLowerCase();
+  
+  for (const location of locations) {
+    if (location.location_type !== "region") continue;
+    const locName = String(location.name || "").toLowerCase();
+    if (locName.includes("одес") && lower.includes("одес")) return location.id;
+    if (locName.includes("харків") && lower.includes("харків")) return location.id;
+    if (locName.includes("київ") && lower.includes("київ")) return location.id;
+    if (locName.includes("суми") && lower.includes("суми")) return location.id;
+    if (locName.includes("сум") && lower.includes("сум")) return location.id;
+    if (locName.includes("днiпро") && lower.includes("днiпр")) return location.id;
+    if (locName.includes("днипро") && lower.includes("днипр")) return location.id;
+    if (locName.includes("чернi") && lower.includes("чернi")) return location.id;
+    if (locName.includes("черни") && lower.includes("черни")) return location.id;
+    if (locName.includes("запор") && lower.includes("запор")) return location.id;
+    if (locName.includes("донец") && lower.includes("донец")) return location.id;
+    if (locName.includes("луган") && lower.includes("луган")) return location.id;
+  }
+  return null;
 }
 
 function extractEventMarkerLabel(event) {
@@ -287,16 +374,7 @@ function buildAnnouncementText(event, resolvedLocationLabel) {
   const typeLabel = announcementTypeLabel(event);
   if (!typeLabel || !resolvedLocationLabel) return null;
 
-  const markerLabel = extractEventMarkerLabel(event);
-  const targetLabel = String(event?.target_label || "").trim() || null;
-
-  if (markerLabel && targetLabel && markerLabel !== targetLabel) {
-    return `${typeLabel} з ${markerLabel} в напрямку ${targetLabel}`;
-  }
-  if (targetLabel) {
-    return `${typeLabel} на ${targetLabel}`;
-  }
-  return `${typeLabel} на ${resolvedLocationLabel}`;
+  return `❗${typeLabel} напрямом на ${resolvedLocationLabel}, Обережно!❗`;
 }
 
 function matchAnnouncementLocationByLabel(label, locations, byId) {
@@ -319,37 +397,53 @@ function matchAnnouncementLocationByLabel(label, locations, byId) {
 }
 
 async function resolveAnnouncementLocation(event) {
+  const explicitLabel = extractEventMarkerLabel(event);
+
+  // Если в сообщении ничего нет - не объявляем
+  if (!explicitLabel) return null;
+
+  // Если в сообщении указан ГОРОД/РАЙОН - используем его напрямую!
+  if (!isRegionLabel(explicitLabel)) {
+    const cleaned = cleanLocationLabelForDisplay(explicitLabel);
+    return cleaned || explicitLabel;
+  }
+
+  // ===== ЕСЛИ В СООБЩЕНИИ ТОЛЬКО ОБЛАСТЬ =====
+  // Нужно найти ближайший город по координатам в этой области
   const lat = Number(event?.lat);
   const lng = Number(event?.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
 
   const locations = await listAdminLocations();
   if (!Array.isArray(locations) || locations.length === 0) return null;
-  const byId = new Map(locations.map((item) => [item.id, item]));
-  const type = String(event?.type || "").toLowerCase();
-  const explicitLabel = extractEventMarkerLabel(event);
 
-  if (explicitLabel) {
-    return matchAnnouncementLocationByLabel(explicitLabel, locations, byId);
-  }
+  // Определяем ID область из названия
+  const regionId = getRegionIdFromLabel(explicitLabel, locations);
 
-  let nearestPoint = null;
+  // Ищем ближайший ГОРОД (по центру координат города)
+  let nearestCity = null;
   for (const location of locations) {
-    const points = Array.isArray(location.points) ? location.points : [];
-    for (const point of points) {
-      const pointTypes = Array.isArray(point.types) ? point.types.map((item) => String(item).toLowerCase()) : [];
-      if (pointTypes.length > 0 && !pointTypes.includes(type)) continue;
-      const distanceKm = haversineKm({ lat, lng }, { lat: Number(point.lat), lng: Number(point.lng) });
-      if (!Number.isFinite(distanceKm)) continue;
-      if (!nearestPoint || distanceKm < nearestPoint.distanceKm) {
-        nearestPoint = { location, distanceKm };
-      }
+    if (location.location_type !== "city") continue;
+    
+    // Если определена область - ищем города только в этой области
+    if (regionId && location.parent_location_id !== regionId) continue;
+    
+    const locLat = Number(location.lat);
+    const locLng = Number(location.lng);
+    if (!Number.isFinite(locLat) || !Number.isFinite(locLng)) continue;
+    
+    const distanceKm = haversineKm({ lat, lng }, { lat: locLat, lng: locLng });
+    if (!Number.isFinite(distanceKm)) continue;
+    
+    if (!nearestCity || distanceKm < nearestCity.distanceKm) {
+      nearestCity = { location, distanceKm };
     }
   }
 
-  if (nearestPoint && nearestPoint.distanceKm <= announcePointRadiusKm) {
-    return formatAnnouncementLocation(nearestPoint.location, byId);
+  if (nearestCity) {
+    return nearestCity.location.name || null;
   }
+
   return null;
 }
 
@@ -460,6 +554,278 @@ async function announceNewEvents(events, previousEvents = []) {
   }
 }
 
+function normalizePendingReports(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object" || !item.id) return null;
+      return {
+        id: String(item.id),
+        created_at: Number(item.created_at || Date.now()),
+        status: String(item.status || "pending"),
+        payload: item.payload && typeof item.payload === "object" ? { ...item.payload } : {},
+        event: item.event && typeof item.event === "object" ? { ...item.event } : null,
+        review_chat_id: item.review_chat_id ? String(item.review_chat_id) : null,
+        review_message_id: Number(item.review_message_id || 0) || null,
+        reviewed_at: Number(item.reviewed_at || 0) || null,
+        reviewer: item.reviewer ? String(item.reviewer) : null,
+        notified_at: Number(item.notified_at || 0) || null
+      };
+    })
+    .filter(Boolean)
+    .slice(-500);
+}
+
+async function readPendingReports() {
+  try {
+    const raw = await getSetting(pendingReportsKey, "[]");
+    return normalizePendingReports(JSON.parse(raw));
+  } catch {
+    return [];
+  }
+}
+
+async function writePendingReports(items) {
+  await setSetting(pendingReportsKey, JSON.stringify(normalizePendingReports(items)));
+}
+
+async function getReportReviewChatId() {
+  const raw = await getSetting(reportReviewChatKey, "");
+  return String(raw || "").trim() || null;
+}
+
+async function setReportReviewChatId(chatId) {
+  await setSetting(reportReviewChatKey, String(chatId || "").trim());
+}
+
+function buildUserReportMessage(payload = {}) {
+  const type = String(payload.type || "other").trim().toLowerCase();
+  const count = Math.max(1, Math.min(50, Number(payload.count || 1) || 1));
+  const location = String(payload.location || "").trim();
+  const target = String(payload.target || "").trim();
+  const note = String(payload.note || "").trim();
+  const countPrefix = count > 1 ? `${count} ` : "";
+  const targetText = target ? ` в напрямку ${target}` : "";
+  const noteText = note ? `. ${note}` : "";
+  return `${countPrefix}${type} над ${location}${targetText}${noteText}`.trim();
+}
+
+function enrichApprovedReportEvent(event, report) {
+  const payload = report?.payload || {};
+  const commentParts = [String(event.comment || "").trim()];
+  if (payload.note) commentParts.push(`Заявка користувача: ${String(payload.note).trim()}`);
+  if (payload.contact_name || payload.contact_link) {
+    commentParts.push(
+      `Контакт: ${[payload.contact_name, payload.contact_link].filter(Boolean).join(" / ")}`
+    );
+  }
+  return {
+    ...event,
+    id: `user-report-${report.id}`,
+    source: "user-report",
+    is_test: false,
+    timestamp: toIso(payload.seen_at || event.timestamp || new Date().toISOString()),
+    direction: Number.isFinite(Number(payload.direction)) ? Number(payload.direction) : normalizeHeading(event),
+    comment: commentParts.filter(Boolean).join(". "),
+    marker_action: "place",
+    group_count_min: Math.max(1, Number(payload.count || event.group_count_min || 1)),
+    group_count_max: Math.max(1, Number(payload.count || event.group_count_max || 1)),
+    bot_meta: {
+      ...(event.bot_meta && typeof event.bot_meta === "object" ? event.bot_meta : {}),
+      action: "place_marker",
+      pending_report_id: report.id,
+      reported_by_user: true
+    }
+  };
+}
+
+function formatReportReviewText(report) {
+  const payload = report?.payload || {};
+  const event = report?.event || {};
+  const lines = [
+    "Нова заявка на мітку",
+    `ID: ${report.id}`,
+    `Тип: ${payload.type || event.type || "unknown"}`,
+    `Де: ${payload.location || event.marker_label || "—"}`,
+    `Напрямок: ${payload.target || event.target_label || "—"}`,
+    `Коли: ${payload.seen_at ? toIso(payload.seen_at) : toIso(report.created_at)}`,
+    `Кількість: ${payload.count || 1}`,
+    `Коментар: ${payload.note || "—"}`,
+    `Контакт: ${[payload.contact_name, payload.contact_link].filter(Boolean).join(" / ") || "—"}`
+  ];
+  return lines.join("\n");
+}
+
+async function reportBotRequest(method, payload = {}, options = {}) {
+  if (!reportBotToken) throw new Error("report_bot_token_missing");
+  const response = await fetch(`https://api.telegram.org/bot${reportBotToken}/${method}`, {
+    method: "POST",
+    headers: options.formData ? undefined : { "Content-Type": "application/json" },
+    body: options.formData ? payload : JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`report_bot_${method}_failed:${response.status}:${body}`);
+  }
+  const data = await response.json().catch(() => ({}));
+  if (data?.ok === false) {
+    throw new Error(`report_bot_${method}_error:${data?.description || "unknown"}`);
+  }
+  return data?.result;
+}
+
+async function sendReportBotMessage(chatId, text, extra = {}) {
+  return reportBotRequest("sendMessage", {
+    chat_id: chatId,
+    text,
+    disable_web_page_preview: true,
+    reply_markup: extra.reply_markup || undefined
+  });
+}
+
+async function answerReportCallback(callbackQueryId, text) {
+  return reportBotRequest("answerCallbackQuery", {
+    callback_query_id: callbackQueryId,
+    text,
+    show_alert: false
+  });
+}
+
+async function editReportBotMessage(chatId, messageId, text) {
+  return reportBotRequest("editMessageText", {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    disable_web_page_preview: true
+  });
+}
+
+async function dispatchPendingReports(chatIdOverride = null) {
+  if (!reportBotEnabled || !reportBotToken) return 0;
+  const chatId = chatIdOverride || await getReportReviewChatId();
+  if (!chatId) return 0;
+  const reports = await readPendingReports();
+  let sent = 0;
+  for (const report of reports) {
+    if (report.status !== "pending" || report.review_message_id) continue;
+    try {
+      const message = await sendReportBotMessage(chatId, formatReportReviewText(report), {
+        reply_markup: {
+          inline_keyboard: [[
+            { text: "Поставити", callback_data: `report:approve:${report.id}` },
+            { text: "Скасувати мітку", callback_data: `report:reject:${report.id}` }
+          ]]
+        }
+      });
+      report.review_chat_id = String(chatId);
+      report.review_message_id = Number(message?.message_id || 0) || null;
+      report.notified_at = Date.now();
+      sent += 1;
+    } catch (error) {
+      console.warn("Failed to dispatch pending report", report.id, error?.message || error);
+    }
+  }
+  if (sent > 0) {
+    await writePendingReports(reports);
+  }
+  return sent;
+}
+
+async function approvePendingReport(report, query = {}) {
+  const approvedEvent = enrichApprovedReportEvent(report.event, report);
+  await upsertMarkerEvents([approvedEvent], reportEventTtlMs, Date.now());
+  state.cache = await listActiveMarkerEvents(Date.now());
+  report.status = "approved";
+  report.reviewed_at = Date.now();
+  report.reviewer = String(query?.from?.username || query?.from?.id || "reviewer");
+  if (report.review_chat_id && report.review_message_id) {
+    await editReportBotMessage(
+      report.review_chat_id,
+      report.review_message_id,
+      `${formatReportReviewText(report)}\n\nСтатус: поставлено`
+    ).catch(() => {});
+  }
+}
+
+async function rejectPendingReport(report, query = {}) {
+  report.status = "rejected";
+  report.reviewed_at = Date.now();
+  report.reviewer = String(query?.from?.username || query?.from?.id || "reviewer");
+  if (report.review_chat_id && report.review_message_id) {
+    await editReportBotMessage(
+      report.review_chat_id,
+      report.review_message_id,
+      `${formatReportReviewText(report)}\n\nСтатус: відхилено`
+    ).catch(() => {});
+  }
+}
+
+async function handleReportBotUpdate(update) {
+  const message = update?.message;
+  if (message?.text) {
+    const text = String(message.text).trim();
+    if (text.startsWith("/start") || text.startsWith("/review")) {
+      const chatId = String(message.chat?.id || "").trim();
+      if (!chatId) return;
+      await setReportReviewChatId(chatId);
+      await sendReportBotMessage(chatId, "Чат модератора зареєстровано. Нові заявки на мітки будуть приходити сюди.");
+      await dispatchPendingReports(chatId);
+    }
+    return;
+  }
+
+  const query = update?.callback_query;
+  if (!query?.data) return;
+  const [scope, action, reportId] = String(query.data).split(":");
+  if (scope !== "report" || !action || !reportId) return;
+  const reports = await readPendingReports();
+  const report = reports.find((item) => item.id === reportId);
+  if (!report) {
+    await answerReportCallback(query.id, "Заявку не знайдено.");
+    return;
+  }
+  if (report.status !== "pending") {
+    await answerReportCallback(query.id, "Заявка вже оброблена.");
+    return;
+  }
+  if (action === "approve") {
+    await approvePendingReport(report, query);
+    await answerReportCallback(query.id, "Мітку поставлено.");
+  } else if (action === "reject") {
+    await rejectPendingReport(report, query);
+    await answerReportCallback(query.id, "Мітку скасовано.");
+  }
+  await writePendingReports(reports);
+}
+
+async function pollReportBot() {
+  if (!reportBotEnabled || !reportBotToken || state.reportBotPolling) return;
+  state.reportBotPolling = true;
+  try {
+    const updates = await reportBotRequest("getUpdates", {
+      offset: state.reportBotOffset,
+      timeout: 20,
+      allowed_updates: ["message", "callback_query"]
+    });
+    for (const update of updates || []) {
+      state.reportBotOffset = Math.max(state.reportBotOffset, Number(update.update_id || 0) + 1);
+      await handleReportBotUpdate(update);
+    }
+  } catch (error) {
+    console.warn("Report bot polling failed", error?.message || error);
+  } finally {
+    state.reportBotPolling = false;
+  }
+}
+
+function startReportBotPolling() {
+  if (!reportBotEnabled || !reportBotToken) return;
+  setInterval(() => {
+    pollReportBot().catch(() => {});
+  }, reportBotPollMs);
+  pollReportBot().catch(() => {});
+}
+
 function withConfidence(event) {
   const base = Number(event.confidence);
   const baseConfidence = Number.isFinite(base) ? base : 0.45;
@@ -475,6 +841,17 @@ function withConfidence(event) {
 async function hydrateEventCacheFromStore() {
   if (state.cache.length > 0) return;
   try {
+    const activeEvents = await listActiveMarkerEvents();
+    if (Array.isArray(activeEvents) && activeEvents.length > 0) {
+      state.cache = activeEvents.filter((event) =>
+        Number.isFinite(Number(event?.lat)) &&
+        Number.isFinite(Number(event?.lng)) &&
+        Number.isFinite(Date.parse(event?.timestamp))
+      );
+      state.lastFetch = Date.now();
+      await persistEventCacheToStore(state.cache, state.lastFetch);
+      return;
+    }
     const rawCache = await getSetting(EVENTS_CACHE_KEY, "[]");
     const rawUpdatedAt = await getSetting(EVENTS_CACHE_UPDATED_AT_KEY, "0");
     const parsed = JSON.parse(rawCache);
@@ -501,6 +878,10 @@ async function persistEventCacheToStore(events, updatedAt = Date.now()) {
 }
 
 function isServerEventAlive(event, now = Date.now()) {
+  const expiresAt = Number(event?.expires_at);
+  if (Number.isFinite(expiresAt) && expiresAt > 0) {
+    return now <= expiresAt;
+  }
   const ts = Date.parse(event?.timestamp);
   if (!Number.isFinite(ts)) return false;
   const ttlMs = Math.max(1, eventTtlMin) * 60 * 1000;
@@ -509,10 +890,20 @@ function isServerEventAlive(event, now = Date.now()) {
 
 async function pruneServerEventCache(now = Date.now()) {
   const current = Array.isArray(state.cache) ? state.cache : [];
-  const next = current.filter((event) => isServerEventAlive(event, now));
+  let next = [];
+  try {
+    next = await listActiveMarkerEvents(now);
+  } catch (error) {
+    console.warn("Failed to prune marker events in store", error?.message || error);
+  }
+  if (!Array.isArray(next) || next.length === 0) {
+    next = current.filter((event) => isServerEventAlive(event, now));
+  }
   if (next.length !== current.length) {
     state.cache = next;
     await persistEventCacheToStore(next, state.lastFetch || now);
+  } else if (current !== next) {
+    state.cache = next;
   }
   return state.cache;
 }
@@ -708,15 +1099,11 @@ async function refreshEventCacheFromSources() {
     await setSetting("alarms_state", JSON.stringify(alarmState));
     await setSetting("district_alarms_state", JSON.stringify(districtAlarmState));
     await setSetting("alarms_updated_at", String(Date.now()));
-  } else {
-    const storedStates = await readStoredAlarmState();
-    if (storedStates.alarmState.length > 0) {
-      alarmState = storedStates.alarmState;
-    }
-    if (storedStates.districtAlarmState.length > 0) {
-      districtAlarmState = storedStates.districtAlarmState;
-    }
   }
+  
+  // Always update in-memory state with the latest alarms from Telegram
+  state.alarmState = alarmState;
+  state.districtAlarmState = districtAlarmState;
 
   const [rssEvents, openEvents, storedTests] = await Promise.all([
     rssPromise,
@@ -748,8 +1135,11 @@ async function refreshEventCacheFromSources() {
       return nowTs - time <= ttlMs;
     });
   const combined = deduplicateEvents(combinedRaw);
+  const activeEvents = combined.length > 0
+    ? await upsertMarkerEvents(combined, ttlMs, nowTs)
+    : await listActiveMarkerEvents(nowTs);
 
-  if (combined.length === 0 && state.cache.length && nowTs - state.lastFetch <= staleKeepMs) {
+  if (combined.length === 0 && activeEvents.length === 0 && state.cache.length && nowTs - state.lastFetch <= staleKeepMs) {
     return {
       events: state.cache,
       alarms: alarmState,
@@ -761,13 +1151,13 @@ async function refreshEventCacheFromSources() {
     };
   }
 
-  state.cache = combined;
+  state.cache = activeEvents;
   state.lastFetch = nowTs;
-  await persistEventCacheToStore(combined, nowTs);
+  await persistEventCacheToStore(activeEvents, nowTs);
   await announceNewEvents(combined, previousCache);
 
   return {
-    events: combined,
+    events: activeEvents,
     alarms: alarmState,
     district_alarms: districtAlarmState,
     cached: false,
@@ -780,7 +1170,7 @@ async function buildFastFallbackPayload(maintenance = { enabled: false, until: n
   const { alarmState, districtAlarmState } = await readStoredAlarmState();
   const liveCache = await pruneServerEventCache();
   return {
-    events: maintenance.enabled ? [] : liveCache,
+    events: maintenance.enabled ? [] : liveCache.map(cleanEventForDisplay),
     alarms: alarmState,
     district_alarms: districtAlarmState,
     cached: true,
@@ -793,7 +1183,18 @@ async function buildFastFallbackPayload(maintenance = { enabled: false, until: n
 async function buildEventsPayload() {
 
   try {
-    await hydrateEventCacheFromStore();
+    // Add timeout to database hydration to prevent hanging
+    await Promise.race([
+      hydrateEventCacheFromStore(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("hydrate_timeout")), 2000))
+    ]).catch((error) => {
+      if (error.message === "hydrate_timeout") {
+        console.warn("Database hydration timed out, continuing with empty cache");
+      } else {
+        throw error;
+      }
+    });
+    
     const maintenance = await getMaintenanceState();
     const now = Date.now();
     const liveCache = await pruneServerEventCache(now);
@@ -802,7 +1203,7 @@ async function buildEventsPayload() {
     if (now - state.lastFetch < refreshMs && liveCache.length) {
       const { alarmState, districtAlarmState } = await readStoredAlarmState();
       return {
-        events: maintenance.enabled ? [] : liveCache,
+        events: maintenance.enabled ? [] : liveCache.map(cleanEventForDisplay),
         alarms: alarmState,
         district_alarms: districtAlarmState,
         cached: true,
@@ -831,7 +1232,7 @@ async function buildEventsPayload() {
       }
       const { alarmState, districtAlarmState } = await readStoredAlarmState();
       return {
-        events: liveCache,
+        events: liveCache.map(cleanEventForDisplay),
         alarms: alarmState,
         district_alarms: districtAlarmState,
         cached: true,
@@ -850,6 +1251,7 @@ async function buildEventsPayload() {
     const fallback = await buildFastFallbackPayload(maintenance);
     return {
       ...fallback,
+      events: fallback.events.map(cleanEventForDisplay),
       warming: true
     };
   } catch (error) {
@@ -859,30 +1261,14 @@ async function buildEventsPayload() {
 }
 
 async function sendEvents(_req, res) {
-  try {
-    const payload = await buildEventsPayload();
-    return res.json(payload);
-  } catch {
-    return res.status(500).json({ error: "failed_to_load" });
-  }
+  console.log("[API] /api/v1/events request received, current cache size:", state.cache?.length || 0);
+  const payload = await buildEventsPayload();
+  return res.json(payload);
 }
 
 async function sendEmbedEvents(_req, res) {
-  try {
-    const payload = await buildEventsPayload();
-    return res.json({
-      events: Array.isArray(payload.events) ? payload.events : [],
-      alarms: Array.isArray(payload.alarms) ? payload.alarms : [],
-      district_alarms: Array.isArray(payload.district_alarms) ? payload.district_alarms : [],
-      maintenance: Boolean(payload.maintenance),
-      maintenance_until: payload.maintenance_until || null,
-      cached: Boolean(payload.cached),
-      stale: Boolean(payload.stale),
-      warming: Boolean(payload.warming)
-    });
-  } catch {
-    return res.status(500).json({ error: "failed_to_load" });
-  }
+  const payload = await buildEventsPayload();
+  return res.json(payload);
 }
 
 async function warmEventCacheInBackground() {
@@ -921,6 +1307,80 @@ app.post("/api/announce-event", async (req, res) => {
   } catch (error) {
     console.warn("Failed to announce event from client", error?.message || error);
     return res.status(500).json({ ok: false, error: "announce_failed" });
+  }
+});
+
+app.post("/api/reports", async (req, res) => {
+  try {
+    const payload = req.body && typeof req.body === "object" ? req.body : {};
+    const type = String(payload.type || "shahed").trim().toLowerCase();
+    const location = String(payload.location || "").trim();
+    const target = String(payload.target || "").trim();
+    const note = String(payload.note || "").trim();
+    const seenAt = payload.seen_at ? toIso(payload.seen_at) : new Date().toISOString();
+    const count = Math.max(1, Math.min(50, Number(payload.count || 1) || 1));
+    if (!location) {
+      return res.status(400).json({ ok: false, error: "location_required" });
+    }
+
+    const syntheticMessage = buildUserReportMessage({
+      type,
+      location,
+      target,
+      note,
+      count
+    });
+    const parsed = parseMessageToEvents(syntheticMessage, {
+      source: "user-report",
+      timestamp: seenAt,
+      type,
+      direction: Number.isFinite(Number(payload.direction)) ? Number(payload.direction) : null,
+      is_test: false,
+      group_count: count
+    }).filter(Boolean);
+
+    if (parsed.length === 0) {
+      return res.status(400).json({ ok: false, error: "unable_to_parse_location" });
+    }
+
+    const reportId = `rp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const report = {
+      id: reportId,
+      created_at: Date.now(),
+      status: "pending",
+      payload: {
+        type,
+        location,
+        target,
+        note,
+        count,
+        seen_at: seenAt,
+        contact_name: String(payload.contact_name || "").trim(),
+        contact_link: String(payload.contact_link || "").trim(),
+        direction: Number.isFinite(Number(payload.direction)) ? Number(payload.direction) : null
+      },
+      event: {
+        ...parsed[0],
+        marker_label: parsed[0].marker_label || location,
+        target_label: parsed[0].target_label || target || null
+      }
+    };
+
+    const reports = await readPendingReports();
+    reports.push(report);
+    await writePendingReports(reports);
+    const reviewChatId = await getReportReviewChatId();
+    const dispatched = reviewChatId ? await dispatchPendingReports(reviewChatId) : 0;
+    return res.status(201).json({
+      ok: true,
+      queued: true,
+      dispatched: dispatched > 0,
+      reviewer_registered: Boolean(reviewChatId),
+      id: reportId
+    });
+  } catch (error) {
+    console.warn("Failed to submit user report", error?.message || error);
+    return res.status(500).json({ ok: false, error: "report_submit_failed" });
   }
 });
 
@@ -1082,6 +1542,9 @@ app.post("/api/admin/test-events", requireAdmin, async (req, res) => {
     return res.status(400).json({ error: "city_required" });
   }
 
+  // Resolve region to city (e.g., "Одеська область" -> "Одеса")
+  const resolvedCity = resolveRegionToCity(city);
+
   const normalizedType = String(type || "other").trim().toLowerCase();
   const normalizedGroupCount = Number.isFinite(Number(group_count))
     ? Math.max(1, Math.min(99, Math.round(Number(group_count))))
@@ -1099,7 +1562,7 @@ app.post("/api/admin/test-events", requireAdmin, async (req, res) => {
         : `${normalizedGroupCount} `
     : "";
   const testText = isTest ? " тест" : "";
-  const message = `${countPrefix}${normalizedType} ${seaText} ${city}${directionText}.${testText} ${note || ""}`.trim();
+  const message = `${countPrefix}${normalizedType} ${seaText} ${resolvedCity}${directionText}.${testText} ${note || ""}`.trim();
 
   await addTestEvent({
     id: `test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -1191,6 +1654,7 @@ app.get("*", (_req, res) => {
 
 app.listen(port, () => {
   console.log(`Skywatch UA backend running on http://localhost:${port}`);
+  startReportBotPolling();
   
   // Start warming cache in background after server starts
   setTimeout(async () => {
@@ -1206,6 +1670,15 @@ app.listen(port, () => {
 
 hydrateEventCacheFromStore().catch((error) => {
   console.warn("Initial event cache hydrate failed", error?.message || error);
+});
+
+// Initialize alarm state from storage on startup
+readStoredAlarmState().then(({ alarmState, districtAlarmState }) => {
+  state.alarmState = alarmState;
+  state.districtAlarmState = districtAlarmState;
+  console.log(`[INIT] Loaded from storage: ${alarmState.length} alarms, ${districtAlarmState.length} district alarms`);
+}).catch((error) => {
+  console.warn("Failed to load alarm state on startup", error?.message || error);
 });
 
 warmEventCacheInBackground().catch(() => {});

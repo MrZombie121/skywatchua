@@ -18,6 +18,7 @@ const coreTelegramChannels = [
   "@war_monitor",
   "@tlknewsua",
   "@xydessa_live",
+  "@oddesitmedia",
   "@pivdenmedia",
   "@dneproperatyv",
   "@kyivoperat",

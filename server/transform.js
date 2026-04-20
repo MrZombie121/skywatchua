@@ -677,6 +677,51 @@ function loadOverrideLocations() {
 
 const overrideLocations = loadOverrideLocations();
 
+// Map region IDs to their main city locations
+const regionCityMapping = {
+  kyivska: "Київ",
+  kharkivska: "Харків",
+  odeska: "Одеса",
+  lvivska: "Львів",
+  dniprovska: "Дніпро",
+  zaporizka: "Запоріжжя",
+  mykolaivska: "Миколаїв",
+  khersonska: "Херсон",
+  chernihivska: "Чернігів",
+  sumyska: "Суми",
+  poltavska: "Полтава",
+  rivnenska: "Рівне",
+  volynska: "Луцьк",
+  ternopilska: "Тернопіль",
+  "ivano-frankivska": "Івано-Франківськ",
+  chernivetska: "Чернівці",
+  zakarpatska: "Ужгород",
+  khmelnytska: "Хмельницький",
+  vinnytska: "Вінниця",
+  zhytomyrska: "Житомир",
+  cherkaska: "Черкаси",
+  kirovohradska: "Кропивницький",
+  donetska: "Донецьк",
+  luhanska: "Луганськ",
+  crimea: "Сімферополь",
+  sevastopol: "Севастополь"
+};
+
+function resolveRegionToCity(text) {
+  const lower = normalizeText(text);
+  
+  // First check if text is a region name
+  for (const [regionId, cityName] of Object.entries(regionCityMapping)) {
+    const regionAliases = alarmRegions.find(r => r.id === regionId)?.keys || [];
+    if (regionAliases.some(alias => lower.includes(normalizeText(alias)))) {
+      return cityName;
+    }
+  }
+  
+  // If not a region, return original text
+  return text;
+}
+
 function getAdminLocationHints() {
   return getAdminLocationsSync()
     .filter((item) =>
@@ -1033,6 +1078,7 @@ function isLooseTrackSource(source) {
     "povitryanatrivogaaa",
     "ukrainian_intelligence",
     "xydessa_live",
+    "oddesitmedia",
     "pivdenmedia",
     "dnipro_alerts",
     "onemaster_kr",
@@ -1066,6 +1112,30 @@ function haversineKm(a, b) {
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function destinationPoint(lat, lng, bearingDegValue, distanceKm) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const toDeg = (value) => (value * 180) / Math.PI;
+  const R = 6371;
+  const angularDistance = distanceKm / R;
+  const bearing = toRad(bearingDegValue);
+  const lat1 = toRad(lat);
+  const lng1 = toRad(lng);
+
+  const lat2 = Math.asin(
+    Math.sin(lat1) * Math.cos(angularDistance) +
+    Math.cos(lat1) * Math.sin(angularDistance) * Math.cos(bearing)
+  );
+  const lng2 = lng1 + Math.atan2(
+    Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(lat1),
+    Math.cos(angularDistance) - Math.sin(lat1) * Math.sin(lat2)
+  );
+
+  return {
+    lat: toDeg(lat2),
+    lng: ((toDeg(lng2) + 540) % 360) - 180
+  };
 }
 
 function angularDiffDeg(a, b) {
@@ -1364,7 +1434,8 @@ function getLiveFallbackLocations() {
       lat: Number(item.lat),
       lng: Number(item.lng),
       keys: Array.isArray(item.keys) ? item.keys.map((key) => String(key).toLowerCase()) : [],
-      region_id: item.region_id ? String(item.region_id) : null
+      region_id: item.region_id ? String(item.region_id) : null,
+      location_type: item.location_type ? String(item.location_type) : null
     }));
 
   const combined = [...adminLocations, ...liveFallbackLocationHints];
@@ -1376,20 +1447,82 @@ function getLiveFallbackLocations() {
   return Array.from(unique.values());
 }
 
+function getRegionFallbackTarget(regionId, referencePoint = null) {
+  if (!regionId) return null;
+  const candidates = getLiveFallbackLocations()
+    .filter((item) => item.region_id === regionId)
+    .filter((item) => item.location_type !== "region");
+
+  if (candidates.length === 0) {
+    const center = liveFallbackRegionCenters[regionId] || regionCenters[regionId];
+    return center
+      ? { lat: center.lat, lng: center.lng, label: center.name, region_id: regionId, exact: false }
+      : null;
+  }
+
+  if (!referencePoint || !Number.isFinite(referencePoint.lat) || !Number.isFinite(referencePoint.lng)) {
+    const first = candidates[0];
+    return {
+      lat: Number(first.lat),
+      lng: Number(first.lng),
+      label: first.name,
+      location_id: first.id || null,
+      region_id: regionId,
+      exact: false
+    };
+  }
+
+  const nearest = candidates
+    .map((item) => ({
+      ...item,
+      distanceKm: haversineKm(referencePoint, { lat: Number(item.lat), lng: Number(item.lng) })
+    }))
+    .sort((a, b) => a.distanceKm - b.distanceKm)[0];
+
+  return {
+    lat: Number(nearest.lat),
+    lng: Number(nearest.lng),
+    label: nearest.name,
+    location_id: nearest.id || null,
+    region_id: regionId,
+    exact: false
+  };
+}
+
+function extractOffshoreDistanceKm(text) {
+  const lower = normalizeText(text);
+  const offshoreRegex = new RegExp("(\\d{1,3})\\s*\\u043a\\u043c\\s*(?:\\u0434\\u043e|\\u0432\\u0456\\u0434|\\u043e\\u0442)\\s*\\u0431\\u0435\\u0440\\u0435\\u0433\\u0430", "u");
+  const match = lower.match(offshoreRegex);
+  if (!match) return null;
+  const distanceKm = Number(match[1]);
+  return Number.isFinite(distanceKm) ? distanceKm : null;
+}
+
+function projectOffshorePoint(target, sea, distanceKm) {
+  if (!target || !Number.isFinite(target.lat) || !Number.isFinite(target.lng) || !Number.isFinite(distanceKm)) {
+    return null;
+  }
+  const anchor = sea ? sea.anchor : seaHints[0].anchor;
+  const bearing = bearingDeg(Number(target.lat), Number(target.lng), Number(anchor.lat), Number(anchor.lng));
+  return destinationPoint(Number(target.lat), Number(target.lng), bearing, distanceKm);
+}
+
 function findLiveFallbackTargets(text) {
   const lower = normalizeLiveText(text);
   const matches = [];
 
   for (const item of getLiveFallbackLocations()) {
     if (!Array.isArray(item.keys) || item.keys.length === 0) continue;
-    if (!item.keys.some((key) => includesLiveKey(lower, key))) continue;
+    const matchedKey = item.keys.find((key) => includesLiveKey(lower, key));
+    if (!matchedKey) continue;
     matches.push({
       lat: Number(item.lat),
       lng: Number(item.lng),
       label: item.name,
       location_id: item.id,
       region_id: item.region_id || null,
-      exact: true
+      exact: true,
+      index: Math.max(0, lower.indexOf(String(matchedKey).toLowerCase().trim()))
     });
   }
 
@@ -1399,6 +1532,8 @@ function findLiveFallbackTargets(text) {
     if (!unique.has(key)) unique.set(key, item);
   });
   if (unique.size > 0) return Array.from(unique.values()).slice(0, 3);
+  const regionMatchByLabel = extractRegionIds(text, "").find(Boolean);
+  if (regionMatchByLabel) return [getRegionFallbackTarget(regionMatchByLabel)].filter(Boolean);
 
   if (/\b(київська область|київщина|киевская область)\b/u.test(lower)) {
     return [{ ...liveFallbackRegionCenters.kyivska, label: liveFallbackRegionCenters.kyivska.name, region_id: "kyivska", exact: false }];
@@ -1500,8 +1635,22 @@ export function parseMessageToEvents(text, meta = {}) {
   const trackContextText = allowContextForType ? mergedText : baseText;
   // Parse locations only from the original message to avoid marker explosions from context.
   const coords = extractCoords(baseText);
-  const locationHitsRaw = coords ? [coords] : extractLocationHits(baseText);
-  const sea = pickSea(baseText);
+  let locationHitsRaw = coords ? [coords] : extractLocationHits(baseText);
+  if (!coords && sourceLower.includes("oddesitmedia")) {
+    const exactSourceHits = findLiveFallbackTargets(baseText).filter((item) => item?.exact);
+    if (exactSourceHits.length > 0) {
+      const mergedHits = new Map();
+      exactSourceHits.forEach((item) => {
+        mergedHits.set(`${item.label}:${item.lat}:${item.lng}`, item);
+      });
+      locationHitsRaw.forEach((item) => {
+        mergedHits.set(`${item.label}:${item.lat}:${item.lng}`, item);
+      });
+      locationHitsRaw = Array.from(mergedHits.values()).sort((a, b) => Number(a.index || 0) - Number(b.index || 0));
+    }
+  }
+  const offshoreDistanceKm = extractOffshoreDistanceKm(baseText);
+  const sea = pickSea(baseText) || (Number.isFinite(offshoreDistanceKm) ? seaHints[0] : null);
   const hasRouteGuidance = hasRouteCue(baseText);
   const guidedTargets = extractGuidedTargets(baseText, locationHitsRaw);
   const transitTargets = extractTransitTargets(baseText, locationHitsRaw);
@@ -1572,7 +1721,7 @@ export function parseMessageToEvents(text, meta = {}) {
   if (!regionId && meta.region_id) {
     regionId = String(meta.region_id);
   }
-  if (!regionId && (sourceLower.includes("xydessa_live") || sourceLower.includes("pivdenmedia"))) {
+  if (!regionId && (sourceLower.includes("xydessa_live") || sourceLower.includes("pivdenmedia") || sourceLower.includes("oddesitmedia"))) {
     regionId = "odeska";
   }
   if (!regionId && (sourceLower.includes("dnipro_alerts") || sourceLower.includes("onemaster_kr"))) {
@@ -1590,15 +1739,7 @@ export function parseMessageToEvents(text, meta = {}) {
   const regionTargets = locationHits.length === 0
     ? extractRegionIds(baseText, "")
         .map((id) => {
-          const center = regionCenters[id];
-          if (!center) return null;
-          return {
-            lat: center.lat,
-            lng: center.lng,
-            label: regionDisplayNames[id] || center.name,
-            exact: false,
-            region_id: id
-          };
+          return getRegionFallbackTarget(id);
         })
         .filter(Boolean)
     : [];
@@ -1622,7 +1763,7 @@ export function parseMessageToEvents(text, meta = {}) {
     : regionTargets.length > 0
       ? regionTargets.slice(0, 3)
     : regionCenter
-      ? [{ lat: regionCenter.lat, lng: regionCenter.lng, label: regionCenter.name, exact: false }]
+      ? [getRegionFallbackTarget(regionId, regionCenter) || { lat: regionCenter.lat, lng: regionCenter.lng, label: regionCenter.name, exact: false, region_id: regionId }]
       : hasBasePoint
         ? [{
           lat: Number(meta.base_lat),
@@ -1668,15 +1809,30 @@ export function parseMessageToEvents(text, meta = {}) {
     }
 
     if (!isTlk && (sea || forceSea) && locationHits.length > 0) {
-      const vectorLat = target.lat - seaAnchor.lat;
-      const vectorLng = target.lng - seaAnchor.lng;
-      const scale = 0.35;
-      lat = seaAnchor.lat + vectorLat * scale;
-      lng = seaAnchor.lng + vectorLng * scale;
+      const offshorePoint = offshoreDistanceKm ? projectOffshorePoint(target, sea, offshoreDistanceKm) : null;
+      if (offshorePoint) {
+        lat = offshorePoint.lat;
+        lng = offshorePoint.lng;
+        label = target.label;
+      } else {
+        const vectorLat = target.lat - seaAnchor.lat;
+        const vectorLng = target.lng - seaAnchor.lng;
+        const scale = 0.35;
+        lat = seaAnchor.lat + vectorLat * scale;
+        lng = seaAnchor.lng + vectorLng * scale;
       label = `${sea ? sea.name : "Чорне море"} -> ${target.label}`;
+      }
     } else if (!isTlk && (sea || forceSea)) {
-      lat = seaAnchor.lat;
-      lng = seaAnchor.lng;
+      const offshoreBaseTarget = getRegionFallbackTarget(target.region_id || regionId || inferRegionIdFromCoords(target.lat, target.lng), target);
+      const offshorePoint = offshoreDistanceKm ? projectOffshorePoint(offshoreBaseTarget || target, sea, offshoreDistanceKm) : null;
+      if (offshorePoint) {
+        lat = offshorePoint.lat;
+        lng = offshorePoint.lng;
+        label = (offshoreBaseTarget || target).label || label;
+      } else {
+        lat = seaAnchor.lat;
+        lng = seaAnchor.lng;
+      }
     }
 
     if (isTlk && type === "shahed" && locationHits.length === 0 && !regionCenter) {
@@ -1810,4 +1966,4 @@ export function parseMessageToEvents(text, meta = {}) {
   });
 }
 
-export { extractAlarmRegions, extractAlarmSignals };
+export { extractAlarmRegions, extractAlarmSignals, resolveRegionToCity };

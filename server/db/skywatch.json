@@ -2,24 +2,37 @@
   "settings": {
     "maintenance": "false",
     "maintenance_until": "",
-    "alarms_state": "[\"khersonska\",\"kyiv\",\"dniprovska\",\"donetska\",\"crimea\",\"zaporizka\",\"luhanska\",\"chernihivska\"]",
-    "district_alarms_state": "[{\"id\":\"dniprovska:synelnykivskyi\",\"region_id\":\"dniprovska\",\"name\":\"Синельниківський район\",\"lat\":48.32,\"lng\":35.52},{\"id\":\"kharkivska:kupianskyi\",\"region_id\":\"kharkivska\",\"name\":\"Куп'янський район\",\"lat\":49.72,\"lng\":37.62},{\"id\":\"kharkivska:izyumskyi\",\"region_id\":\"kharkivska\",\"name\":\"Ізюмський район\",\"lat\":49.21,\"lng\":37.28},{\"id\":\"kharkivska:bohodukhivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Богодухівський район\",\"lat\":50.16,\"lng\":35.53},{\"id\":\"donetska:kramatorskyi\",\"region_id\":\"donetska\",\"name\":\"Краматорський район\",\"lat\":48.72,\"lng\":37.56},{\"id\":\"donetska:pokrovskyi\",\"region_id\":\"donetska\",\"name\":\"Покровський район\",\"lat\":48.28,\"lng\":37.18},{\"id\":\"donetska:volnovaskyi\",\"region_id\":\"donetska\",\"name\":\"Волноваський район\",\"lat\":47.6,\"lng\":37.5},{\"id\":\"kharkivska:chuhuivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Чугуївський район\",\"lat\":49.83,\"lng\":36.68},{\"id\":\"kharkivska:kharkivskyi\",\"region_id\":\"kharkivska\",\"name\":\"Харківський район\",\"lat\":49.95,\"lng\":36.3}]",
-    "alarms_updated_at": "1775676191008",
-    "events_cache_v1": "[{\"id\":\"@tlknewsua:89526-kab-0\",\"type\":\"kab\",\"lat\":49.9688,\"lng\":36.4161,\"direction\":109.42588200997193,\"source\":\"@tlknewsua\",\"timestamp\":\"2026-04-08T19:08:39.000Z\",\"comment\":\"Джерело: @tlknewsua. Локація: Куп'янськ.\",\"is_test\":false,\"confidence\":0.62,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Куп'янськ\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":49.72,\"target_lng\":37.61,\"target_label\":\"Куп'янськ\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Куп'янськ\",\"marker_location_id\":null,\"target_label\":\"Куп'янськ\",\"track_target\":true},\"region_id\":\"kharkivska\",\"raw_text\":\"КАБ на Купянск/район⚠️\\n\\n📷TlkInst  \\n🎞Канал со стримами\",\"evidence_count\":1,\"evidence_sources\":[\"@tlknewsua\"]},{\"id\":\"@UkraineAlarmSignal:475480-shahed-0\",\"type\":\"shahed\",\"lat\":50.91,\"lng\":34.8,\"direction\":0,\"source\":\"@UkraineAlarmSignal\",\"timestamp\":\"2026-04-08T19:13:52.000Z\",\"comment\":\"Джерело: @UkraineAlarmSignal. Локація: Суми.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Суми\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":null,\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Суми\",\"marker_location_id\":null,\"target_label\":null,\"track_target\":false},\"region_id\":\"sumyska\",\"raw_text\":\"⚠️ Суми (Сумська обл.)\\nЗМІ повідомляють про вибухи. Будьте обережні!\",\"evidence_count\":1,\"evidence_sources\":[\"@UkraineAlarmSignal\"]},{\"id\":\"@tlknewsua:89526-kab-0\",\"type\":\"kab\",\"lat\":49.957,\"lng\":36.5902,\"direction\":109.42588200997193,\"source\":\"@tlknewsua\",\"timestamp\":\"2026-04-08T19:15:27.000Z\",\"comment\":\"Джерело: @tlknewsua. Локація: Куп'янськ.\",\"is_test\":false,\"confidence\":0.62,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Куп'янськ\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":49.72,\"target_lng\":37.61,\"target_label\":\"Куп'янськ\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Куп'янськ\",\"marker_location_id\":null,\"target_label\":\"Куп'янськ\",\"track_target\":true},\"region_id\":\"kharkivska\",\"raw_text\":\"Повторные пуски КАБ на Купянск/район⚠️\\n\\n📷TlkInst  \\n🎞Канал со стримами\",\"evidence_count\":1,\"evidence_sources\":[\"@tlknewsua\"]}]",
-    "events_cache_updated_at_v1": "1775676099149",
-    "announced_event_ids_v1": "[\"@UkraineAlarmSignal:475475-shahed-0\",\"@UkraineAlarmSignal:475477-kab-0\",\"@UkraineAlarmSignal:475477-kab-1\",\"@UkraineAlarmSignal:475478-kab-0\",\"@UkraineAlarmSignal:475479-kab-0\",\"@xydessa_live:60601-shahed-0\",\"@tlknewsua:89526-kab-0\",\"@UkraineAlarmSignal:475480-shahed-0\"]"
+    "alarms_state": "[\"kharkivska\",\"dniprovska\",\"sumyska\",\"donetska\",\"crimea\",\"poltavska\",\"luhanska\",\"khersonska\",\"chernihivska\"]",
+    "district_alarms_state": "[]",
+    "alarms_updated_at": "1776634493358",
+    "events_cache_v1": "[{\"id\":\"@dnipro_alerts:44024-shahed-0\",\"type\":\"shahed\",\"lat\":48.46,\"lng\":35.05,\"direction\":0,\"source\":\"@dnipro_alerts\",\"timestamp\":\"2026-04-19T21:31:33.000Z\",\"comment\":\"Джерело: @dnipro_alerts. Локація: Дніпро.\",\"is_test\":false,\"confidence\":0.71,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Дніпро\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":null,\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Дніпро\",\"marker_location_id\":null,\"target_label\":null,\"track_target\":false},\"region_id\":\"dniprovska\",\"raw_text\":\"З цієї групи залишилося одне.\\n\\nІ нова група близько 5 одиниць від Сахновщина, тобто з півночі Павлоградського району. ~10-15 хвилин до межі області.\\n\\n\\n💙 Дніпро Alerts • 💛 Київ Alerts\\nℹ️ Alerts Live • 🤙 Зворотний зв’язок\",\"evidence_count\":1,\"evidence_sources\":[\"@dnipro_alerts\"],\"expires_at\":1776635393630},{\"id\":\"@dnipro_alerts:44024-shahed-1\",\"type\":\"shahed\",\"lat\":50.2911,\"lng\":30.4953,\"direction\":7.696342490700431,\"source\":\"@dnipro_alerts\",\"timestamp\":\"2026-04-19T21:31:33.000Z\",\"comment\":\"Джерело: @dnipro_alerts. Локація: Київ.\",\"is_test\":false,\"confidence\":0.71,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Київ\",\"marker_location_id\":\"київ\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":null,\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Київ\",\"marker_location_id\":\"київ\",\"target_label\":null,\"track_target\":false},\"region_id\":\"kyiv\",\"raw_text\":\"З цієї групи залишилося одне.\\n\\nІ нова група близько 5 одиниць від Сахновщина, тобто з півночі Павлоградського району. ~10-15 хвилин до межі області.\\n\\n\\n💙 Дніпро Alerts • 💛 Київ Alerts\\nℹ️ Alerts Live • 🤙 Зворотний зв’язок\",\"evidence_count\":1,\"evidence_sources\":[\"@dnipro_alerts\"],\"expires_at\":1776635393630},{\"id\":\"@dnipro_alerts:44024-shahed-2\",\"type\":\"shahed\",\"lat\":50.3251,\"lng\":30.5874,\"direction\":0,\"source\":\"@dnipro_alerts\",\"timestamp\":\"2026-04-19T21:22:51.000Z\",\"comment\":\"Джерело: @dnipro_alerts. Локація: Київ.\",\"is_test\":false,\"confidence\":0.85,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Київ\",\"marker_location_id\":\"київ\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":null,\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Київ\",\"marker_location_id\":\"київ\",\"target_label\":null,\"track_target\":false},\"region_id\":\"kyiv\",\"raw_text\":\"Завдяки роботі СОУ, дронів стало менше,  але ще є.\\nПерші перетинають кордон області, напрямок наразі у бік Самар.\\nПоки що без загроз, при змінах попередимо.\\n\\n\\n💙 Дніпро Alerts • 💛 Київ Alerts\\nℹ️ Alerts Live • 🤙 Зворотний зв’язок\",\"evidence_count\":1,\"evidence_sources\":[\"@dnipro_alerts\"],\"expires_at\":1776635393630},{\"id\":\"@UkraineAlarmSignal:485400-shahed-0\",\"type\":\"shahed\",\"lat\":49.59,\"lng\":34.55,\"direction\":0,\"source\":\"@UkraineAlarmSignal\",\"timestamp\":\"2026-04-19T21:25:20.000Z\",\"comment\":\"Джерело: @UkraineAlarmSignal. Локація: Полтавська.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Полтавська\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":49.59,\"target_lng\":34.55,\"target_label\":\"Полтавська\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Полтавська\",\"marker_location_id\":null,\"target_label\":\"Полтавська\",\"track_target\":true},\"region_id\":\"poltavska\",\"raw_text\":\"🚨 Миргородський район (Полтавська обл.)\\nПовітряна тривога. Прямуйте в укриття!\",\"evidence_count\":2,\"evidence_sources\":[\"@UkraineAlarmSignal\",\"@airalertmonitor_bot\"],\"expires_at\":1776635393630},{\"id\":\"@kudy_letyt:105450-shahed-0\",\"type\":\"shahed\",\"lat\":49.9564,\"lng\":36.5411,\"direction\":189.4564716482123,\"source\":\"@kudy_letyt\",\"timestamp\":\"2026-04-19T21:25:57.000Z\",\"comment\":\"Джерело: @kudy_letyt. Локація: Лозова.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Лозова\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":48.89,\"target_lng\":36.32,\"target_label\":\"Лозова\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Лозова\",\"marker_location_id\":null,\"target_label\":\"Лозова\",\"track_target\":true},\"region_id\":\"kharkivska\",\"raw_text\":\"Сумщина:\\nБпЛА курсом на Есмань  \\n\\nПолтавщина:\\nБпЛА курсом на Заводське  \\n\\nХарківщина:\\n2х БпЛА курсом на Сахновщину\\nБпЛА курсом на Краснопавлівку\\nБпЛА курсом на Орільку \\nБпЛА курсом на Лозову \\nБпЛА курсом на Слобожанське \\nБпЛА курсом на Старий Салтів\",\"evidence_count\":3,\"evidence_sources\":[\"@kudy_letyt\",\"@raketa_trevoga\",\"@povitryanatrivogaaa\"],\"expires_at\":1776635393630},{\"id\":\"@kudy_letyt:105449-shahed-0\",\"type\":\"shahed\",\"lat\":49.953,\"lng\":36.2586,\"direction\":62.613309664888675,\"source\":\"@kudy_letyt\",\"timestamp\":\"2026-04-19T21:19:02.000Z\",\"comment\":\"Джерело: @kudy_letyt. Локація: Люботин.\",\"is_test\":false,\"confidence\":0.67,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Люботин\",\"marker_location_id\":\"liubotyn\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":49.95,\"target_lng\":35.93,\"target_label\":\"Люботин\",\"target_location_id\":\"liubotyn\",\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Люботин\",\"marker_location_id\":\"liubotyn\",\"target_label\":\"Люботин\",\"track_target\":true},\"region_id\":\"kharkivska\",\"raw_text\":\"Сумщина:\\nБпЛА курсом на Глухів  \\n\\nЧернігівщина:\\nБпЛА курсом на Сновськ \\n\\nХарківщина:\\nБпЛА курсом на Богодухів \\n2х БпЛА курсом на Кегичівку \\nБпЛА курсом на Краснопавлівку\\n4х БпЛА курсом на Орільку \\n2х БпЛА курсом на Вільчу\\nБпЛА курсом на Рогань\",\"evidence_count\":1,\"evidence_sources\":[\"@kudy_letyt\"],\"expires_at\":1776635247179},{\"id\":\"@kudy_letyt:105449-shahed-1\",\"type\":\"shahed\",\"lat\":51.5,\"lng\":31.3,\"direction\":254.88242881766644,\"source\":\"@kudy_letyt\",\"timestamp\":\"2026-04-19T21:19:02.000Z\",\"comment\":\"Джерело: @kudy_letyt. Локація: Чернігів.\",\"is_test\":false,\"confidence\":0.67,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Чернігів\",\"marker_location_id\":\"chernihiv-city-fallback\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":51.4982,\"target_lng\":31.2893,\"target_label\":\"Чернігів\",\"target_location_id\":\"chernihiv-city-fallback\",\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Чернігів\",\"marker_location_id\":\"chernihiv-city-fallback\",\"target_label\":\"Чернігів\",\"track_target\":true},\"region_id\":\"chernihivska\",\"raw_text\":\"Сумщина:\\nБпЛА курсом на Глухів  \\n\\nЧернігівщина:\\nБпЛА курсом на Сновськ \\n\\nХарківщина:\\nБпЛА курсом на Богодухів \\n2х БпЛА курсом на Кегичівку \\nБпЛА курсом на Краснопавлівку\\n4х БпЛА курсом на Орільку \\n2х БпЛА курсом на Вільчу\\nБпЛА курсом на Рогань\",\"evidence_count\":1,\"evidence_sources\":[\"@kudy_letyt\"],\"expires_at\":1776635247179},{\"id\":\"@kudy_letyt:105449-shahed-2\",\"type\":\"shahed\",\"lat\":50.91,\"lng\":34.8,\"direction\":207.51547546312577,\"source\":\"@kudy_letyt\",\"timestamp\":\"2026-04-19T21:19:02.000Z\",\"comment\":\"Джерело: @kudy_letyt. Локація: Суми.\",\"is_test\":false,\"confidence\":0.67,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Суми\",\"marker_location_id\":\"sumy-city-fallback\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":50.9077,\"target_lng\":34.7981,\"target_label\":\"Суми\",\"target_location_id\":\"sumy-city-fallback\",\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Суми\",\"marker_location_id\":\"sumy-city-fallback\",\"target_label\":\"Суми\",\"track_target\":true},\"region_id\":\"sumyska\",\"raw_text\":\"Сумщина:\\nБпЛА курсом на Глухів  \\n\\nЧернігівщина:\\nБпЛА курсом на Сновськ \\n\\nХарківщина:\\nБпЛА курсом на Богодухів \\n2х БпЛА курсом на Кегичівку \\nБпЛА курсом на Краснопавлівку\\n4х БпЛА курсом на Орільку \\n2х БпЛА курсом на Вільчу\\nБпЛА курсом на Рогань\",\"evidence_count\":1,\"evidence_sources\":[\"@kudy_letyt\"],\"expires_at\":1776635247179},{\"id\":\"@raketa_trevoga:72218-shahed-0\",\"type\":\"shahed\",\"lat\":45.3,\"lng\":34.2,\"direction\":0,\"source\":\"@raketa_trevoga\",\"timestamp\":\"2026-04-19T21:19:50.000Z\",\"comment\":\"Джерело: @raketa_trevoga. Локація: АР Крим. К-сть: 4.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":\"shahed-multi\",\"marker_action\":\"place\",\"marker_label\":\"АР Крим\",\"marker_location_id\":null,\"group_count_min\":4,\"group_count_max\":4,\"target_lat\":45.3,\"target_lng\":34.2,\"target_label\":\"АР Крим\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"АР Крим\",\"marker_location_id\":null,\"target_label\":\"АР Крим\",\"track_target\":true},\"region_id\":\"crimea\",\"raw_text\":\"На Харківщині:\\n4 шахеди на Орільку\\n2 шахеди на Кегичівку\\n2 шахеди на Вільчу\\n1 шахед на Богодухів\\n1 шахед на Краснопавлівку\\n1 шахед на Рогань\\n\\nНа Сумщині 1 шахед на Глухів\\n\\nНа Чернігівщині 1 шахед на Сновськ\\nㅤ \\n➡Підписатися\",\"evidence_count\":1,\"evidence_sources\":[\"@raketa_trevoga\"],\"expires_at\":1776635247179},{\"id\":\"@Ukrainian_Intelligence:129361-kab-0\",\"type\":\"kab\",\"lat\":49.98,\"lng\":36.25,\"direction\":261.83044682083414,\"source\":\"@Ukrainian_Intelligence\",\"timestamp\":\"2026-04-19T21:09:35.000Z\",\"comment\":\"Джерело: @Ukrainian_Intelligence. Локація: Люботин.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Люботин\",\"marker_location_id\":\"liubotyn\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":49.95,\"target_lng\":35.93,\"target_label\":\"Люботин\",\"target_location_id\":\"liubotyn\",\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Люботин\",\"marker_location_id\":\"liubotyn\",\"target_label\":\"Люботин\",\"track_target\":true},\"region_id\":\"kharkivska\",\"raw_text\":\"Харківщина: ~10 від Борової до Орільки\\n\\nСумщина: 2 біля Глухова, 2 на Липову Долину\",\"evidence_count\":1,\"evidence_sources\":[\"@Ukrainian_Intelligence\"],\"expires_at\":1776634717250},{\"id\":\"@Ukrainian_Intelligence:129361-kab-1\",\"type\":\"kab\",\"lat\":50.91,\"lng\":34.8,\"direction\":207.51547546312577,\"source\":\"@Ukrainian_Intelligence\",\"timestamp\":\"2026-04-19T21:09:35.000Z\",\"comment\":\"Джерело: @Ukrainian_Intelligence. Локація: Суми.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Суми\",\"marker_location_id\":\"sumy-city-fallback\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":50.9077,\"target_lng\":34.7981,\"target_label\":\"Суми\",\"target_location_id\":\"sumy-city-fallback\",\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Суми\",\"marker_location_id\":\"sumy-city-fallback\",\"target_label\":\"Суми\",\"track_target\":true},\"region_id\":\"sumyska\",\"raw_text\":\"Харківщина: ~10 від Борової до Орільки\\n\\nСумщина: 2 біля Глухова, 2 на Липову Долину\",\"evidence_count\":1,\"evidence_sources\":[\"@Ukrainian_Intelligence\"],\"expires_at\":1776634717250},{\"id\":\"@Ukrainian_Intelligence:129361-kab-2\",\"type\":\"kab\",\"lat\":45.3,\"lng\":34.2,\"direction\":0,\"source\":\"@Ukrainian_Intelligence\",\"timestamp\":\"2026-04-19T21:09:35.000Z\",\"comment\":\"Джерело: @Ukrainian_Intelligence. Локація: АР Крим.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"АР Крим\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":45.3,\"target_lng\":34.2,\"target_label\":\"АР Крим\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"АР Крим\",\"marker_location_id\":null,\"target_label\":\"АР Крим\",\"track_target\":true},\"region_id\":\"crimea\",\"raw_text\":\"Харківщина: ~10 від Борової до Орільки\\n\\nСумщина: 2 біля Глухова, 2 на Липову Долину\",\"evidence_count\":1,\"evidence_sources\":[\"@Ukrainian_Intelligence\"],\"expires_at\":1776634717250},{\"id\":\"@airalertmonitor_bot:38221-kab-0\",\"type\":\"kab\",\"lat\":48.1096,\"lng\":37.8,\"direction\":0,\"source\":\"@airalertmonitor_bot\",\"timestamp\":\"2026-04-19T21:09:19.000Z\",\"comment\":\"Джерело: @airalertmonitor_bot. Локація: Донецьк.\",\"is_test\":false,\"confidence\":0.69,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Донецьк\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":null,\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Донецьк\",\"marker_location_id\":null,\"target_label\":null,\"track_target\":false},\"region_id\":\"donetska\",\"raw_text\":\"💣 Миколаївка (Донецька обл.)\\nЗагроза застосування КАБів. Негайно прямуйте в укриття!\\n\\n💣 Словʼянськ (Донецька обл.)\\nЗагроза застосування КАБів. Негайно прямуйте в укриття!\",\"evidence_count\":1,\"evidence_sources\":[\"@airalertmonitor_bot\"],\"expires_at\":1776634717250},{\"id\":\"@UkraineAlarmSignal:485398-kab-0\",\"type\":\"kab\",\"lat\":48.1667,\"lng\":37.8,\"direction\":0,\"source\":\"@UkraineAlarmSignal\",\"timestamp\":\"2026-04-19T21:08:34.000Z\",\"comment\":\"Джерело: @UkraineAlarmSignal. Локація: Донецьк.\",\"is_test\":false,\"confidence\":0.83,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Донецьк\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":null,\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Донецьк\",\"marker_location_id\":null,\"target_label\":null,\"track_target\":false},\"region_id\":\"donetska\",\"raw_text\":\"💣 Словʼянськ (Донецька обл.)\\nЗагроза застосування КАБів. Негайно прямуйте в укриття!\",\"evidence_count\":1,\"evidence_sources\":[\"@UkraineAlarmSignal\"],\"expires_at\":1776634549506},{\"id\":\"@UkraineAlarmSignal:485399-kab-0\",\"type\":\"kab\",\"lat\":48.1274,\"lng\":37.8,\"direction\":0,\"source\":\"@UkraineAlarmSignal\",\"timestamp\":\"2026-04-19T21:09:19.000Z\",\"comment\":\"Джерело: @UkraineAlarmSignal. Локація: Донецьк.\",\"is_test\":false,\"confidence\":0.76,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Донецьк\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":null,\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Донецьк\",\"marker_location_id\":null,\"target_label\":null,\"track_target\":false},\"region_id\":\"donetska\",\"raw_text\":\"💣 Миколаївка (Донецька обл.)\\nЗагроза застосування КАБів. Негайно прямуйте в укриття!\",\"evidence_count\":2,\"evidence_sources\":[\"@UkraineAlarmSignal\",\"@airalertmonitor_bot\"],\"expires_at\":1776634549506},{\"id\":\"@war_monitor:39071-shahed-0\",\"type\":\"shahed\",\"lat\":50.0125,\"lng\":36.4799,\"direction\":149.5736017001105,\"source\":\"@war_monitor\",\"timestamp\":\"2026-04-19T21:06:58.000Z\",\"comment\":\"Джерело: @war_monitor. Локація: Ізюм.\",\"is_test\":false,\"confidence\":0.91,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Ізюм\",\"marker_location_id\":null,\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":49.21,\"target_lng\":37.26,\"target_label\":\"Ізюм\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Ізюм\",\"marker_location_id\":null,\"target_label\":\"Ізюм\",\"track_target\":true},\"region_id\":\"kharkivska\",\"raw_text\":\"Харківщина:\\n8х БпЛА з сектору Ізюм/Балаклія у напрямку Павлоградського району Дніпропетровщини.\",\"evidence_count\":1,\"evidence_sources\":[\"@war_monitor\"],\"expires_at\":1776634549506}]",
+    "events_cache_updated_at_v1": "1776634493630",
+    "announced_event_ids_v1": "[\"@Ukrainian_Intelligence:129111-shahed-0\",\"@UkraineAlarmSignal:483726-shahed-0\",\"@UkraineAlarmSignal:483723-shahed-0\",\"@UkraineAlarmSignal:483724-shahed-0\",\"@UkraineAlarmSignal:483724-shahed-1\",\"@UkraineAlarmSignal:483725-shahed-0\",\"@raketa_trevoga:72012-shahed-0\",\"@UkraineAlarmSignal:483730-shahed-0\",\"@UkraineAlarmSignal:483731-shahed-0\",\"@dnipro_alerts:43958-shahed-0\",\"@dnipro_alerts:43958-shahed-1\",\"@dnipro_alerts:43958-shahed-2\",\"@kudy_letyt:105392-shahed-0\",\"@kudy_letyt:105392-shahed-2\",\"@raketa_trevoga:72013-shahed-2\",\"@raketa_trevoga:72013-shahed-0\",\"@Ukrainian_Intelligence:129114-shahed-1\",\"@Ukrainian_Intelligence:129114-shahed-0\",\"@onemaster_kr:62004-shahed-0\",\"@UkraineAlarmSignal:483735-shahed-0\",\"@UkraineAlarmSignal:483735-shahed-1\",\"@UkraineAlarmSignal:483736-shahed-0\",\"@UkraineAlarmSignal:483737-shahed-0\",\"@raketa_trevoga:72013-shahed-1\",\"@airalertmonitor_bot:37269-shahed-1\",\"@airalertmonitor_bot:37269-shahed-2\",\"@UkraineAlarmSignal:483738-shahed-0\",\"@UkraineAlarmSignal:483738-shahed-1\",\"@Ukrainian_Intelligence:129115-shahed-0\",\"@UkraineAlarmSignal:483743-shahed-0\",\"@UkraineAlarmSignal:483743-shahed-1\",\"@airalertmonitor_bot:37271-shahed-1\",\"@povitryanatrivogaaa:194173-shahed-0\",\"@xydessa_live:61930-shahed-0\",\"@Ukrainian_Intelligence:129116-shahed-0\",\"@UkraineAlarmSignal:483744-shahed-0\",\"@pivdenmedia:102275-shahed-0\",\"@airalertmonitor_bot:37272-shahed-0\",\"@kudy_letyt:105393-shahed-2\",\"@kudy_letyt:105393-shahed-0\",\"@kudy_letyt:105393-shahed-1\",\"@UkraineAlarmSignal:483745-shahed-0\",\"@raketa_trevoga:72015-shahed-1\",\"@UkraineAlarmSignal:483746-shahed-0\",\"@UkraineAlarmSignal:483746-shahed-0\",\"@UkraineAlarmSignal:483747-shahed-0\",\"@xydessa_live:61933-shahed-0\",\"@UkraineAlarmSignal:483750-shahed-0\",\"@UkraineAlarmSignal:483751-shahed-0\",\"@UkraineAlarmSignal:483751-shahed-1\",\"@pivdenmedia:102279-shahed-1\",\"@pivdenmedia:102279-shahed-0\",\"@raketa_trevoga:72015-shahed-2\",\"@UkraineAlarmSignal:483752-shahed-0\",\"@pivdenmedia:102282-shahed-0\",\"@pivdenmedia:102283-shahed-0\",\"@pivdenmedia:102284-shahed-0\",\"@pivdenmedia:102285-shahed-0\",\"@kudy_letyt:105395-shahed-1\",\"@kudy_letyt:105395-shahed-0\",\"@UkraineAlarmSignal:483753-shahed-0\",\"@UkraineAlarmSignal:483753-shahed-1\",\"@UkraineAlarmSignal:483754-shahed-0\",\"@UkraineAlarmSignal:483754-shahed-1\",\"@kyivoperat:187926-missile-0\",\"@kudy_letyt:105396-kab-0\",\"@UkraineAlarmSignal:483755-shahed-0\",\"@Ukrainian_Intelligence:129118-shahed-0\",\"@UkraineAlarmSignal:483756-shahed-0\",\"@UkraineAlarmSignal:483757-shahed-0\",\"@UkraineAlarmSignal:483757-shahed-1\",\"@UkraineAlarmSignal:483758-shahed-0\",\"@kudy_letyt:105397-shahed-1\",\"@kudy_letyt:105397-shahed-0\",\"@raketa_trevoga:72017-shahed-0\",\"@UkraineAlarmSignal:483759-shahed-0\",\"@war_monitor:39034-shahed-1\",\"@pivdenmedia:102289-shahed-0\",\"@war_monitor:39034-shahed-2\",\"@UkraineAlarmSignal:483760-shahed-0\",\"@povitryanatrivogaaa:194179-shahed-0\",\"@povitryanatrivogaaa:194179-shahed-1\",\"@pivdenmedia:102290-shahed-0\",\"@oddesitmedia:667-shahed-0\",\"@oddesitmedia:668-shahed-0\",\"@UkraineAlarmSignal:483761-shahed-0\",\"@UkraineAlarmSignal:483762-shahed-0\",\"@xydessa_live:61937-shahed-0\",\"@xydessa_live:61938-shahed-0\",\"@oddesitmedia:670-shahed-0\",\"@oddesitmedia:670-shahed-1\",\"@oddesitmedia:672-shahed-0\",\"@oddesitmedia:672-shahed-1\",\"@oddesitmedia:671-shahed-0\",\"@onemaster_kr:62008-shahed-0\",\"@UkraineAlarmSignal:483763-shahed-0\",\"@UkraineAlarmSignal:483763-shahed-1\",\"@Ukrainian_Intelligence:129119-shahed-0\",\"@dnipro_alerts:43960-shahed-0\",\"@dnipro_alerts:43960-shahed-1\",\"@UkraineAlarmSignal:483764-shahed-0\",\"@oddesitmedia:674-shahed-0\",\"@kudy_letyt:105398-shahed-0\",\"@raketa_trevoga:72018-shahed-0\",\"@UkraineAlarmSignal:483765-shahed-0\",\"@UkraineAlarmSignal:483765-shahed-1\",\"@airalertmonitor_bot:37282-shahed-0\",\"@oddesitmedia:666-shahed-0\",\"@airalertmonitor_bot:37283-shahed-0\",\"@airalertmonitor_bot:37284-shahed-0\",\"@airalertmonitor_bot:37285-shahed-0\",\"@airalertmonitor_bot:37285-shahed-1\",\"@airalertmonitor_bot:37286-shahed-0\",\"@airalertmonitor_bot:37287-shahed-0\",\"@airalertmonitor_bot:37287-shahed-1\",\"@Ukrainian_Intelligence:129120-shahed-0\",\"@UkraineAlarmSignal:483766-shahed-0\",\"@pivdenmedia:102297-shahed-0\",\"@UkraineAlarmSignal:483767-shahed-0\",\"@air_alert_ua:263203-shahed-0\",\"@UkraineAlarmSignal:483768-shahed-0\",\"@UkraineAlarmSignal:483769-shahed-0\",\"@xydessa_live:61941-shahed-0\",\"@oddesitmedia:680-shahed-0\",\"@oddesitmedia:681-shahed-0\",\"@airalertmonitor_bot:37289-shahed-0\",\"@oddesitmedia:682-shahed-0\",\"@UkraineAlarmSignal:483773-shahed-0\",\"@oddesitmedia:683-shahed-0\",\"@UkraineAlarmSignal:483774-kab-0\",\"@UkraineAlarmSignal:483775-kab-0\",\"@airalertmonitor_bot:37290-shahed-0\",\"@UkraineAlarmSignal:483776-shahed-0\",\"@UkraineAlarmSignal:483777-shahed-0\",\"@kpszsu:60218-shahed-0\",\"@UkraineAlarmSignal:483778-shahed-0\",\"@UkraineAlarmSignal:483779-shahed-0\",\"@airalertmonitor_bot:37292-shahed-0\",\"@UkraineAlarmSignal:483780-shahed-0\",\"@UkraineAlarmSignal:483781-kab-0\",\"@pivdenmedia:102304-shahed-0\",\"@pivdenmedia:102305-shahed-0\",\"@pivdenmedia:102306-shahed-0\",\"@UkraineAlarmSignal:483782-shahed-0\",\"@oddesitmedia:685-shahed-0\",\"@pivdenmedia:102307-shahed-0\",\"@pivdenmedia:102307-shahed-1\",\"@oddesitmedia:686-shahed-0\",\"@kudy_letyt:105399-shahed-0\",\"@raketa_trevoga:72019-shahed-0\",\"@Ukrainian_Intelligence:129121-shahed-0\",\"@Ukrainian_Intelligence:129121-shahed-1\",\"@povitryanatrivogaaa:194183-shahed-1\",\"@UkraineAlarmSignal:483786-shahed-0\",\"@UkraineAlarmSignal:483787-shahed-0\",\"@UkraineAlarmSignal:483788-shahed-0\",\"@pivdenmedia:102310-shahed-0\",\"@pivdenmedia:102311-shahed-0\",\"@oddesitmedia:688-shahed-0\",\"@UkraineAlarmSignal:483789-shahed-0\",\"@UkraineAlarmSignal:483790-shahed-0\",\"@airalertmonitor_bot:37298-shahed-0\",\"@oddesitmedia:689-shahed-0\",\"@oddesitmedia:691-shahed-0\",\"@dnipro_alerts:43962-shahed-1\",\"@pivdenmedia:102313-shahed-0\",\"@airalertmonitor_bot:37295-shahed-0\",\"@oddesitmedia:692-shahed-0\",\"@oddesitmedia:692-shahed-1\",\"@oddesitmedia:692-shahed-2\",\"@pivdenmedia:102315-shahed-0\",\"@UkraineAlarmSignal:483794-shahed-0\",\"@UkraineAlarmSignal:483795-shahed-0\",\"@pivdenmedia:102316-shahed-0\",\"@airalertmonitor_bot:37300-shahed-0\",\"@pivdenmedia:102317-shahed-0\",\"@povitryanatrivogaaa:194185-shahed-0\",\"@oddesitmedia:693-shahed-0\",\"@pivdenmedia:102318-shahed-0\",\"@oddesitmedia:695-shahed-0\",\"@airalertmonitor_bot:37302-shahed-1\",\"@UkraineAlarmSignal:483797-shahed-0\",\"@UkraineAlarmSignal:483798-shahed-1\",\"@UkraineAlarmSignal:483797-shahed-1\",\"@pivdenmedia:102319-shahed-0\",\"@UkraineAlarmSignal:483798-shahed-0\",\"@UkraineAlarmSignal:483799-shahed-0\",\"@UkraineAlarmSignal:483799-shahed-1\",\"@UkraineAlarmSignal:483800-shahed-0\",\"@UkraineAlarmSignal:483801-shahed-0\",\"@oddesitmedia:696-shahed-0\",\"@oddesitmedia:696-shahed-1\",\"@pivdenmedia:102321-shahed-0\",\"@UkraineAlarmSignal:483802-shahed-0\",\"@pivdenmedia:102322-shahed-0\",\"@oddesitmedia:698-shahed-0\",\"@oddesitmedia:698-shahed-1\",\"@airalertmonitor_bot:37304-shahed-0\",\"@airalertmonitor_bot:37305-shahed-0\",\"@UkraineAlarmSignal:483803-shahed-0\",\"@UkraineAlarmSignal:483804-shahed-0\",\"@pivdenmedia:102323-shahed-0\",\"@UkraineAlarmSignal:483805-shahed-0\",\"@pivdenmedia:102324-shahed-0\",\"@UkraineAlarmSignal:483806-shahed-0\",\"@UkraineAlarmSignal:483806-shahed-1\",\"@pivdenmedia:102325-shahed-0\",\"@pivdenmedia:102326-shahed-0\",\"@pivdenmedia:102327-shahed-0\",\"@UkraineAlarmSignal:483807-shahed-0\",\"@UkraineAlarmSignal:483808-shahed-0\",\"@UkraineAlarmSignal:483808-shahed-1\",\"@pivdenmedia:102328-shahed-0\",\"@pivdenmedia:102329-shahed-0\",\"@pivdenmedia:102330-shahed-0\",\"@pivdenmedia:102331-shahed-0\",\"@oddesitmedia:700-shahed-0\",\"@UkraineAlarmSignal:483809-shahed-0\",\"@airalertmonitor_bot:37308-shahed-1\",\"@oddesitmedia:702-shahed-0\",\"@oddesitmedia:703-shahed-0\",\"@pivdenmedia:102335-shahed-0\",\"@oddesitmedia:701-shahed-0\",\"@pivdenmedia:102336-shahed-0\",\"@UkraineAlarmSignal:483810-shahed-0\",\"@UkraineAlarmSignal:483811-shahed-0\",\"@pivdenmedia:102337-shahed-0\",\"@pivdenmedia:102338-shahed-0\",\"@StrategicaviationT:29819-shahed-0\",\"@UkraineAlarmSignal:483812-shahed-0\",\"@Ukrainian_Intelligence:129123-shahed-1\",\"@pivdenmedia:102340-shahed-0\",\"@oddesitmedia:706-shahed-0\",\"@pivdenmedia:102341-shahed-0\",\"@UkraineAlarmSignal:483814-shahed-0\",\"@UkraineAlarmSignal:483814-shahed-1\",\"@pivdenmedia:102342-shahed-0\",\"@UkraineAlarmSignal:483815-shahed-0\",\"@pivdenmedia:102343-shahed-0\",\"@pivdenmedia:102344-shahed-0\",\"@UkraineAlarmSignal:483816-shahed-0\",\"@UkraineAlarmSignal:483817-shahed-0\",\"@UkraineAlarmSignal:483818-shahed-0\",\"@kudy_letyt:105401-shahed-2\",\"@oddesitmedia:708-shahed-0\",\"@oddesitmedia:709-shahed-0\",\"@oddesitmedia:710-shahed-0\",\"@pivdenmedia:102345-shahed-0\",\"@pivdenmedia:102346-shahed-0\",\"@pivdenmedia:102347-shahed-0\",\"@pivdenmedia:102348-shahed-0\",\"@airalertmonitor_bot:37314-shahed-0\",\"@oddesitmedia:714-shahed-0\",\"@pivdenmedia:102349-shahed-0\",\"@pivdenmedia:102350-shahed-0\",\"@Ukrainian_Intelligence:129123-shahed-0\",\"@oddesitmedia:715-shahed-0\",\"@oddesitmedia:716-shahed-0\",\"@oddesitmedia:717-shahed-0\",\"@oddesitmedia:718-shahed-0\",\"@oddesitmedia:719-shahed-0\",\"@pivdenmedia:102351-shahed-0\",\"@kpszsu:60219-shahed-2\",\"@Ukrainian_Intelligence:129126-shahed-0\",\"@Ukrainian_Intelligence:129126-shahed-1\",\"@Ukrainian_Intelligence:129126-shahed-2\",\"@oddesitmedia:720-shahed-0\",\"@oddesitmedia:721-shahed-0\",\"@oddesitmedia:721-shahed-1\",\"@pivdenmedia:102352-shahed-0\",\"@UkraineAlarmSignal:483821-shahed-0\",\"@pivdenmedia:102353-shahed-0\",\"@kpszsu:60255-shahed-0\",\"@Ukrainian_Intelligence:129199-shahed-0\",\"@raketa_trevoga:72084-shahed-0\",\"@tlknewsua:91188-shahed-0\",\"@UkraineAlarmSignal:484287-shahed-0\",\"@UkraineAlarmSignal:484288-shahed-0\",\"@raketa_trevoga:72085-shahed-0\",\"@raketa_trevoga:72086-shahed-0\",\"@kyivoperat:187956-shahed-0\",\"@UkraineAlarmSignal:484289-shahed-1\",\"@UkraineAlarmSignal:484289-shahed-0\",\"@KyivCityOfficial:17879-shahed-0\",\"@air_alert_ua:263478-shahed-0\",\"@tlknewsua:91189-shahed-0\",\"@airalertmonitor_bot:37580-shahed-0\",\"@airalertmonitor_bot:37580-shahed-1\",\"@tlknewsua:91190-shahed-0\",\"@airalertmonitor_bot:37579-shahed-0\",\"@airalertmonitor_bot:37577-shahed-0\",\"@Ukrainian_Intelligence:129196-shahed-0\",\"@UkraineAlarmSignal:484294-shahed-0\",\"@Ukrainian_Intelligence:129199-shahed-1\",\"@pivdenmedia:102385-shahed-0\",\"@UkraineAlarmSignal:484297-shahed-1\",\"@UkraineAlarmSignal:484295-shahed-0\",\"@UkraineAlarmSignal:484297-shahed-0\",\"@pivdenmedia:102386-shahed-0\",\"@UkraineAlarmSignal:484296-shahed-0\",\"@pivdenmedia:102387-shahed-0\",\"@dneproperatyv:164924-shahed-0\",\"@tlknewsua:91195-shahed-0\",\"@xydessa_live:62011-shahed-0\",\"@kpszsu:60257-shahed-0\",\"@ChernigivOperative:52683-shahed-0\",\"@tlknewsua:91196-shahed-0\",\"@UkraineAlarmSignal:484301-shahed-0\",\"@pivdenmedia:102388-shahed-0\",\"@eyes_everywhere_ua:77970-shahed-0\",\"@tlknewsua:91197-shahed-0\",\"@povitryanatrivogaaa:194287-shahed-0\",\"@xydessa_live:62013-shahed-0\",\"@eyes_everywhere_ua:77975-shahed-0\",\"@pivdenmedia:102389-shahed-0\",\"@ChernigivOperative:52678-shahed-0\",\"@Ukrainian_Intelligence:129207-shahed-0\",\"@dnipro_alerts:43969-shahed-1\",\"@dnipro_alerts:43969-shahed-0\",\"@dnipro_alerts:43969-shahed-2\",\"@tlknewsua:91199-shahed-0\",\"@UkraineAlarmSignal:484306-shahed-0\",\"@UkraineAlarmSignal:484308-shahed-0\",\"@Ukrainian_Intelligence:129210-shahed-0\",\"@UkraineAlarmSignal:484310-shahed-1\",\"@dneproperatyv:164930-shahed-0\",\"@dneproperatyv:164930-shahed-1\",\"@dneproperatyv:164930-shahed-2\",\"@pivdenmedia:102391-shahed-0\",\"@UkraineAlarmSignal:484314-shahed-0\",\"@povitryanatrivogaaa:194294-shahed-0\",\"@UkraineAlarmSignal:484313-shahed-0\",\"@KyivCityOfficial:17882-shahed-0\",\"@UkraineAlarmSignal:484315-shahed-0\",\"@UkraineAlarmSignal:484316-shahed-0\",\"@dnipro_alerts:43972-shahed-0\",\"@dnipro_alerts:43972-shahed-2\",\"@Ukrainian_Intelligence:129212-shahed-1\",\"@kudy_letyt:105420-shahed-1\",\"@kudy_letyt:105420-shahed-0\",\"@kyivoperat:187963-shahed-0\",\"@dnipro_alerts:43973-shahed-0\",\"@dnipro_alerts:43973-shahed-1\",\"@dnipro_alerts:43973-shahed-2\",\"@pivdenmedia:102397-shahed-0\",\"@UkraineAlarmSignal:484317-shahed-0\",\"@UkraineAlarmSignal:484317-shahed-1\",\"@UkraineAlarmSignal:484318-shahed-0\",\"@air_alert_ua:263498-shahed-0\",\"@Ukrainian_Intelligence:129212-shahed-0\",\"@UkraineAlarmSignal:484322-shahed-0\",\"@UkraineAlarmSignal:484322-shahed-1\",\"@tlknewsua:91211-shahed-0\",\"@pivdenmedia:102398-shahed-0\",\"@pivdenmedia:102399-shahed-0\",\"@dnipro_alerts:43974-shahed-1\",\"@dnipro_alerts:43974-shahed-2\",\"@UkraineAlarmSignal:484323-shahed-0\",\"@raketa_trevoga:72090-shahed-0\",\"@kudy_letyt:105422-shahed-0\",\"@UkraineAlarmSignal:484328-shahed-0\",\"@dnipro_alerts:43975-shahed-2\",\"@tlknewsua:91213-shahed-0\",\"@dnipro_alerts:43975-shahed-0\",\"@dnipro_alerts:43975-shahed-1\",\"@povitryanatrivogaaa:194300-shahed-0\",\"@UkraineAlarmSignal:484326-shahed-1\",\"@UkraineAlarmSignal:484326-shahed-0\",\"@UkraineAlarmSignal:484327-shahed-0\",\"@air_alert_ua:263506-shahed-0\",\"@UkraineAlarmSignal:484329-shahed-0\",\"@UkraineAlarmSignal:484330-shahed-0\",\"@UkraineAlarmSignal:484331-shahed-0\",\"@povitryanatrivogaaa:194301-shahed-1\",\"@xydessa_live:62018-shahed-0\",\"@xydessa_live:62019-shahed-0\",\"@xydessa_live:62020-shahed-0\",\"@onemaster_kr:62021-shahed-0\",\"@UkraineAlarmSignal:484333-shahed-0\",\"@UkraineAlarmSignal:484334-shahed-0\",\"@UkraineAlarmSignal:484335-shahed-0\",\"@UkraineAlarmSignal:484336-shahed-0\",\"@UkraineAlarmSignal:484337-shahed-0\",\"@UkraineAlarmSignal:484338-shahed-0\",\"@UkraineAlarmSignal:484339-shahed-0\",\"@UkraineAlarmSignal:484340-shahed-0\",\"@UkraineAlarmSignal:484341-shahed-0\",\"@airalertmonitor_bot:37614-shahed-0\",\"@dnipro_alerts:43976-shahed-1\",\"@kyivoperat:187965-shahed-0\",\"@kudy_letyt:105424-shahed-0\",\"@onemaster_kr:62023-shahed-0\",\"@povitryanatrivogaaa:194305-shahed-0\",\"@air_alert_ua:263514-shahed-0\",\"@onemaster_kr:62024-shahed-0\",\"@kpszsu:60260-shahed-0\",\"@UkraineAlarmSignal:484343-shahed-0\",\"@kudy_letyt:105425-shahed-0\",\"@vanek_nikolaev:40126-shahed-0\",\"@pivdenmedia:102401-shahed-0\",\"@air_alert_ua:263515-shahed-0\",\"@pivdenmedia:102402-shahed-0\",\"@tlknewsua:91216-shahed-0\",\"@UkraineAlarmSignal:484349-shahed-0\",\"@UkraineAlarmSignal:484349-shahed-1\",\"@eyes_everywhere_ua:78019-shahed-0\",\"@UkraineAlarmSignal:484352-kab-0\",\"@tlknewsua:91217-shahed-0\",\"@airalertmonitor_bot:37625-shahed-0\",\"@dneproperatyv:164936-shahed-0\",\"@UkraineAlarmSignal:484358-shahed-0\",\"@UkraineAlarmSignal:484356-shahed-0\",\"@UkraineAlarmSignal:484357-shahed-0\",\"@UkraineAlarmSignal:484357-shahed-1\",\"@tlknewsua:91218-shahed-0\",\"@air_alert_ua:263523-kab-0\",\"@air_alert_ua:263524-kab-0\",\"@raketa_trevoga:72096-shahed-0\",\"@raketa_trevoga:72096-shahed-1\",\"@kyivoperat:187966-shahed-0\",\"@tlknewsua:91219-shahed-0\",\"@airalertmonitor_bot:37626-shahed-0\",\"@UkraineAlarmSignal:484359-shahed-0\",\"@airalertmonitor_bot:37627-shahed-0\",\"@povitryanatrivogaaa:194308-shahed-0\",\"@tlknewsua:91220-shahed-0\",\"@UkraineAlarmSignal:484360-shahed-0\",\"@UkraineAlarmSignal:484360-shahed-1\",\"@tlknewsua:91221-shahed-0\",\"@UkraineAlarmSignal:484361-shahed-0\",\"@raketa_trevoga:72097-shahed-0\",\"@kyivoperat:187967-shahed-0\",\"@xydessa_live:62023-shahed-0\",\"@airalertmonitor_bot:37629-shahed-0\",\"@airalertmonitor_bot:37630-shahed-0\",\"@xydessa_live:62024-shahed-0\",\"@raketa_trevoga:72099-shahed-0\",\"@raketa_trevoga:72099-shahed-1\",\"@UkraineAlarmSignal:484364-shahed-0\",\"@Ukrainian_Intelligence:129221-shahed-0\",\"@UkraineAlarmSignal:484365-shahed-0\",\"@UkraineAlarmSignal:484365-shahed-1\",\"@UkraineAlarmSignal:484366-shahed-0\",\"@tlknewsua:91223-shahed-0\",\"@UkraineAlarmSignal:484367-shahed-0\",\"@UkraineAlarmSignal:484371-shahed-0\",\"@UkraineAlarmSignal:484372-shahed-0\",\"@air_alert_ua:263533-shahed-0\",\"@raketa_trevoga:72100-shahed-0\",\"@tlknewsua:91224-shahed-0\",\"@UkraineAlarmSignal:484376-shahed-0\",\"@UkraineAlarmSignal:484377-shahed-0\",\"@UkraineAlarmSignal:484378-shahed-0\",\"@UkraineAlarmSignal:484379-shahed-0\",\"@UkraineAlarmSignal:484380-shahed-0\",\"@UkraineAlarmSignal:484381-shahed-0\",\"@UkraineAlarmSignal:484382-shahed-0\",\"@UkraineAlarmSignal:484383-shahed-0\",\"@raketa_trevoga:72101-shahed-0\",\"@eyes_everywhere_ua:78032-shahed-0\",\"@airalertmonitor_bot:37640-shahed-0\",\"@airalertmonitor_bot:37640-shahed-1\",\"@airalertmonitor_bot:37640-shahed-2\",\"@dnipro_alerts:43977-shahed-0\",\"@dnipro_alerts:43977-shahed-1\",\"@dnipro_alerts:43977-shahed-2\",\"@UkraineAlarmSignal:484386-shahed-0\",\"@UkraineAlarmSignal:484387-shahed-0\",\"@UkraineAlarmSignal:484388-shahed-0\",\"@povitryanatrivogaaa:194310-shahed-1\",\"@UkraineAlarmSignal:484389-shahed-1\",\"@UkraineAlarmSignal:484389-shahed-0\",\"@eyes_everywhere_ua:78035-shahed-0\",\"@airalertmonitor_bot:37643-shahed-0\",\"@airalertmonitor_bot:37643-shahed-1\",\"@UkraineAlarmSignal:484395-shahed-0\",\"@UkraineAlarmSignal:484396-shahed-0\",\"@air_alert_ua:263550-shahed-0\",\"@airalertmonitor_bot:37645-shahed-0\",\"@raketa_trevoga:72103-shahed-0\",\"@xydessa_live:62026-shahed-0\",\"@UkraineAlarmSignal:484397-shahed-0\",\"@xydessa_live:62027-shahed-0\",\"@UkraineAlarmSignal:484398-shahed-0\",\"@KyivCityOfficial:17884-shahed-0\",\"@KyivCityOfficial:17884-shahed-1\",\"@UkraineAlarmSignal:484399-shahed-0\",\"@UkraineAlarmSignal:484400-shahed-0\",\"@UkraineAlarmSignal:484400-shahed-1\",\"@UkraineAlarmSignal:484401-shahed-0\",\"@raketa_trevoga:72105-shahed-0\",\"@UkraineAlarmSignal:484403-shahed-0\",\"@UkraineAlarmSignal:484403-shahed-1\",\"@UkraineAlarmSignal:484404-shahed-0\",\"@UkraineAlarmSignal:484404-shahed-1\",\"@UkraineAlarmSignal:484405-shahed-0\",\"@raketa_trevoga:72106-shahed-0\",\"@dneproperatyv:164937-shahed-0\",\"@UkraineAlarmSignal:484406-shahed-0\",\"@UkraineAlarmSignal:484406-shahed-1\",\"@UkraineAlarmSignal:484407-shahed-0\",\"@kpszsu:60264-shahed-0\",\"@UkraineAlarmSignal:484408-shahed-0\",\"@povitryanatrivogaaa:194317-shahed-1\",\"@raketa_trevoga:72108-shahed-0\",\"@UkraineAlarmSignal:484409-shahed-0\",\"@UkraineAlarmSignal:484410-shahed-0\",\"@xydessa_live:62030-shahed-0\",\"@UkraineAlarmSignal:484411-shahed-0\",\"@air_alert_ua:263558-shahed-0\",\"@airalertmonitor_bot:37656-shahed-0\",\"@UkraineAlarmSignal:484412-shahed-0\",\"@UkraineAlarmSignal:484412-shahed-1\",\"@xydessa_live:62032-shahed-0\",\"@kpszsu:60267-shahed-0\",\"@UkraineAlarmSignal:484413-shahed-0\",\"@airalertmonitor_bot:37660-shahed-0\",\"@UkraineAlarmSignal:484414-shahed-0\",\"@UkraineAlarmSignal:484415-shahed-0\",\"@xydessa_live:62033-shahed-0\",\"@kpszsu:60266-shahed-0\",\"@dnipro_alerts:43979-shahed-0\",\"@dnipro_alerts:43979-shahed-1\",\"@dnipro_alerts:43979-shahed-2\",\"@UkraineAlarmSignal:484419-shahed-0\",\"@UkraineAlarmSignal:484419-shahed-1\",\"@airalertmonitor_bot:37668-shahed-1\",\"@tlknewsua:91255-shahed-0\",\"@kpszsu:60268-shahed-0\",\"@UkraineAlarmSignal:484420-shahed-0\",\"@airalertmonitor_bot:37668-shahed-0\",\"@airalertmonitor_bot:37668-shahed-2\",\"@UkraineAlarmSignal:484421-shahed-0\",\"@povitryanatrivogaaa:194321-shahed-0\",\"@airalertmonitor_bot:37670-shahed-0\",\"@tlknewsua:91256-shahed-0\",\"@xydessa_live:62035-shahed-0\",\"@UkraineAlarmSignal:484423-shahed-0\",\"@dneproperatyv:164941-shahed-0\",\"@Ukrainian_Intelligence:129233-shahed-0\",\"@UkraineAlarmSignal:484425-shahed-0\",\"@tlknewsua:91257-shahed-0\",\"@air_alert_ua:263569-shahed-0\",\"@xydessa_live:62036-shahed-0\",\"@UkraineAlarmSignal:484422-shahed-0\",\"@povitryanatrivogaaa:194323-shahed-0\",\"@povitryanatrivogaaa:194323-shahed-2\",\"@Ukrainian_Intelligence:129234-shahed-0\",\"@Ukrainian_Intelligence:129234-shahed-1\",\"@Ukrainian_Intelligence:129234-shahed-2\",\"@kyivoperat:187971-shahed-0\",\"@UkraineAlarmSignal:484428-shahed-0\",\"@povitryanatrivogaaa:194323-shahed-1\",\"@air_alert_ua:263572-kab-0\",\"@UkraineAlarmSignal:484430-kab-0\",\"@UkraineAlarmSignal:484431-kab-0\",\"@UkraineAlarmSignal:484432-kab-0\",\"@airalertmonitor_bot:37676-kab-1\",\"@UkraineAlarmSignal:484433-shahed-0\",\"@Ukrainian_Intelligence:129235-shahed-0\",\"@Ukrainian_Intelligence:129235-shahed-1\",\"@kpszsu:60269-shahed-0\",\"@UkraineAlarmSignal:484434-kab-0\",\"@tlknewsua:91259-shahed-0\",\"@povitryanatrivogaaa:194325-shahed-0\",\"@tlknewsua:91260-shahed-0\",\"@tlknewsua:91261-shahed-0\",\"@UkraineAlarmSignal:484435-shahed-0\",\"@UkraineAlarmSignal:484435-shahed-1\",\"@airalertmonitor_bot:37679-shahed-0\",\"@povitryanatrivogaaa:194327-shahed-0\",\"@povitryanatrivogaaa:194327-shahed-1\",\"@UkraineAlarmSignal:484436-kab-0\",\"@UkraineAlarmSignal:484436-kab-1\",\"@tlknewsua:91262-shahed-0\",\"@Ukrainian_Intelligence:129240-kab-0\",\"@UkraineAlarmSignal:484437-shahed-0\",\"@UkraineAlarmSignal:484438-kab-0\",\"@onemaster_kr:62025-shahed-0\",\"@tlknewsua:91263-kab-0\",\"@UkraineAlarmSignal:484439-kab-0\",\"@UkraineAlarmSignal:484439-kab-1\",\"@Ukrainian_Intelligence:129242-kab-1\",\"@dneproperatyv:164942-kab-0\",\"@pivdenmedia:102404-shahed-0\",\"@tlknewsua:91266-shahed-0\",\"@airalertmonitor_bot:37681-kab-0\",\"@airalertmonitor_bot:37682-kab-0\",\"@airalertmonitor_bot:37682-kab-1\",\"@kpszsu:60271-shahed-0\",\"@povitryanatrivogaaa:194331-shahed-0\",\"@UkraineAlarmSignal:484440-shahed-0\",\"@onemaster_kr:62026-shahed-0\",\"@raketa_trevoga:72111-shahed-0\",\"@UkraineAlarmSignal:484441-kab-0\",\"@UkraineAlarmSignal:484441-kab-1\",\"@dneproperatyv:164942-shahed-0\",\"@kpszsu:60271-kab-0\",\"@tlknewsua:91267-kab-0\",\"@xydessa_live:62037-shahed-0\",\"@raketa_trevoga:72112-shahed-0\",\"@ChernigivOperative:52689-shahed-0\",\"@tlknewsua:91270-shahed-0\",\"@UkraineAlarmSignal:484444-shahed-0\",\"@UkraineAlarmSignal:484445-kab-0\",\"@UkraineAlarmSignal:484445-kab-1\",\"@UkraineAlarmSignal:484446-shahed-0\",\"@airalertmonitor_bot:37686-shahed-2\",\"@airalertmonitor_bot:37686-shahed-0\",\"@tlknewsua:91269-shahed-0\",\"@raketa_trevoga:72114-shahed-0\",\"@UkraineAlarmSignal:484447-kab-0\",\"@airalertmonitor_bot:37687-kab-0\",\"@UkraineAlarmSignal:484448-shahed-1\",\"@UkraineAlarmSignal:484448-shahed-0\",\"@UkraineAlarmSignal:484449-shahed-0\",\"@UkraineAlarmSignal:484450-shahed-0\",\"@UkraineAlarmSignal:484450-shahed-1\",\"@airalertmonitor_bot:37688-shahed-2\",\"@tlknewsua:91271-kab-0\",\"@UkraineAlarmSignal:484451-shahed-1\",\"@UkraineAlarmSignal:484451-shahed-0\",\"@airalertmonitor_bot:37690-shahed-0\",\"@airalertmonitor_bot:37690-shahed-1\",\"@UkraineAlarmSignal:484452-shahed-0\",\"@UkraineAlarmSignal:484452-shahed-1\",\"@airalertmonitor_bot:37691-shahed-0\",\"@airalertmonitor_bot:37691-shahed-1\",\"@airalertmonitor_bot:37686-shahed-1\",\"@kudy_letyt:105426-shahed-1\",\"@raketa_trevoga:72115-shahed-2\",\"@eyes_everywhere_ua:78081-kab-0\",\"@UkraineAlarmSignal:484453-shahed-0\",\"@tlknewsua:91273-kab-0\",\"@dneproperatyv:164944-shahed-0\",\"@UkraineAlarmSignal:484454-kab-0\",\"@povitryanatrivogaaa:194333-shahed-1\",\"@tlknewsua:91272-shahed-0\",\"@kudy_letyt:105427-shahed-0\",\"@StrategicaviationT:29836-shahed-0\",\"@UkraineAlarmSignal:484456-shahed-0\",\"@UkraineAlarmSignal:484457-kab-0\",\"@UkraineAlarmSignal:484455-shahed-0\",\"@UkraineAlarmSignal:484457-kab-1\",\"@UkraineAlarmSignal:484458-shahed-0\",\"@airalertmonitor_bot:37688-shahed-1\",\"@UkraineAlarmSignal:484459-shahed-0\",\"@UkraineAlarmSignal:484460-shahed-0\",\"@tlknewsua:91274-shahed-0\",\"@UkraineAlarmSignal:484461-shahed-0\",\"@UkraineAlarmSignal:484462-shahed-0\",\"@UkraineAlarmSignal:484462-shahed-1\",\"@UkraineAlarmSignal:484463-shahed-0\",\"@airalertmonitor_bot:37696-shahed-0\",\"@Ukrainian_Intelligence:129247-kab-0\",\"@Ukrainian_Intelligence:129248-kab-0\",\"@UkraineAlarmSignal:484464-shahed-0\",\"@kudy_letyt:105428-shahed-0\",\"@kudy_letyt:105428-shahed-1\",\"@kudy_letyt:105428-shahed-2\",\"@UkraineAlarmSignal:484465-shahed-0\",\"@raketa_trevoga:72117-shahed-0\",\"@raketa_trevoga:72117-shahed-1\",\"@tlknewsua:91277-shahed-0\",\"@UkraineAlarmSignal:484468-shahed-0\",\"@povitryanatrivogaaa:194339-shahed-2\",\"@UkraineAlarmSignal:484466-shahed-0\",\"@UkraineAlarmSignal:484473-shahed-0\",\"@UkraineAlarmSignal:484470-kab-0\",\"@UkraineAlarmSignal:484471-kab-0\",\"@xydessa_live:62038-shahed-0\",\"@UkraineAlarmSignal:484472-shahed-0\",\"@UkraineAlarmSignal:484472-shahed-1\",\"@airalertmonitor_bot:37711-shahed-0\",\"@airalertmonitor_bot:37711-shahed-1\",\"@kudy_letyt:105431-recon-0\",\"@kudy_letyt:105431-recon-1\",\"@raketa_trevoga:72121-shahed-0\",\"@airalertmonitor_bot:37714-shahed-0\",\"@UkraineAlarmSignal:484482-shahed-0\",\"@povitryanatrivogaaa:194343-shahed-1\",\"@UkraineAlarmSignal:484480-recon-0\",\"@UkraineAlarmSignal:484481-recon-0\",\"@tlknewsua:91279-shahed-0\",\"@UkraineAlarmSignal:484483-kab-0\",\"@UkraineAlarmSignal:484483-kab-1\",\"@povitryanatrivogaaa:194344-shahed-0\",\"@dnipro_alerts:43988-shahed-0\",\"@dnipro_alerts:43988-shahed-1\",\"@dnipro_alerts:43988-shahed-2\",\"@UkraineAlarmSignal:484484-shahed-0\",\"@UkraineAlarmSignal:484485-kab-0\",\"@UkraineAlarmSignal:484485-kab-1\",\"@UkraineAlarmSignal:484486-shahed-0\",\"@airalertmonitor_bot:37716-kab-0\",\"@airalertmonitor_bot:37716-kab-1\",\"@UkraineAlarmSignal:484487-shahed-0\",\"@UkraineAlarmSignal:484487-shahed-1\",\"@xydessa_live:62039-shahed-0\",\"@xydessa_live:62040-shahed-0\",\"@airalertmonitor_bot:37718-shahed-0\",\"@UkraineAlarmSignal:484489-shahed-0\",\"@UkraineAlarmSignal:484490-shahed-0\",\"@UkraineAlarmSignal:484490-shahed-1\",\"@kudy_letyt:105432-recon-0\",\"@UkraineAlarmSignal:484491-shahed-0\",\"@UkraineAlarmSignal:484494-kab-0\",\"@airalertmonitor_bot:37723-shahed-1\",\"@dnipro_alerts:43991-shahed-1\",\"@dnipro_alerts:43991-shahed-2\",\"@UkraineAlarmSignal:484495-shahed-0\",\"@UkraineAlarmSignal:484496-shahed-0\",\"@UkraineAlarmSignal:484496-shahed-1\",\"@airalertmonitor_bot:37723-shahed-0\",\"@UkraineAlarmSignal:484497-shahed-0\",\"@kudy_letyt:105433-shahed-0\",\"@kudy_letyt:105433-shahed-2\",\"@eyes_everywhere_ua:78132-shahed-0\",\"@dnipro_alerts:43991-shahed-0\",\"@dneproperatyv:164945-shahed-0\",\"@UkraineAlarmSignal:484498-shahed-0\",\"@UkraineAlarmSignal:484498-shahed-1\",\"@UkraineAlarmSignal:484499-shahed-0\",\"@UkraineAlarmSignal:484500-shahed-0\",\"@UkraineAlarmSignal:484501-shahed-0\",\"@dnipro_alerts:43993-shahed-0\",\"@dnipro_alerts:43993-shahed-2\",\"@airalertmonitor_bot:37727-shahed-0\",\"@tlknewsua:91285-shahed-0\",\"@pivdenmedia:102406-shahed-0\",\"@pivdenmedia:102406-shahed-0\",\"@UkraineAlarmSignal:484502-shahed-0\",\"@povitryanatrivogaaa:194351-shahed-0\",\"@UkraineAlarmSignal:484503-shahed-0\",\"@pivdenmedia:102408-shahed-0\",\"@UkraineAlarmSignal:484504-shahed-0\",\"@UkraineAlarmSignal:484505-shahed-0\",\"@UkraineAlarmSignal:484506-shahed-0\",\"@UkraineAlarmSignal:484507-shahed-0\",\"@xydessa_live:62041-shahed-0\",\"@kudy_letyt:105435-shahed-0\",\"@kudy_letyt:105435-shahed-1\",\"@airalertmonitor_bot:37730-shahed-1\",\"@raketa_trevoga:72125-shahed-1\",\"@airalertmonitor_bot:37728-shahed-0\",\"@airalertmonitor_bot:37729-shahed-0\",\"@airalertmonitor_bot:37730-shahed-0\",\"@Ukrainian_Intelligence:129258-shahed-2\",\"@kpszsu:60281-shahed-0\",\"@dnipro_alerts:43995-shahed-0\",\"@dnipro_alerts:43995-shahed-2\",\"@UkraineAlarmSignal:484509-shahed-0\",\"@kudy_letyt:105434-shahed-0\",\"@Ukrainian_Intelligence:129258-shahed-0\",\"@UkraineAlarmSignal:484510-shahed-0\",\"@xydessa_live:62043-shahed-0\",\"@war_monitor:39053-shahed-0\",\"@war_monitor:39053-shahed-1\",\"@Ukrainian_Intelligence:129259-shahed-0\",\"@kpszsu:60283-shahed-0\",\"@airalertmonitor_bot:37731-shahed-0\",\"@dnipro_alerts:43995-shahed-1\",\"@airalertmonitor_bot:37732-shahed-0\",\"@pivdenmedia:102409-shahed-0\",\"@xydessa_live:62044-shahed-0\",\"@dnipro_alerts:43996-shahed-0\",\"@dnipro_alerts:43996-shahed-1\",\"@dnipro_alerts:43996-shahed-2\",\"@xydessa_live:62045-shahed-0\",\"@xydessa_live:62046-shahed-0\",\"@xydessa_live:62042-shahed-0\",\"@pivdenmedia:102410-shahed-0\",\"@UkraineAlarmSignal:484513-shahed-0\",\"@povitryanatrivogaaa:194354-shahed-0\",\"@kudy_letyt:105437-shahed-0\",\"@kudy_letyt:105437-shahed-2\",\"@UkraineAlarmSignal:484514-shahed-0\",\"@UkraineAlarmSignal:484515-shahed-0\",\"@UkraineAlarmSignal:484516-shahed-0\",\"@UkraineAlarmSignal:484517-shahed-0\",\"@povitryanatrivogaaa:194355-shahed-0\",\"@xydessa_live:62048-shahed-0\",\"@UkraineAlarmSignal:484518-shahed-0\",\"@UkraineAlarmSignal:484519-shahed-0\",\"@UkraineAlarmSignal:484520-shahed-0\",\"@eyes_everywhere_ua:78211-shahed-0\",\"@UkraineAlarmSignal:484521-shahed-0\",\"@UkraineAlarmSignal:484522-shahed-0\",\"@UkraineAlarmSignal:484523-shahed-0\",\"@UkraineAlarmSignal:484524-shahed-0\",\"@dnipro_alerts:43998-shahed-0\",\"@dnipro_alerts:43998-shahed-1\",\"@dnipro_alerts:43998-shahed-2\",\"@UkraineAlarmSignal:484526-shahed-0\",\"@UkraineAlarmSignal:484527-shahed-0\",\"@UkraineAlarmSignal:484525-shahed-0\",\"@UkraineAlarmSignal:484528-shahed-0\",\"@Ukrainian_Intelligence:129261-shahed-0\",\"@UkraineAlarmSignal:484529-shahed-0\",\"@dnipro_alerts:43999-shahed-1\",\"@UkraineAlarmSignal:484530-shahed-0\",\"@UkraineAlarmSignal:484531-shahed-0\",\"@UkraineAlarmSignal:484533-shahed-0\",\"@UkraineAlarmSignal:484534-shahed-0\",\"@UkraineAlarmSignal:484535-shahed-0\",\"@UkraineAlarmSignal:484536-shahed-0\",\"@UkraineAlarmSignal:484537-shahed-0\",\"@UkraineAlarmSignal:484538-shahed-0\",\"@airalertmonitor_bot:37741-shahed-0\",\"@ChernigivOperative:52691-shahed-0\",\"@Ukrainian_Intelligence:129260-shahed-0\",\"@UkraineAlarmSignal:484546-shahed-0\",\"@UkraineAlarmSignal:484547-shahed-0\",\"@UkraineAlarmSignal:484548-shahed-0\",\"@UkraineAlarmSignal:484549-shahed-0\",\"@tlknewsua:91289-shahed-0\",\"@airalertmonitor_bot:37740-shahed-0\",\"@UkraineAlarmSignal:484550-shahed-0\",\"@UkraineAlarmSignal:484551-shahed-0\",\"@povitryanatrivogaaa:194356-shahed-0\",\"@UkraineAlarmSignal:484552-shahed-0\",\"@UkraineAlarmSignal:484553-shahed-0\",\"@eyes_everywhere_ua:78237-shahed-0\",\"@UkraineAlarmSignal:484554-shahed-0\",\"@UkraineAlarmSignal:484555-shahed-0\",\"@UkraineAlarmSignal:484556-shahed-0\",\"@UkraineAlarmSignal:484557-shahed-0\",\"@UkraineAlarmSignal:484558-shahed-0\",\"@UkraineAlarmSignal:484559-shahed-0\",\"@UkraineAlarmSignal:484560-shahed-0\",\"@UkraineAlarmSignal:484561-shahed-0\",\"@UkraineAlarmSignal:484562-shahed-0\",\"@UkraineAlarmSignal:484564-shahed-0\",\"@airalertmonitor_bot:37748-shahed-0\",\"@dnipro_alerts:44000-kab-0\",\"@dnipro_alerts:44000-kab-1\",\"@Ukrainian_Intelligence:129262-shahed-0\",\"@airalertmonitor_bot:37743-shahed-1\",\"@airalertmonitor_bot:37744-shahed-0\",\"@airalertmonitor_bot:37744-shahed-1\",\"@airalertmonitor_bot:37745-shahed-0\",\"@airalertmonitor_bot:37747-shahed-0\",\"@airalertmonitor_bot:37746-shahed-0\",\"@airalertmonitor_bot:37749-shahed-0\",\"@UkraineAlarmSignal:484565-shahed-0\",\"@Ukrainian_Intelligence:129263-shahed-0\",\"@UkraineAlarmSignal:484567-shahed-0\",\"@UkraineAlarmSignal:484566-shahed-0\",\"@UkraineAlarmSignal:484568-shahed-0\",\"@Ukrainian_Intelligence:129264-kab-0\",\"@dnipro_alerts:44001-shahed-0\",\"@dnipro_alerts:44001-shahed-1\",\"@povitryanatrivogaaa:194357-shahed-0\",\"@eyes_everywhere_ua:78249-shahed-0\",\"@UkraineAlarmSignal:485347-kab-0\",\"@UkraineAlarmSignal:485348-kab-0\",\"@UkraineAlarmSignal:485350-kab-0\",\"@xydessa_live:62173-shahed-0\",\"@pivdenmedia:102486-kab-0\",\"@tlknewsua:91487-shahed-0\",\"@UkraineAlarmSignal:485351-kab-0\",\"@UkraineAlarmSignal:485352-shahed-0\",\"@air_alert_ua:264028-shahed-0\",\"@airalertmonitor_bot:38166-kab-0\",\"@UkraineAlarmSignal:485353-shahed-0\",\"@UkraineAlarmSignal:485354-shahed-0\",\"@eyes_everywhere_ua:78527-kab-0\",\"@air_alert_ua:264027-shahed-0\",\"@UkraineAlarmSignal:485355-shahed-0\",\"@airalertmonitor_bot:38170-shahed-0\",\"@xydessa_live:62175-shahed-0\",\"@povitryanatrivogaaa:194528-shahed-0\",\"@airalertmonitor_bot:38185-shahed-0\",\"@pivdenmedia:102491-shahed-0\",\"@ChernigivOperative:52745-shahed-0\",\"@raketa_trevoga:72208-shahed-0\",\"@raketa_trevoga:72208-shahed-1\",\"@raketa_trevoga:72209-shahed-0\",\"@xydessa_live:62178-shahed-0\",\"@eyes_everywhere_ua:78541-shahed-0\",\"@UkraineAlarmSignal:485358-shahed-0\",\"@xydessa_live:62179-shahed-0\",\"@xydessa_live:62180-shahed-0\",\"@pivdenmedia:102496-shahed-0\",\"@Ukrainian_Intelligence:129345-kab-0\",\"@UkraineAlarmSignal:485359-shahed-0\",\"@povitryanatrivogaaa:194530-shahed-0\",\"@tlknewsua:91488-shahed-0\",\"@pivdenmedia:102495-shahed-0\",\"@xydessa_live:62181-shahed-0\",\"@air_alert_ua:264033-shahed-0\",\"@xydessa_live:62177-shahed-0\",\"@air_alert_ua:264032-shahed-0\",\"@xydessa_live:62182-shahed-0\",\"@Ukrainian_Intelligence:129346-shahed-0\",\"@Ukrainian_Intelligence:129346-shahed-1\",\"@pivdenmedia:102498-shahed-0\",\"@raketa_trevoga:72210-shahed-0\",\"@raketa_trevoga:72211-shahed-0\",\"@xydessa_live:62183-shahed-0\",\"@kudy_letyt:105445-shahed-1\",\"@povitryanatrivogaaa:194533-shahed-0\",\"@pivdenmedia:102499-shahed-0\",\"@raketa_trevoga:72213-shahed-0\",\"@raketa_trevoga:72213-shahed-1\",\"@raketa_trevoga:72213-shahed-2\",\"@Ukrainian_Intelligence:129347-shahed-0\",\"@pivdenmedia:102499-kab-0\",\"@pivdenmedia:102501-shahed-0\",\"@pivdenmedia:102502-shahed-0\",\"@povitryanatrivogaaa:194535-shahed-2\",\"@kpszsu:60336-shahed-0\",\"@pivdenmedia:102503-shahed-0\",\"@pivdenmedia:102508-shahed-0\",\"@povitryanatrivogaaa:194535-shahed-1\",\"@UkraineAlarmSignal:485363-shahed-1\",\"@UkraineAlarmSignal:485363-shahed-0\",\"@UkraineAlarmSignal:485364-shahed-0\",\"@UkraineAlarmSignal:485366-shahed-0\",\"@pivdenmedia:102509-shahed-0\",\"@UkraineAlarmSignal:485365-shahed-0\",\"@UkraineAlarmSignal:485365-shahed-1\",\"@UkraineAlarmSignal:485366-shahed-1\",\"@UkraineAlarmSignal:485367-shahed-0\",\"@UkraineAlarmSignal:485368-shahed-0\",\"@pivdenmedia:102510-shahed-0\",\"@pivdenmedia:102511-shahed-0\",\"@UkraineAlarmSignal:485371-shahed-0\",\"@pivdenmedia:102513-shahed-0\",\"@pivdenmedia:102513-shahed-0\",\"@ChernigivOperative:52747-shahed-0\",\"@povitryanatrivogaaa:194538-shahed-0\",\"@UkraineAlarmSignal:485376-kab-0\",\"@UkraineAlarmSignal:485376-kab-1\",\"@UkraineAlarmSignal:485378-shahed-0\",\"@UkraineAlarmSignal:485378-shahed-1\",\"@airalertmonitor_bot:38203-shahed-0\",\"@airalertmonitor_bot:38203-shahed-1\",\"@dneproperatyv:165005-shahed-0\",\"@UkraineAlarmSignal:485381-shahed-0\",\"@UkraineAlarmSignal:485379-shahed-0\",\"@UkraineAlarmSignal:485380-shahed-0\",\"@pivdenmedia:102516-shahed-0\",\"@Ukrainian_Intelligence:129353-shahed-0\",\"@povitryanatrivogaaa:194541-shahed-0\",\"@airalertmonitor_bot:38206-shahed-0\",\"@UkraineAlarmSignal:485383-shahed-0\",\"@UkraineAlarmSignal:485384-shahed-0\",\"@UkraineAlarmSignal:485385-shahed-0\",\"@UkraineAlarmSignal:485386-kab-0\",\"@Ukrainian_Intelligence:129354-kab-0\",\"@povitryanatrivogaaa:194543-shahed-0\",\"@UkraineAlarmSignal:485388-shahed-1\",\"@UkraineAlarmSignal:485387-shahed-0\",\"@UkraineAlarmSignal:485388-shahed-0\",\"@tlknewsua:91522-shahed-1\",\"@raketa_trevoga:72215-shahed-1\",\"@raketa_trevoga:72215-shahed-2\",\"@raketa_trevoga:72215-shahed-0\",\"@Ukrainian_Intelligence:129355-shahed-0\",\"@UkraineAlarmSignal:485389-shahed-0\",\"@UkraineAlarmSignal:485389-shahed-1\",\"@airalertmonitor_bot:38217-shahed-2\",\"@kudy_letyt:105446-shahed-0\",\"@raketa_trevoga:72216-shahed-0\",\"@povitryanatrivogaaa:194547-shahed-0\",\"@povitryanatrivogaaa:194547-shahed-1\",\"@avimonitor-1776632005000-live-shahed-Люботин-0\",\"@UkraineAlarmSignal:485390-shahed-0\",\"@Ukrainian_Intelligence:129358-shahed-0\",\"@avimonitor-1776632056000-live-shahed-Суми-0\",\"@dnipro_alerts:44024-shahed-0\",\"@dnipro_alerts:44024-shahed-1\",\"@xydessa_live:62184-shahed-0\",\"@Ukrainian_Intelligence:129359-shahed-0\",\"@war_monitor:39070-shahed-0\",\"@kudy_letyt:105448-shahed-1\",\"@kudy_letyt:105448-shahed-2\",\"@raketa_trevoga:72217-shahed-0\",\"@raketa_trevoga:72217-shahed-1\",\"@raketa_trevoga:72217-shahed-2\",\"@UkraineAlarmSignal:485395-shahed-0\",\"@UkraineAlarmSignal:485393-shahed-0\",\"@UkraineAlarmSignal:485394-shahed-0\",\"@UkraineAlarmSignal:485396-shahed-0\",\"@UkraineAlarmSignal:485397-shahed-0\",\"@airalertmonitor_bot:38220-shahed-2\",\"@airalertmonitor_bot:38220-shahed-1\",\"@dnipro_alerts:44024-shahed-2\",\"@UkraineAlarmSignal:485398-kab-0\",\"@UkraineAlarmSignal:485399-kab-0\",\"@Ukrainian_Intelligence:129361-kab-0\",\"@Ukrainian_Intelligence:129361-kab-1\",\"@Ukrainian_Intelligence:129361-kab-2\",\"@kudy_letyt:105449-shahed-0\",\"@kudy_letyt:105449-shahed-1\",\"@kudy_letyt:105449-shahed-2\",\"@raketa_trevoga:72218-shahed-0\",\"@UkraineAlarmSignal:485400-shahed-0\",\"@kudy_letyt:105450-shahed-0\"]",
+    "pending_reports_v1": "[{\"id\":\"rp-1776628517128-mjitto\",\"created_at\":1776628517142,\"status\":\"approved\",\"payload\":{\"type\":\"shahed\",\"location\":\"Одеса\",\"target\":\"у бік Николаєву\",\"note\":\"Шахед\",\"count\":1,\"seen_at\":\"2026-04-19T19:54:00.000Z\",\"contact_name\":\"\",\"contact_link\":\"\",\"direction\":null},\"event\":{\"id\":\"user-report-2026-04-19T19:54:00.000Z-live-shahed-Одеса-0\",\"type\":\"shahed\",\"lat\":46.4736,\"lng\":30.738,\"direction\":75,\"source\":\"user-report\",\"timestamp\":\"2026-04-19T19:54:00.000Z\",\"comment\":\"Джерело: user-report. Локація: Одеса.\",\"is_test\":false,\"confidence\":0.78,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Одеса\",\"marker_location_id\":\"одеса\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":\"у бік Николаєву\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Одеса\",\"marker_location_id\":\"одеса\",\"track_target\":false},\"region_id\":\"odeska\",\"raw_text\":\"shahed над Одеса в напрямку у бік Николаєву. Шахед\"},\"review_chat_id\":\"8468110023\",\"review_message_id\":4,\"reviewed_at\":1776628555596,\"reviewer\":\"fanatSBU\",\"notified_at\":1776628542609},{\"id\":\"rp-1776628783037-gi0itz\",\"created_at\":1776628783037,\"status\":\"approved\",\"payload\":{\"type\":\"shahed\",\"location\":\"Чернігів\",\"target\":\"у бік Николаєву\",\"note\":\"\",\"count\":1,\"seen_at\":\"2026-04-19T19:59:00.000Z\",\"contact_name\":\"\",\"contact_link\":\"мак\",\"direction\":null},\"event\":{\"id\":\"user-report-2026-04-19T19:59:00.000Z-live-shahed-Чернігів-0\",\"type\":\"shahed\",\"lat\":51.4982,\"lng\":31.2893,\"direction\":24,\"source\":\"user-report\",\"timestamp\":\"2026-04-19T19:59:00.000Z\",\"comment\":\"Джерело: user-report. Локація: Чернігів.\",\"is_test\":false,\"confidence\":0.78,\"marker_variant\":null,\"marker_action\":\"place\",\"marker_label\":\"Чернігів\",\"marker_location_id\":\"chernihiv-city-fallback\",\"group_count_min\":null,\"group_count_max\":null,\"target_lat\":null,\"target_lng\":null,\"target_label\":\"у бік Николаєву\",\"target_location_id\":null,\"bot_meta\":{\"action\":\"place_marker\",\"marker_label\":\"Чернігів\",\"marker_location_id\":\"chernihiv-city-fallback\",\"track_target\":false},\"region_id\":\"chernihivska\",\"raw_text\":\"shahed над Чернігів в напрямку у бік Николаєву\"},\"review_chat_id\":\"8468110023\",\"review_message_id\":5,\"reviewed_at\":1776628793353,\"reviewer\":\"fanatSBU\",\"notified_at\":1776628783974}]",
+    "tg_report_review_chat_id_v1": "8468110023"
   },
   "admins": [
     {
       "username": "adminka",
-      "password_hash": "84c8a28c6b633b7763979cddf2c88e31:1d01f35ca9ab8e982a9d203472fdb1d668de237a4db9816436ecbe90e5e6e9e07f54d73844a63499b125fcf313f543a8360a04942a1c5fb6d34541690b38acc6"
+      "password_hash": "97534361b31aeb4ca8540653ba4362ce:732ed0ea7e0495a0b0c5eb8c5b2482340616f842414cc344eebbdb9b87540af52745538e620b97b52d3d39157653269062ec69d5bdcbb23f2d688d8e1518fcc8"
     }
   ],
   "sessions": [
     {
-      "token": "34422415848399a17993b4b03649b5f4e24834ace01b52e7",
-      "username": "adminka",
-      "expires_at": 1775674757313
+      "token": "d8d52de2cf8cdf4793c6efb63e39192a503cea2338192461",
+      "subject_type": "admin",
+      "subject_id": "adminka",
+      "display_name": "adminka",
+      "expires_at": 1776938672335,
+      "created_at": 1776333872335
+    },
+    {
+      "token": "78e33409e723854ae6e91967bd3d9b3dd243f93792c06c58",
+      "subject_type": "admin",
+      "subject_id": "adminka",
+      "display_name": "adminka",
+      "expires_at": 1776960883749,
+      "created_at": 1776356083749
     }
   ],
   "test_events": [
@@ -803,8 +816,758 @@
       "lng": 30.4761,
       "types": [],
       "created_at": 1775146098747
+    },
+    {
+      "id": "pt-одеса-1776412049221-xolx",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412049221
+    },
+    {
+      "id": "pt-одеса-1776412051364-640z",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412051364
+    },
+    {
+      "id": "pt-одеса-1776412053392-jtrz",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412053392
+    },
+    {
+      "id": "pt-одеса-1776412053657-jg6b",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412053657
+    },
+    {
+      "id": "pt-одеса-1776412053806-n362",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412053806
+    },
+    {
+      "id": "pt-одеса-1776412054038-dl4m",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412054038
+    },
+    {
+      "id": "pt-одеса-1776412054407-5qn7",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412054407
+    },
+    {
+      "id": "pt-одеса-1776412054481-l1kn",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412054481
+    },
+    {
+      "id": "pt-одеса-1776412054922-ap6k",
+      "location_id": "одеса",
+      "lat": 46.4208,
+      "lng": 30.9265,
+      "types": [],
+      "created_at": 1776412054922
+    },
+    {
+      "id": "pt-одеса-1776412314002-roj8",
+      "location_id": "одеса",
+      "lat": 45.9817,
+      "lng": 31.1133,
+      "types": [],
+      "created_at": 1776412314002
+    },
+    {
+      "id": "pt-одеса-1776412339411-21h5",
+      "location_id": "одеса",
+      "lat": 46.2026,
+      "lng": 30.5557,
+      "types": [],
+      "created_at": 1776412339411
     }
   ],
   "users": [],
-  "api_keys": []
+  "api_keys": [],
+  "marker_events": [
+    {
+      "id": "@dnipro_alerts:44024-shahed-0",
+      "event": {
+        "id": "@dnipro_alerts:44024-shahed-0",
+        "type": "shahed",
+        "lat": 48.46,
+        "lng": 35.05,
+        "direction": 0,
+        "source": "@dnipro_alerts",
+        "timestamp": "2026-04-19T21:31:33.000Z",
+        "comment": "Джерело: @dnipro_alerts. Локація: Дніпро.",
+        "is_test": false,
+        "confidence": 0.71,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Дніпро",
+        "marker_location_id": null,
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": null,
+        "target_lng": null,
+        "target_label": null,
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Дніпро",
+          "marker_location_id": null,
+          "target_label": null,
+          "track_target": false
+        },
+        "region_id": "dniprovska",
+        "raw_text": "З цієї групи залишилося одне.\n\nІ нова група близько 5 одиниць від Сахновщина, тобто з півночі Павлоградського району. ~10-15 хвилин до межі області.\n\n\n💙 Дніпро Alerts • 💛 Київ Alerts\nℹ️ Alerts Live • 🤙 Зворотний зв’язок",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@dnipro_alerts"
+        ],
+        "expires_at": 1776635393630
+      },
+      "expires_at": 1776635393630,
+      "updated_at": 1776634493630
+    },
+    {
+      "id": "@dnipro_alerts:44024-shahed-1",
+      "event": {
+        "id": "@dnipro_alerts:44024-shahed-1",
+        "type": "shahed",
+        "lat": 50.2911,
+        "lng": 30.4953,
+        "direction": 7.696342490700431,
+        "source": "@dnipro_alerts",
+        "timestamp": "2026-04-19T21:31:33.000Z",
+        "comment": "Джерело: @dnipro_alerts. Локація: Київ.",
+        "is_test": false,
+        "confidence": 0.71,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Київ",
+        "marker_location_id": "київ",
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": null,
+        "target_lng": null,
+        "target_label": null,
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Київ",
+          "marker_location_id": "київ",
+          "target_label": null,
+          "track_target": false
+        },
+        "region_id": "kyiv",
+        "raw_text": "З цієї групи залишилося одне.\n\nІ нова група близько 5 одиниць від Сахновщина, тобто з півночі Павлоградського району. ~10-15 хвилин до межі області.\n\n\n💙 Дніпро Alerts • 💛 Київ Alerts\nℹ️ Alerts Live • 🤙 Зворотний зв’язок",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@dnipro_alerts"
+        ],
+        "expires_at": 1776635393630
+      },
+      "expires_at": 1776635393630,
+      "updated_at": 1776634493630
+    },
+    {
+      "id": "@dnipro_alerts:44024-shahed-2",
+      "event": {
+        "id": "@dnipro_alerts:44024-shahed-2",
+        "type": "shahed",
+        "lat": 50.3251,
+        "lng": 30.5874,
+        "direction": 0,
+        "source": "@dnipro_alerts",
+        "timestamp": "2026-04-19T21:22:51.000Z",
+        "comment": "Джерело: @dnipro_alerts. Локація: Київ.",
+        "is_test": false,
+        "confidence": 0.85,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Київ",
+        "marker_location_id": "київ",
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": null,
+        "target_lng": null,
+        "target_label": null,
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Київ",
+          "marker_location_id": "київ",
+          "target_label": null,
+          "track_target": false
+        },
+        "region_id": "kyiv",
+        "raw_text": "Завдяки роботі СОУ, дронів стало менше,  але ще є.\nПерші перетинають кордон області, напрямок наразі у бік Самар.\nПоки що без загроз, при змінах попередимо.\n\n\n💙 Дніпро Alerts • 💛 Київ Alerts\nℹ️ Alerts Live • 🤙 Зворотний зв’язок",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@dnipro_alerts"
+        ],
+        "expires_at": 1776635393630
+      },
+      "expires_at": 1776635393630,
+      "updated_at": 1776634493630
+    },
+    {
+      "id": "@UkraineAlarmSignal:485398-kab-0",
+      "event": {
+        "id": "@UkraineAlarmSignal:485398-kab-0",
+        "type": "kab",
+        "lat": 48.1667,
+        "lng": 37.8,
+        "direction": 0,
+        "source": "@UkraineAlarmSignal",
+        "timestamp": "2026-04-19T21:08:34.000Z",
+        "comment": "Джерело: @UkraineAlarmSignal. Локація: Донецьк.",
+        "is_test": false,
+        "confidence": 0.83,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Донецьк",
+        "marker_location_id": null,
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": null,
+        "target_lng": null,
+        "target_label": null,
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Донецьк",
+          "marker_location_id": null,
+          "target_label": null,
+          "track_target": false
+        },
+        "region_id": "donetska",
+        "raw_text": "💣 Словʼянськ (Донецька обл.)\nЗагроза застосування КАБів. Негайно прямуйте в укриття!",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@UkraineAlarmSignal"
+        ],
+        "expires_at": 1776634549506
+      },
+      "expires_at": 1776634549506,
+      "updated_at": 1776633649506
+    },
+    {
+      "id": "@UkraineAlarmSignal:485399-kab-0",
+      "event": {
+        "id": "@UkraineAlarmSignal:485399-kab-0",
+        "type": "kab",
+        "lat": 48.1274,
+        "lng": 37.8,
+        "direction": 0,
+        "source": "@UkraineAlarmSignal",
+        "timestamp": "2026-04-19T21:09:19.000Z",
+        "comment": "Джерело: @UkraineAlarmSignal. Локація: Донецьк.",
+        "is_test": false,
+        "confidence": 0.76,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Донецьк",
+        "marker_location_id": null,
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": null,
+        "target_lng": null,
+        "target_label": null,
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Донецьк",
+          "marker_location_id": null,
+          "target_label": null,
+          "track_target": false
+        },
+        "region_id": "donetska",
+        "raw_text": "💣 Миколаївка (Донецька обл.)\nЗагроза застосування КАБів. Негайно прямуйте в укриття!",
+        "evidence_count": 2,
+        "evidence_sources": [
+          "@UkraineAlarmSignal",
+          "@airalertmonitor_bot"
+        ],
+        "expires_at": 1776634549506
+      },
+      "expires_at": 1776634549506,
+      "updated_at": 1776633649506
+    },
+    {
+      "id": "@Ukrainian_Intelligence:129361-kab-0",
+      "event": {
+        "id": "@Ukrainian_Intelligence:129361-kab-0",
+        "type": "kab",
+        "lat": 49.98,
+        "lng": 36.25,
+        "direction": 261.83044682083414,
+        "source": "@Ukrainian_Intelligence",
+        "timestamp": "2026-04-19T21:09:35.000Z",
+        "comment": "Джерело: @Ukrainian_Intelligence. Локація: Люботин.",
+        "is_test": false,
+        "confidence": 0.69,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Люботин",
+        "marker_location_id": "liubotyn",
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 49.95,
+        "target_lng": 35.93,
+        "target_label": "Люботин",
+        "target_location_id": "liubotyn",
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Люботин",
+          "marker_location_id": "liubotyn",
+          "target_label": "Люботин",
+          "track_target": true
+        },
+        "region_id": "kharkivska",
+        "raw_text": "Харківщина: ~10 від Борової до Орільки\n\nСумщина: 2 біля Глухова, 2 на Липову Долину",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@Ukrainian_Intelligence"
+        ],
+        "expires_at": 1776634717250
+      },
+      "expires_at": 1776634717250,
+      "updated_at": 1776633817250
+    },
+    {
+      "id": "@Ukrainian_Intelligence:129361-kab-1",
+      "event": {
+        "id": "@Ukrainian_Intelligence:129361-kab-1",
+        "type": "kab",
+        "lat": 50.91,
+        "lng": 34.8,
+        "direction": 207.51547546312577,
+        "source": "@Ukrainian_Intelligence",
+        "timestamp": "2026-04-19T21:09:35.000Z",
+        "comment": "Джерело: @Ukrainian_Intelligence. Локація: Суми.",
+        "is_test": false,
+        "confidence": 0.69,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Суми",
+        "marker_location_id": "sumy-city-fallback",
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 50.9077,
+        "target_lng": 34.7981,
+        "target_label": "Суми",
+        "target_location_id": "sumy-city-fallback",
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Суми",
+          "marker_location_id": "sumy-city-fallback",
+          "target_label": "Суми",
+          "track_target": true
+        },
+        "region_id": "sumyska",
+        "raw_text": "Харківщина: ~10 від Борової до Орільки\n\nСумщина: 2 біля Глухова, 2 на Липову Долину",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@Ukrainian_Intelligence"
+        ],
+        "expires_at": 1776634717250
+      },
+      "expires_at": 1776634717250,
+      "updated_at": 1776633817250
+    },
+    {
+      "id": "@Ukrainian_Intelligence:129361-kab-2",
+      "event": {
+        "id": "@Ukrainian_Intelligence:129361-kab-2",
+        "type": "kab",
+        "lat": 45.3,
+        "lng": 34.2,
+        "direction": 0,
+        "source": "@Ukrainian_Intelligence",
+        "timestamp": "2026-04-19T21:09:35.000Z",
+        "comment": "Джерело: @Ukrainian_Intelligence. Локація: АР Крим.",
+        "is_test": false,
+        "confidence": 0.69,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "АР Крим",
+        "marker_location_id": null,
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 45.3,
+        "target_lng": 34.2,
+        "target_label": "АР Крим",
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "АР Крим",
+          "marker_location_id": null,
+          "target_label": "АР Крим",
+          "track_target": true
+        },
+        "region_id": "crimea",
+        "raw_text": "Харківщина: ~10 від Борової до Орільки\n\nСумщина: 2 біля Глухова, 2 на Липову Долину",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@Ukrainian_Intelligence"
+        ],
+        "expires_at": 1776634717250
+      },
+      "expires_at": 1776634717250,
+      "updated_at": 1776633817250
+    },
+    {
+      "id": "@war_monitor:39071-shahed-0",
+      "event": {
+        "id": "@war_monitor:39071-shahed-0",
+        "type": "shahed",
+        "lat": 50.0125,
+        "lng": 36.4799,
+        "direction": 149.5736017001105,
+        "source": "@war_monitor",
+        "timestamp": "2026-04-19T21:06:58.000Z",
+        "comment": "Джерело: @war_monitor. Локація: Ізюм.",
+        "is_test": false,
+        "confidence": 0.91,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Ізюм",
+        "marker_location_id": null,
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 49.21,
+        "target_lng": 37.26,
+        "target_label": "Ізюм",
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Ізюм",
+          "marker_location_id": null,
+          "target_label": "Ізюм",
+          "track_target": true
+        },
+        "region_id": "kharkivska",
+        "raw_text": "Харківщина:\n8х БпЛА з сектору Ізюм/Балаклія у напрямку Павлоградського району Дніпропетровщини.",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@war_monitor"
+        ],
+        "expires_at": 1776634549506
+      },
+      "expires_at": 1776634549506,
+      "updated_at": 1776633649506
+    },
+    {
+      "id": "@airalertmonitor_bot:38221-kab-0",
+      "event": {
+        "id": "@airalertmonitor_bot:38221-kab-0",
+        "type": "kab",
+        "lat": 48.1096,
+        "lng": 37.8,
+        "direction": 0,
+        "source": "@airalertmonitor_bot",
+        "timestamp": "2026-04-19T21:09:19.000Z",
+        "comment": "Джерело: @airalertmonitor_bot. Локація: Донецьк.",
+        "is_test": false,
+        "confidence": 0.69,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Донецьк",
+        "marker_location_id": null,
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": null,
+        "target_lng": null,
+        "target_label": null,
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Донецьк",
+          "marker_location_id": null,
+          "target_label": null,
+          "track_target": false
+        },
+        "region_id": "donetska",
+        "raw_text": "💣 Миколаївка (Донецька обл.)\nЗагроза застосування КАБів. Негайно прямуйте в укриття!\n\n💣 Словʼянськ (Донецька обл.)\nЗагроза застосування КАБів. Негайно прямуйте в укриття!",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@airalertmonitor_bot"
+        ],
+        "expires_at": 1776634717250
+      },
+      "expires_at": 1776634717250,
+      "updated_at": 1776633817250
+    },
+    {
+      "id": "@kudy_letyt:105449-shahed-0",
+      "event": {
+        "id": "@kudy_letyt:105449-shahed-0",
+        "type": "shahed",
+        "lat": 49.953,
+        "lng": 36.2586,
+        "direction": 62.613309664888675,
+        "source": "@kudy_letyt",
+        "timestamp": "2026-04-19T21:19:02.000Z",
+        "comment": "Джерело: @kudy_letyt. Локація: Люботин.",
+        "is_test": false,
+        "confidence": 0.67,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Люботин",
+        "marker_location_id": "liubotyn",
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 49.95,
+        "target_lng": 35.93,
+        "target_label": "Люботин",
+        "target_location_id": "liubotyn",
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Люботин",
+          "marker_location_id": "liubotyn",
+          "target_label": "Люботин",
+          "track_target": true
+        },
+        "region_id": "kharkivska",
+        "raw_text": "Сумщина:\nБпЛА курсом на Глухів  \n\nЧернігівщина:\nБпЛА курсом на Сновськ \n\nХарківщина:\nБпЛА курсом на Богодухів \n2х БпЛА курсом на Кегичівку \nБпЛА курсом на Краснопавлівку\n4х БпЛА курсом на Орільку \n2х БпЛА курсом на Вільчу\nБпЛА курсом на Рогань",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@kudy_letyt"
+        ],
+        "expires_at": 1776635247179
+      },
+      "expires_at": 1776635247179,
+      "updated_at": 1776634347179
+    },
+    {
+      "id": "@kudy_letyt:105449-shahed-1",
+      "event": {
+        "id": "@kudy_letyt:105449-shahed-1",
+        "type": "shahed",
+        "lat": 51.5,
+        "lng": 31.3,
+        "direction": 254.88242881766644,
+        "source": "@kudy_letyt",
+        "timestamp": "2026-04-19T21:19:02.000Z",
+        "comment": "Джерело: @kudy_letyt. Локація: Чернігів.",
+        "is_test": false,
+        "confidence": 0.67,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Чернігів",
+        "marker_location_id": "chernihiv-city-fallback",
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 51.4982,
+        "target_lng": 31.2893,
+        "target_label": "Чернігів",
+        "target_location_id": "chernihiv-city-fallback",
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Чернігів",
+          "marker_location_id": "chernihiv-city-fallback",
+          "target_label": "Чернігів",
+          "track_target": true
+        },
+        "region_id": "chernihivska",
+        "raw_text": "Сумщина:\nБпЛА курсом на Глухів  \n\nЧернігівщина:\nБпЛА курсом на Сновськ \n\nХарківщина:\nБпЛА курсом на Богодухів \n2х БпЛА курсом на Кегичівку \nБпЛА курсом на Краснопавлівку\n4х БпЛА курсом на Орільку \n2х БпЛА курсом на Вільчу\nБпЛА курсом на Рогань",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@kudy_letyt"
+        ],
+        "expires_at": 1776635247179
+      },
+      "expires_at": 1776635247179,
+      "updated_at": 1776634347179
+    },
+    {
+      "id": "@kudy_letyt:105449-shahed-2",
+      "event": {
+        "id": "@kudy_letyt:105449-shahed-2",
+        "type": "shahed",
+        "lat": 50.91,
+        "lng": 34.8,
+        "direction": 207.51547546312577,
+        "source": "@kudy_letyt",
+        "timestamp": "2026-04-19T21:19:02.000Z",
+        "comment": "Джерело: @kudy_letyt. Локація: Суми.",
+        "is_test": false,
+        "confidence": 0.67,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Суми",
+        "marker_location_id": "sumy-city-fallback",
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 50.9077,
+        "target_lng": 34.7981,
+        "target_label": "Суми",
+        "target_location_id": "sumy-city-fallback",
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Суми",
+          "marker_location_id": "sumy-city-fallback",
+          "target_label": "Суми",
+          "track_target": true
+        },
+        "region_id": "sumyska",
+        "raw_text": "Сумщина:\nБпЛА курсом на Глухів  \n\nЧернігівщина:\nБпЛА курсом на Сновськ \n\nХарківщина:\nБпЛА курсом на Богодухів \n2х БпЛА курсом на Кегичівку \nБпЛА курсом на Краснопавлівку\n4х БпЛА курсом на Орільку \n2х БпЛА курсом на Вільчу\nБпЛА курсом на Рогань",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@kudy_letyt"
+        ],
+        "expires_at": 1776635247179
+      },
+      "expires_at": 1776635247179,
+      "updated_at": 1776634347179
+    },
+    {
+      "id": "@raketa_trevoga:72218-shahed-0",
+      "event": {
+        "id": "@raketa_trevoga:72218-shahed-0",
+        "type": "shahed",
+        "lat": 45.3,
+        "lng": 34.2,
+        "direction": 0,
+        "source": "@raketa_trevoga",
+        "timestamp": "2026-04-19T21:19:50.000Z",
+        "comment": "Джерело: @raketa_trevoga. Локація: АР Крим. К-сть: 4.",
+        "is_test": false,
+        "confidence": 0.69,
+        "marker_variant": "shahed-multi",
+        "marker_action": "place",
+        "marker_label": "АР Крим",
+        "marker_location_id": null,
+        "group_count_min": 4,
+        "group_count_max": 4,
+        "target_lat": 45.3,
+        "target_lng": 34.2,
+        "target_label": "АР Крим",
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "АР Крим",
+          "marker_location_id": null,
+          "target_label": "АР Крим",
+          "track_target": true
+        },
+        "region_id": "crimea",
+        "raw_text": "На Харківщині:\n4 шахеди на Орільку\n2 шахеди на Кегичівку\n2 шахеди на Вільчу\n1 шахед на Богодухів\n1 шахед на Краснопавлівку\n1 шахед на Рогань\n\nНа Сумщині 1 шахед на Глухів\n\nНа Чернігівщині 1 шахед на Сновськ\nㅤ \n➡Підписатися",
+        "evidence_count": 1,
+        "evidence_sources": [
+          "@raketa_trevoga"
+        ],
+        "expires_at": 1776635247179
+      },
+      "expires_at": 1776635247179,
+      "updated_at": 1776634347179
+    },
+    {
+      "id": "@UkraineAlarmSignal:485400-shahed-0",
+      "event": {
+        "id": "@UkraineAlarmSignal:485400-shahed-0",
+        "type": "shahed",
+        "lat": 49.59,
+        "lng": 34.55,
+        "direction": 0,
+        "source": "@UkraineAlarmSignal",
+        "timestamp": "2026-04-19T21:25:20.000Z",
+        "comment": "Джерело: @UkraineAlarmSignal. Локація: Полтавська.",
+        "is_test": false,
+        "confidence": 0.69,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Полтавська",
+        "marker_location_id": null,
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 49.59,
+        "target_lng": 34.55,
+        "target_label": "Полтавська",
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Полтавська",
+          "marker_location_id": null,
+          "target_label": "Полтавська",
+          "track_target": true
+        },
+        "region_id": "poltavska",
+        "raw_text": "🚨 Миргородський район (Полтавська обл.)\nПовітряна тривога. Прямуйте в укриття!",
+        "evidence_count": 2,
+        "evidence_sources": [
+          "@UkraineAlarmSignal",
+          "@airalertmonitor_bot"
+        ],
+        "expires_at": 1776635393630
+      },
+      "expires_at": 1776635393630,
+      "updated_at": 1776634493630
+    },
+    {
+      "id": "@kudy_letyt:105450-shahed-0",
+      "event": {
+        "id": "@kudy_letyt:105450-shahed-0",
+        "type": "shahed",
+        "lat": 49.9564,
+        "lng": 36.5411,
+        "direction": 189.4564716482123,
+        "source": "@kudy_letyt",
+        "timestamp": "2026-04-19T21:25:57.000Z",
+        "comment": "Джерело: @kudy_letyt. Локація: Лозова.",
+        "is_test": false,
+        "confidence": 0.69,
+        "marker_variant": null,
+        "marker_action": "place",
+        "marker_label": "Лозова",
+        "marker_location_id": null,
+        "group_count_min": null,
+        "group_count_max": null,
+        "target_lat": 48.89,
+        "target_lng": 36.32,
+        "target_label": "Лозова",
+        "target_location_id": null,
+        "bot_meta": {
+          "action": "place_marker",
+          "marker_label": "Лозова",
+          "marker_location_id": null,
+          "target_label": "Лозова",
+          "track_target": true
+        },
+        "region_id": "kharkivska",
+        "raw_text": "Сумщина:\nБпЛА курсом на Есмань  \n\nПолтавщина:\nБпЛА курсом на Заводське  \n\nХарківщина:\n2х БпЛА курсом на Сахновщину\nБпЛА курсом на Краснопавлівку\nБпЛА курсом на Орільку \nБпЛА курсом на Лозову \nБпЛА курсом на Слобожанське \nБпЛА курсом на Старий Салтів",
+        "evidence_count": 3,
+        "evidence_sources": [
+          "@kudy_letyt",
+          "@raketa_trevoga",
+          "@povitryanatrivogaaa"
+        ],
+        "expires_at": 1776635393630
+      },
+      "expires_at": 1776635393630,
+      "updated_at": 1776634493630
+    }
+  ]
 }

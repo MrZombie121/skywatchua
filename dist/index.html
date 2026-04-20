@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="sw-version" content="2.0.4" />
-    <title>Skywatch UA — Моніторинг 2.0</title>
+    <meta name="sw-version" content="2.1.0" />
+    <title>Skywatch UA — Моніторинг 2.1</title>
     <link
       rel="preload"
       as="style"
@@ -26,8 +26,8 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script type="module" crossorigin src="/assets/index-DHXl4yf1.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DuSaIFdu.css">
+    <script type="module" crossorigin src="/js/index-5iH8uOP_.js"></script>
+    <link rel="stylesheet" crossorigin href="/css/index-wILSB9uD.css">
   </head>
   <body class="v3">
     <header class="topbar v3">
@@ -56,6 +56,7 @@
         </button>
         <a class="ghost-btn" href="/api-docs">API меню</a>
         <button class="ghost-btn" id="export-brief">Експорт бриф</button>
+        <button class="ghost-btn" id="report-open" type="button">Повідомити про ціль</button>
         <button class="ghost-btn" id="tool-settings">Налаштування</button>
         <a class="ghost-btn" href="/about.html">Про систему</a>
         <button class="primary-btn" id="admin-open">Для адмінів</button>
@@ -92,6 +93,10 @@
           <label class="toggle">
             <input type="checkbox" id="toggle-history" checked />
             <span>Історія 24г</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-trajectories" checked />
+            <span>Показувати траєкторії</span>
           </label>
           <label class="toggle">
             <input type="checkbox" id="toggle-follow" />
@@ -199,11 +204,29 @@
             <button class="active" data-dock="radar">Радар</button>
             <button data-dock="alarms">Тривоги</button>
             <button data-dock="watchlist">Закріплені</button>
+            <button data-dock="timeline">Таймлайн</button>
           </div>
           <div class="dock-content">
             <div id="radar-list" class="dock-list"></div>
             <div id="alarm-list" class="dock-list hidden"></div>
             <div id="watchlist-list" class="dock-list hidden"></div>
+            <div id="timeline-content" class="dock-list hidden">
+              <div class="timeline-controls">
+                <div class="timeline-info">
+                  <span class="timeline-label">Час:</span>
+                  <span class="timeline-time" id="timeline-display-time">—</span>
+                </div>
+                <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="100" value="100" />
+                <div class="timeline-bounds">
+                  <span id="timeline-start-time" class="timeline-bound">—</span>
+                  <span id="timeline-end-time" class="timeline-bound">—</span>
+                </div>
+                <div class="timeline-actions">
+                  <button class="ghost-btn" id="timeline-rebuild">Оновити дані історії</button>
+                  <button class="primary-btn" id="timeline-exit">Вийти з таймлайну</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -312,6 +335,72 @@
             <div id="radar-summary" class="radar-summary"></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="settings-modal" id="report-modal">
+      <div class="settings-card report-card">
+        <div class="settings-header">
+          <div>
+            <div class="settings-title">Повідомити про ціль</div>
+            <div class="settings-label">Заявка піде у Telegram-бот на підтвердження перед постановкою мітки.</div>
+          </div>
+          <button class="settings-close" id="report-close">✕</button>
+        </div>
+        <form class="settings-body report-form" id="report-form">
+          <div class="report-grid">
+            <label>
+              Тип цілі
+              <select id="report-type" required>
+                <option value="shahed">Шахед</option>
+                <option value="missile">Ракета</option>
+                <option value="kab">КАБ</option>
+                <option value="recon">Розвідка</option>
+                <option value="airplane">Літак</option>
+                <option value="other">Інше</option>
+              </select>
+            </label>
+            <label>
+              Кількість
+              <input id="report-count" type="number" min="1" max="50" step="1" value="1" />
+            </label>
+          </div>
+          <label>
+            Де зараз
+            <input id="report-location" type="text" maxlength="120" required placeholder="Напр. Одеса / район Чорноморська" />
+          </label>
+          <div class="report-grid">
+            <label>
+              Куди летить / напрямок
+              <input id="report-target" type="text" maxlength="120" placeholder="Напр. у бік Миколаєва" />
+            </label>
+            <label>
+              Час спостереження
+              <input id="report-seen-at" type="datetime-local" />
+            </label>
+          </div>
+          <label>
+            Коментар
+            <textarea id="report-note" rows="4" maxlength="400" placeholder="Що саме бачили або чули"></textarea>
+          </label>
+          <div class="report-grid">
+            <label>
+              Ваше ім'я / позивний
+              <input id="report-contact-name" type="text" maxlength="80" placeholder="Необов'язково" />
+            </label>
+            <label>
+              Контакт
+              <input id="report-contact-link" type="text" maxlength="120" placeholder="@username / телефон / Telegram" />
+            </label>
+          </div>
+          <div class="report-actions">
+            <span class="report-status" id="report-status">Після підтвердження адміністратором мітка з'явиться на карті.</span>
+            <div class="inline-actions">
+              <button class="ghost-btn" id="report-cancel" type="button">Скасувати</button>
+              <button class="primary-btn" id="report-submit" type="submit">Відправити боту</button>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -490,5 +579,50 @@
         <button class="primary-btn" id="maintenance-admin-open">Для адмінів</button>
       </div>
     </div>
+
+    <div class="maintenance-screen" id="maintenance-screen">
+      <div class="maintenance-card">
+        <div class="maintenance-title">Технічні роботи</div>
+        <div class="maintenance-text" id="maintenance-screen-text">
+          Сервіс тимчасово недоступний. Спробуйте пізніше.
+        </div>
+        <button class="primary-btn" id="maintenance-admin-open">Для адмінів</button>
+      </div>
+    </div>
+    <script>
+      // Keep development free from stale asset caches; use SW only outside localhost.
+      if ("serviceWorker" in navigator) {
+        const isLocalhost =
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1" ||
+          location.hostname === "[::1]";
+
+        if (isLocalhost) {
+          navigator.serviceWorker.getRegistrations()
+            .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+            .catch((error) => {
+              console.warn("[App] Service Worker cleanup failed:", error);
+            });
+
+          if ("caches" in window) {
+            caches.keys()
+              .then((keys) => Promise.all(
+                keys
+                  .filter((key) => key.startsWith("skywatch-"))
+                  .map((key) => caches.delete(key))
+              ))
+              .catch((error) => {
+                console.warn("[App] Cache cleanup failed:", error);
+              });
+          }
+        } else {
+          navigator.serviceWorker.register("/sw.js").then((registration) => {
+            console.log("[App] Service Worker registered:", registration);
+          }).catch((error) => {
+            console.warn("[App] Service Worker registration failed:", error);
+          });
+        }
+      }
+    </script>
   </body>
 </html>

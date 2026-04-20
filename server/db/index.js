@@ -9,12 +9,61 @@ const defaultData = {
   admins: [],
   sessions: [],
   test_events: [],
+  marker_events: [],
   admin_locations: [],
   admin_location_points: [],
   users: [],
   api_keys: []
 };
 const db = new Low(adapter, defaultData);
+const rawDbRead = db.read.bind(db);
+const rawDbWrite = db.write.bind(db);
+let dbOpChain = Promise.resolve();
+const RETRYABLE_DB_ERROR_CODES = new Set(["EPERM", "EBUSY", "ENOTEMPTY"]);
+
+function isRetryableDbWriteError(error) {
+  const code = String(error?.code || "").toUpperCase();
+  const message = String(error?.message || error || "").toLowerCase();
+  return (
+    RETRYABLE_DB_ERROR_CODES.has(code) ||
+    (message.includes("rename") && (message.includes("eperm") || message.includes("busy")))
+  );
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function writeDbWithRetry() {
+  let lastError = null;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      return await rawDbWrite();
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableDbWriteError(error) || attempt === 4) {
+        throw error;
+      }
+      await delay(50 * (attempt + 1));
+    }
+  }
+  throw lastError;
+}
+
+function enqueueDbOp(operation) {
+  const task = dbOpChain.then(() => operation());
+  dbOpChain = task.catch(() => {});
+  return task;
+}
+
+db.read = async function serializedRead() {
+  return enqueueDbOp(() => rawDbRead());
+};
+
+db.write = async function serializedWrite() {
+  return enqueueDbOp(() => writeDbWithRetry());
+};
+
 let tursoClient = null;
 let tursoSettingsReady = false;
 let initError = null;
@@ -137,6 +186,9 @@ async function init() {
   if (!Array.isArray(db.data.test_events)) {
     db.data.test_events = [];
   }
+  if (!Array.isArray(db.data.marker_events)) {
+    db.data.marker_events = [];
+  }
   if (!Array.isArray(db.data.admin_locations)) {
     db.data.admin_locations = [];
   }
@@ -191,6 +243,13 @@ function normalizeKeyList(values) {
 
 function normalizeLocationType(value) {
   return String(value || "").trim().toLowerCase() === "district" ? "district" : "city";
+}
+
+function parseCoordinateValue(value) {
+  if (value == null || value === "") return NaN;
+  const normalized = String(value).trim().replace(",", ".");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : NaN;
 }
 
 function normalizeEmail(value) {
@@ -364,6 +423,15 @@ async function initTursoSettings() {
     await tursoClient.execute("ALTER TABLE test_events ADD COLUMN is_test INTEGER NOT NULL DEFAULT 1").catch(() => {});
     await tursoClient.execute("ALTER TABLE test_events ADD COLUMN group_count INTEGER").catch(() => {});
     await tursoClient.execute(`
+      CREATE TABLE IF NOT EXISTS marker_events (
+        id TEXT PRIMARY KEY,
+        event_json TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `);
+    await tursoClient.execute("CREATE INDEX IF NOT EXISTS idx_marker_events_expires ON marker_events(expires_at)");
+    await tursoClient.execute(`
       CREATE TABLE IF NOT EXISTS admin_locations (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -479,6 +547,28 @@ async function initTursoSettings() {
             Number(item.createdAt || item.created_at || Date.now()),
             item.is_test === false ? 0 : 1,
             Number.isFinite(Number(item.group_count)) ? Number(item.group_count) : null
+          ]
+        });
+      }
+    }
+
+    const markerEventCountResult = await tursoClient.execute("SELECT COUNT(*) AS count FROM marker_events");
+    const markerEventCount = Number(markerEventCountResult.rows?.[0]?.count || 0);
+    if (markerEventCount === 0) {
+      await db.read();
+      for (const item of db.data?.marker_events || []) {
+        const event = item?.event && typeof item.event === "object" ? item.event : null;
+        if (!event?.id) continue;
+        await tursoClient.execute({
+          sql: `
+            INSERT INTO marker_events(id, event_json, expires_at, updated_at)
+            VALUES(?, ?, ?, ?)
+          `,
+          args: [
+            String(event.id),
+            JSON.stringify(event),
+            Number(item.expires_at || 0),
+            Number(item.updated_at || Date.now())
           ]
         });
       }
@@ -738,6 +828,7 @@ async function getSetting(key, fallback = null) {
 
 async function setSetting(key, value) {
   await ensureReady();
+  let wroteRemote = false;
   if (tursoSettingsReady && tursoClient) {
     try {
       await tursoClient.execute({
@@ -747,14 +838,23 @@ async function setSetting(key, value) {
         `,
         args: [String(key), String(value ?? "")]
       });
+      wroteRemote = true;
     } catch (error) {
       console.warn("Turso write failed, fallback to lowdb:", error?.message || error);
     }
   }
 
-  await db.read();
-  db.data.settings[key] = value;
-  await db.write();
+  try {
+    await db.read();
+    db.data.settings[key] = value;
+    await db.write();
+  } catch (error) {
+    if (wroteRemote) {
+      console.warn("Local settings write failed, remote copy kept:", error?.message || error);
+      return;
+    }
+    throw error;
+  }
 }
 
 async function listTestEvents() {
@@ -819,6 +919,157 @@ async function clearTestEvents() {
   await db.write();
 }
 
+function normalizeMarkerEventRecord(item) {
+  const event = item?.event && typeof item.event === "object" ? { ...item.event } : null;
+  if (!event?.id) return null;
+  if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return null;
+  if (!Number.isFinite(Date.parse(event.timestamp))) return null;
+
+  const expiresAt = Number(item?.expires_at ?? event.expires_at ?? 0);
+  if (!Number.isFinite(expiresAt) || expiresAt <= 0) return null;
+
+  return {
+    id: String(event.id),
+    event: {
+      ...event,
+      expires_at: expiresAt
+    },
+    expires_at: expiresAt,
+    updated_at: Number(item?.updated_at || Date.now())
+  };
+}
+
+async function listActiveMarkerEvents(now = Date.now()) {
+  await ensureReady();
+  if (tursoSettingsReady && tursoClient) {
+    try {
+      await tursoClient.execute({
+        sql: "DELETE FROM marker_events WHERE expires_at < ?",
+        args: [Number(now)]
+      });
+      const result = await tursoClient.execute({
+        sql: `
+          SELECT id, event_json, expires_at, updated_at
+          FROM marker_events
+          WHERE expires_at >= ?
+          ORDER BY updated_at DESC
+        `,
+        args: [Number(now)]
+      });
+      return (result.rows || [])
+        .map((row) => {
+          try {
+            return normalizeMarkerEventRecord({
+              event: JSON.parse(String(row.event_json || "{}")),
+              expires_at: Number(row.expires_at || 0),
+              updated_at: Number(row.updated_at || 0)
+            });
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean)
+        .map((item) => item.event);
+    } catch (error) {
+      console.warn("Turso marker events read failed, fallback to lowdb:", error?.message || error);
+    }
+  }
+
+  await db.read();
+  if (!Array.isArray(db.data.marker_events)) {
+    db.data.marker_events = [];
+  }
+  const pruned = db.data.marker_events
+    .map((item) => normalizeMarkerEventRecord(item))
+    .filter((item) => item && item.expires_at >= now);
+  db.data.marker_events = pruned;
+  return pruned.map((item) => ({ ...item.event }));
+}
+
+async function upsertMarkerEvents(events, ttlMs, now = Date.now()) {
+  await ensureReady();
+  const safeTtlMs = Math.max(60 * 1000, Number(ttlMs || 0));
+  const normalized = (Array.isArray(events) ? events : [])
+    .map((event) => {
+      if (!event?.id) return null;
+      if (!Number.isFinite(Number(event.lat)) || !Number.isFinite(Number(event.lng))) return null;
+      if (!Number.isFinite(Date.parse(event.timestamp))) return null;
+      const expiresAt = now + safeTtlMs;
+      return {
+        id: String(event.id),
+        event: {
+          ...event,
+          expires_at: expiresAt
+        },
+        expires_at: expiresAt,
+        updated_at: now
+      };
+    })
+    .filter(Boolean);
+
+  if (normalized.length === 0) {
+    return listActiveMarkerEvents(now);
+  }
+
+  let wroteRemote = false;
+  if (tursoSettingsReady && tursoClient) {
+    try {
+      await tursoClient.execute({
+        sql: "DELETE FROM marker_events WHERE expires_at < ?",
+        args: [Number(now)]
+      });
+      for (const item of normalized) {
+        await tursoClient.execute({
+          sql: `
+            INSERT INTO marker_events(id, event_json, expires_at, updated_at)
+            VALUES(?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              event_json = excluded.event_json,
+              expires_at = excluded.expires_at,
+              updated_at = excluded.updated_at
+          `,
+          args: [
+            item.id,
+            JSON.stringify(item.event),
+            Number(item.expires_at),
+            Number(item.updated_at)
+          ]
+        });
+      }
+      wroteRemote = true;
+    } catch (error) {
+      console.warn("Turso marker events write failed, fallback to lowdb:", error?.message || error);
+    }
+  }
+
+  try {
+    await db.read();
+    if (!Array.isArray(db.data.marker_events)) {
+      db.data.marker_events = [];
+    }
+    const byId = new Map(
+      db.data.marker_events
+        .map((item) => normalizeMarkerEventRecord(item))
+        .filter((item) => item && item.expires_at >= now)
+        .map((item) => [item.id, item])
+    );
+    normalized.forEach((item) => {
+      byId.set(item.id, item);
+    });
+    db.data.marker_events = [...byId.values()];
+    await db.write();
+  } catch (error) {
+    if (!wroteRemote) {
+      console.warn("Local marker events write failed, keeping in-memory payload:", error?.message || error);
+    } else {
+      console.warn("Local marker events write failed, remote copy kept:", error?.message || error);
+    }
+    return normalized.map((item) => ({ ...item.event }));
+  }
+
+  return listActiveMarkerEvents(now);
+}
+
 function getAdminLocationsSync() {
   const locations = Array.isArray(db.data?.admin_locations) ? db.data.admin_locations : defaultData.admin_locations;
   return Array.isArray(locations)
@@ -868,10 +1119,10 @@ async function upsertAdminLocationWithPoint(payload = {}) {
   const now = Date.now();
   const explicitId = String(payload.location_id || "").trim();
   const name = String(payload.name || "").trim();
-  const lat = Number(payload.lat);
-  const lng = Number(payload.lng);
-  const pointLat = Number(payload.point_lat);
-  const pointLng = Number(payload.point_lng);
+  const lat = parseCoordinateValue(payload.lat);
+  const lng = parseCoordinateValue(payload.lng);
+  const pointLat = parseCoordinateValue(payload.point_lat);
+  const pointLng = parseCoordinateValue(payload.point_lng);
   const regionId = String(payload.region_id || "").trim() || null;
   const locationType = normalizeLocationType(payload.location_type);
   const parentLocationId = String(payload.parent_location_id || "").trim() || null;
@@ -1165,6 +1416,8 @@ export {
   listTestEvents,
   addTestEvent,
   clearTestEvents,
+  listActiveMarkerEvents,
+  upsertMarkerEvents,
   listAdminLocations,
   upsertAdminLocationWithPoint,
   getAdminLocationsSync,

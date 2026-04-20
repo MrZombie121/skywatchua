@@ -7,7 +7,7 @@ let shuttingDown = false;
 function spawnProcess(name, command, args) {
   const child = spawn(command, args, {
     stdio: "inherit",
-    shell: false,
+    shell: true,
     windowsHide: false
   });
 
@@ -56,4 +56,4 @@ process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
 
 spawnProcess("backend", "node", ["server/index.js"]);
-spawnProcess("vite", isWindows ? "npm.cmd" : "npm", ["run", "dev:client"]);
+spawnProcess("vite", "npm", ["run", "dev:client"]);

@@ -13,19 +13,22 @@ const testChannels = new Set(
     .map((item) => item.trim().toLowerCase().replace(/^@/, ""))
     .filter(Boolean)
 );
-const limit = Number(process.env.TG_LIMIT || 25);
+const limit = Math.max(10, Math.min(200, Number(process.env.TG_LIMIT || 100)));
 const contextWindowMs = Number(process.env.TG_CONTEXT_WINDOW_MS || 8 * 60 * 1000);
 const contextMaxSignals = Number(process.env.TG_CONTEXT_MAX_SIGNALS || 4);
-const channelConcurrency = Math.max(1, Number(process.env.TG_CHANNEL_CONCURRENCY || 4));
+const channelConcurrency = Math.max(1, Math.min(24, Number(process.env.TG_CHANNEL_CONCURRENCY || 1)));
 const channelTimeoutMs = Math.max(1000, Number(process.env.TG_CHANNEL_TIMEOUT_MS || 8000));
 const clientStartTimeoutMs = Math.max(1000, Number(process.env.TG_CLIENT_START_TIMEOUT_MS || 20000));
 const entityResolveTimeoutMs = Math.max(channelTimeoutMs, Number(process.env.TG_ENTITY_RESOLVE_TIMEOUT_MS || 15000));
-const disabledChannels = new Set();
+const messageFreshWindowMs = Math.max(contextWindowMs, Number(process.env.TG_MESSAGE_WINDOW_MS || 30 * 60 * 1000));
+const disabledChannels = new Map();
+const disabledChannelRetryMs = Math.max(60 * 1000, Number(process.env.TG_DISABLED_RETRY_MS || 10 * 60 * 1000));
 const entityCache = new Map();
 let dialogPeerIndex = null;
 
 let client = null;
 let clientReady = false;
+let reconnectPromise = null;
 
 function normalizeChannelKey(value) {
   return String(value || "").trim().toLowerCase();
@@ -42,6 +45,18 @@ function isPermanentChannelError(error) {
     message.includes("no user has") ||
     message.includes("no channel has") ||
     message.includes("resolveusername")
+  );
+}
+
+function isRecoverableConnectionError(error) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return (
+    message.includes("not connected") ||
+    message.includes("connection closed") ||
+    message.includes("cannot send requests while disconnected") ||
+    message.includes("please reconnect") ||
+    message.includes("disconnected") ||
+    message.includes("timeout")
   );
 }
 
@@ -105,7 +120,7 @@ function isTrackGoneMessage(text) {
 
 function preferredRegionIdForChannel(channel) {
   const lower = String(channel || "").toLowerCase().replace(/^@/, "");
-  if (lower.includes("xydessa_live") || lower.includes("pivdenmedia")) return "odeska";
+  if (lower.includes("xydessa_live") || lower.includes("pivdenmedia") || lower.includes("oddesitmedia")) return "odeska";
   if (lower.includes("kyivoperat")) return "kyiv";
   if (lower.includes("dneproperatyv")) return "dniprovska";
   if (lower.includes("dnipro_alerts")) return "dniprovska";
@@ -174,15 +189,47 @@ async function disconnectClient() {
   client = null;
   clientReady = false;
   dialogPeerIndex = null;
+  entityCache.clear();
 }
 
-async function getClient() {
+function filterFreshMessages(messages) {
+  const items = [...messages].filter(Boolean);
+  const cutoffTs = Date.now() - messageFreshWindowMs;
+  return items
+    .filter((msg) => Number(msg?.date || 0) * 1000 >= cutoffTs)
+    .reverse();
+}
+
+async function reconnectClient() {
+  if (reconnectPromise) {
+    return reconnectPromise;
+  }
+  reconnectPromise = (async () => {
+    await disconnectClient();
+    return getClient(true);
+  })();
+  try {
+    return await reconnectPromise;
+  } finally {
+    reconnectPromise = null;
+  }
+}
+
+async function getClient(forceReconnect = false) {
   if (!apiId || !apiHash) return null;
-  if (clientReady && client) return client;
+  const connected = Boolean(client?.connected) && !client?.disconnected;
+  if (forceReconnect || (client && clientReady && !connected)) {
+    await disconnectClient();
+  }
+  if (clientReady && client && Boolean(client.connected) && !client.disconnected) {
+    return client;
+  }
 
   if (!client) {
     client = new TelegramClient(new StringSession(sessionString), apiId, apiHash, {
-      connectionRetries: 2,
+      autoReconnect: true,
+      connectionRetries: 5,
+      retryDelay: 1000,
       receiveUpdates: false
     });
   }
@@ -248,6 +295,10 @@ async function resolveChannelPeer(tgClient, channel) {
     entityCache.set(key, entity);
     return entity;
   } catch (error) {
+    if (isRecoverableConnectionError(error)) {
+      entityCache.delete(key);
+      throw error;
+    }
     const dialogs = await buildDialogPeerIndex(tgClient).catch(() => null);
     const dialogEntity = dialogs?.get(bareChannelKey(channel)) || null;
     if (dialogEntity) {
@@ -265,45 +316,63 @@ export async function loadTelegramEvents() {
     console.warn(`Telegram not ready or no channels. Client: ${!!tgClient}, Channels: ${channels.length}`);
     return { events: [], alarms: [], district_alarms: [], alarms_updated: false };
   }
+  console.log(`[TG] Reading ${channels.length} channels with limit=${limit}, concurrency=${channelConcurrency}. oddesitmedia=${channels.includes("@oddesitmedia")}`);
 
   const events = [];
   const alarmSet = new Set();
   const districtAlarmMap = new Map();
   let alarmsUpdated = false;
-  const channelMessages = new Map();
+  const channelMessageIndex = new Map();
   const allMessages = [];
   let successCount = 0;
   let failureCount = 0;
 
-  async function readChannel(channel) {
-    if (disabledChannels.has(normalizeChannelKey(channel))) {
+async function readChannel(channel) {
+    const normalizedChannel = normalizeChannelKey(channel);
+    const disabledUntil = disabledChannels.get(normalizedChannel) || 0;
+    if (disabledUntil > Date.now()) {
       return { channel, ordered: [] };
+    }
+    if (disabledUntil) {
+      disabledChannels.delete(normalizedChannel);
     }
     const chStartTime = Date.now();
-    try {
-      const peer = await resolveChannelPeer(tgClient, channel);
-      if (!peer) {
-        throw new Error(`Unable to resolve peer for ${channel}`);
-      }
-      const messages = await withTimeout(
-        tgClient.getMessages(peer, { limit }),
-        channelTimeoutMs,
-        `telegram channel ${channel}`
-      );
-      const chDuration = Date.now() - chStartTime;
-      const msgCount = [...messages].filter(Boolean).length;
-      console.log(`  ${channel}: ${msgCount} msgs in ${chDuration}ms`);
-      return { channel, ordered: [...messages].filter(Boolean).reverse() };
-    } catch (error) {
-      const chDuration = Date.now() - chStartTime;
-      if (isPermanentChannelError(error)) {
-        disabledChannels.add(normalizeChannelKey(channel));
-        console.warn(`  ${channel}: DISABLED after ${chDuration}ms - ${error?.message || error}`);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const activeClient = attempt > 0 ? await reconnectClient() : tgClient;
+        if (!activeClient) {
+          throw new Error("Telegram client unavailable");
+        }
+        const peer = await resolveChannelPeer(activeClient, channel);
+        if (!peer) {
+          throw new Error(`Unable to resolve peer for ${channel}`);
+        }
+        const messages = await withTimeout(
+          activeClient.getMessages(peer, { limit }),
+          channelTimeoutMs,
+          `telegram channel ${channel}`
+        );
+        const ordered = filterFreshMessages(messages);
+        const chDuration = Date.now() - chStartTime;
+        console.log(`  ${channel}: ${ordered.length}/${[...messages].filter(Boolean).length} fresh msgs in ${chDuration}ms`);
+        return { channel, ordered };
+      } catch (error) {
+        const chDuration = Date.now() - chStartTime;
+        if (isPermanentChannelError(error)) {
+          disabledChannels.set(normalizedChannel, Date.now() + disabledChannelRetryMs);
+          console.warn(`  ${channel}: DISABLED for ${Math.round(disabledChannelRetryMs / 60000)}m after ${chDuration}ms - ${error?.message || error}`);
+          return { channel, ordered: [] };
+        }
+        if (attempt === 0 && isRecoverableConnectionError(error)) {
+          console.warn(`  ${channel}: reconnect after ${chDuration}ms - ${error?.message || error}`);
+          await reconnectClient();
+          continue;
+        }
+        console.warn("Failed to read channel", channel, error?.message || error);
         return { channel, ordered: [] };
       }
-      console.warn("Failed to read channel", channel, error?.message || error);
-      return { channel, ordered: [] };
     }
+    return { channel, ordered: [] };
   }
 
   try {
@@ -328,7 +397,10 @@ export async function loadTelegramEvents() {
       } else {
         failureCount++;
       }
-      channelMessages.set(channel, ordered);
+      channelMessageIndex.set(
+        channel,
+        new Map(ordered.map((msg) => [msg.id, msg]))
+      );
       ordered.forEach((msg) => {
         allMessages.push({ channel, msg });
       });
@@ -355,51 +427,72 @@ export async function loadTelegramEvents() {
     }
 
     allMessages.sort((a, b) => (a.msg.date || 0) - (b.msg.date || 0));
+    const replyContextCache = new Map();
+    const baseEventCache = new Map();
 
     function findReplyContext(channel, msg) {
+      const cacheKey = `${channel}:${msg.id}`;
+      if (replyContextCache.has(cacheKey)) {
+        return replyContextCache.get(cacheKey);
+      }
       const replyTo = msg.replyTo || {};
       const replyId = replyTo.replyToMsgId;
       if (!replyId) {
-        return {
+        const context = {
           hasReply: false,
           rootKey: `${channel}:${msg.id}`,
           parentText: null,
           baseEvent: null
         };
+        replyContextCache.set(cacheKey, context);
+        return context;
       }
 
-      const sameChannel = channelMessages.get(channel) || [];
-      const parent = sameChannel.find((item) => item.id === replyId);
+      const sameChannel = channelMessageIndex.get(channel) || new Map();
+      const parent = sameChannel.get(replyId);
       const root = replyTo.replyToTopId || replyId;
       let baseEvent = null;
       if (parent?.message) {
-        const parentEvents = parseMessageToEvents(parent.message, {
-          source: channel,
-          timestamp: parent.date * 1000,
-          raw_text: parent.message
-        });
-        if (parentEvents.length) {
-          baseEvent = parentEvents[0];
+        const baseEventKey = `${channel}:${parent.id}`;
+        if (!baseEventCache.has(baseEventKey)) {
+          const parentEvents = parseMessageToEvents(parent.message, {
+            source: channel,
+            timestamp: parent.date * 1000,
+            raw_text: parent.message
+          });
+          baseEventCache.set(baseEventKey, parentEvents[0] || null);
         }
+        baseEvent = baseEventCache.get(baseEventKey);
       }
-      return {
+      const context = {
         hasReply: true,
         rootKey: `${channel}:${root}`,
         parentText: parent?.message || null,
         baseEvent
       };
+      replyContextCache.set(cacheKey, context);
+      return context;
     }
 
     let lastTrackKey = null;
     let lastTrackEvent = null;
     const lastTrackByRegion = new Map();
     const lastTrackEventByRegion = new Map();
+    const recentTexts = [];
+    let recentCursor = 0;
 
     for (const item of allMessages) {
       const { channel, msg } = item;
       if (!msg?.message) continue;
 
       const nowTs = Number(msg.date || 0) * 1000;
+      while (recentCursor < recentTexts.length && nowTs - recentTexts[recentCursor].ts > contextWindowMs) {
+        recentCursor += 1;
+      }
+      if (recentCursor > 128 && recentCursor * 2 > recentTexts.length) {
+        recentTexts.splice(0, recentCursor);
+        recentCursor = 0;
+      }
       const turnSignal = isTurnMessage(msg.message);
       const replyContext = findReplyContext(channel, msg);
       const regionPreference = preferredRegionIdForChannel(channel);
@@ -424,13 +517,8 @@ export async function loadTelegramEvents() {
           ? lastTrackEvent
           : replyContext.baseEvent;
       const nearbySignals = [];
-      for (let i = allMessages.length - 1; i >= 0 && nearbySignals.length < contextMaxSignals; i -= 1) {
-        const current = allMessages[i];
-        const currentText = current.msg?.message;
-        if (!currentText || current.msg.id === msg.id) continue;
-        const ts = Number(current.msg.date || 0) * 1000;
-        if (Math.abs(nowTs - ts) > contextWindowMs) continue;
-        nearbySignals.push(currentText);
+      for (let i = recentTexts.length - 1; i >= recentCursor && nearbySignals.length < contextMaxSignals; i -= 1) {
+        nearbySignals.push(recentTexts[i].text);
       }
 
       const contextTexts = [parentText, ...nearbySignals].filter(Boolean);
@@ -465,11 +553,15 @@ export async function loadTelegramEvents() {
           lastTrackByRegion.delete(regionPreference);
           lastTrackEventByRegion.delete(regionPreference);
         }
+        recentTexts.push({ ts: nowTs, text: msg.message });
         continue;
       }
 
       const eventsFromMsg = parseMessageToEvents(msg.message, parseMeta);
-      if (!eventsFromMsg.length) continue;
+      if (!eventsFromMsg.length) {
+        recentTexts.push({ ts: nowTs, text: msg.message });
+        continue;
+      }
 
       events.push(...eventsFromMsg);
       lastTrackKey = rootKey;
@@ -480,6 +572,7 @@ export async function loadTelegramEvents() {
           lastTrackEventByRegion.set(eventItem.region_id, eventItem);
         }
       });
+      recentTexts.push({ ts: nowTs, text: msg.message });
     }
 
     const refinedEvents = refineEventsByConsensus(events);

@@ -1,4 +1,5 @@
 
+import './styles.css';
 import { sources } from "./data/sources.js";
 import { oblasts } from "./data/oblasts.js";
 
@@ -53,6 +54,7 @@ const mapStyleCatalog = {
 let baseTileLayer = null;
 
 const markerLayer = L.layerGroup().addTo(map);
+const trajectoryLayer = L.layerGroup().addTo(map);
 const alarmLayer = L.layerGroup().addTo(map);
 const districtAlarmLayer = L.layerGroup().addTo(map);
 const trackLayer = L.layerGroup().addTo(map);
@@ -62,6 +64,7 @@ const userLayer = L.layerGroup().addTo(map);
 let oblastGeoLayer = null;
 let oblastGeoReady = false;
 const markerById = new Map();
+const trajectoryById = new Map();
 const markerIconSignatureById = new Map();
 const eventById = new Map();
 const driftById = new Map();
@@ -71,6 +74,9 @@ let driftTimer = null;
 let maintenanceTimer = null;
 let refreshTimer = null;
 let markerAgingTimer = null;
+let timelineSyncTimer = null;
+let fastRetryTimer = null;
+let refreshInFlight = null;
 let geoWatchId = null;
 let activeTrackId = null;
 let activeTrackLine = null;
@@ -90,18 +96,22 @@ const STALE_WARN_MS = 5 * 60 * 1000;
 const STALE_CRITICAL_MS = 9 * 60 * 1000;
 const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const SPAWN_ANIMATION_MS = 3000;
+const DEFAULT_REFRESH_INTERVAL_MS = 5000;
+const FAST_RETRY_REFRESH_MS = 1000;
 const HISTORY_STORAGE_KEY = "sw_history_24h_v2";
 const SNAPSHOT_STORAGE_KEY = "sw_snapshot_v1";
 const PINNED_STORAGE_KEY = "sw_pinned_v2";
 const SAVED_VIEWS_KEY = "sw_saved_views_v2";
 const OPS_NOTES_KEY = "sw_ops_notes_v2";
 const MARKER_TTL_KEY = "sw_marker_ttl_ms";
+const TRAJECTORY_VISIBILITY_KEY = "sw_show_trajectories_v1";
 const SOUND_COOLDOWN_MS = 4000;
 const MAP_HEIGHT_STORAGE_KEY = "sw_map_height_v1";
 const MAP_MIN_HEIGHT = 360;
 const DOCK_MIN_HEIGHT = 160;
 const SOURCE_FETCH_TIMEOUT_MS = 12000;
 const MARKER_AGING_TICK_MS = 30000;
+const TIMELINE_SYNC_TICK_MS = 1000;
 
 const state = {
   events: [],
@@ -119,7 +129,8 @@ const state = {
   refreshPaused: false,
   autoFollow: false,
   showHistory: true,
-  refreshIntervalMs: 5000,
+  showTrajectories: true,
+  refreshIntervalMs: DEFAULT_REFRESH_INTERVAL_MS,
   adminLocations: [],
   adminMapPickMode: null,
   pinnedIds: new Set(),
@@ -128,7 +139,11 @@ const state = {
   markerTtlMs: DEFAULT_MARKER_TTL_MS,
   userLocation: null,
   radarRadiusKm: 100,
-  dangerRadiusKm: 25
+  dangerRadiusKm: 25,
+  timelineActive: false,
+  timelineMinTs: null,
+  timelineMaxTs: null,
+  timelineCurrentTs: null
 };
 
 const typeContainer = document.getElementById("type-filters");
@@ -202,12 +217,14 @@ const panelBackdrop = document.getElementById("panel-backdrop");
 const manualRefresh = document.getElementById("manual-refresh");
 const toggleRefresh = document.getElementById("toggle-refresh");
 const toggleHistory = document.getElementById("toggle-history");
+const toggleTrajectories = document.getElementById("toggle-trajectories");
 const toggleFollow = document.getElementById("toggle-follow");
 const toggleSound = document.getElementById("toggle-sound");
 const fitVisible = document.getElementById("fit-visible");
 const refreshModeSelect = document.getElementById("refresh-mode-select");
 const ttlSelect = document.getElementById("ttl-select");
 const toolSettings = document.getElementById("tool-settings");
+let reportOpen = document.getElementById("report-open");
 const saveViewButton = document.getElementById("save-view");
 const savedViewsList = document.getElementById("saved-views");
 const opsNotes = document.getElementById("ops-notes");
@@ -226,10 +243,29 @@ const geoToggle = document.getElementById("geo-toggle");
 const radarOpen = document.getElementById("radar-open");
 const radarModal = document.getElementById("radar-modal");
 const radarClose = document.getElementById("radar-close");
+const reportModal = document.getElementById("report-modal");
+const reportClose = document.getElementById("report-close");
+const reportForm = document.getElementById("report-form");
+const reportType = document.getElementById("report-type");
+const reportCount = document.getElementById("report-count");
+const reportLocation = document.getElementById("report-location");
+const reportTarget = document.getElementById("report-target");
+const reportSeenAt = document.getElementById("report-seen-at");
+const reportNote = document.getElementById("report-note");
+const reportContactName = document.getElementById("report-contact-name");
+const reportContactLink = document.getElementById("report-contact-link");
+const reportStatus = document.getElementById("report-status");
+const reportCancel = document.getElementById("report-cancel");
 const radarMapNode = document.getElementById("radar-map");
 const dangerRadiusSelect = document.getElementById("danger-radius-select");
 const geoStatus = document.getElementById("geo-status");
 const radarSummary = document.getElementById("radar-summary");
+const timelineSlider = document.getElementById("timeline-slider");
+const timelineDisplayTime = document.getElementById("timeline-display-time");
+const timelineStartTime = document.getElementById("timeline-start-time");
+const timelineEndTime = document.getElementById("timeline-end-time");
+const timelineRebuild = document.getElementById("timeline-rebuild");
+const timelineExit = document.getElementById("timeline-exit");
 const leftSidebar = document.querySelector(".sidebar.left");
 const rightSidebar = document.querySelector(".sidebar.right");
 const dockTabs = document.querySelectorAll(".dock-tabs button");
@@ -238,6 +274,19 @@ const stageHead = document.querySelector(".stage-head");
 const mapShell = document.querySelector(".map-shell");
 const mapResizer = document.getElementById("map-resizer");
 const dock = document.querySelector(".dock");
+
+if (!reportOpen) {
+  const topbarActions = document.querySelector(".topbar-actions");
+  if (topbarActions) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "ghost-btn";
+    button.id = "report-open";
+    button.textContent = "Повідомити про ціль";
+    topbarActions.insertBefore(button, toolSettings || topbarActions.firstChild);
+    reportOpen = button;
+  }
+}
 
 const typeLabels = {
   shahed: "Шахед",
@@ -432,15 +481,22 @@ async function fetchSource(source) {
   const items = Array.isArray(payload)
     ? payload
     : payload.events || payload.items || payload.data || [];
-  return items.map((item) => normalizeEvent(item, source.id));
+  return {
+    events: items.map((item) => normalizeEvent(item, source.id)),
+    stale: Boolean(payload?.stale),
+    warming: Boolean(payload?.warming),
+    cached: Boolean(payload?.cached)
+  };
 }
 
 async function loadEvents() {
   const results = await Promise.allSettled(sources.map(fetchSource));
   const merged = [];
+  let needsFastRetry = false;
   results.forEach((result, index) => {
     if (result.status === "fulfilled") {
-      merged.push(...result.value);
+      merged.push(...result.value.events);
+      needsFastRetry ||= result.value.stale || result.value.warming;
     } else {
       console.warn("Source failed", sources[index].id, result.reason);
     }
@@ -455,7 +511,10 @@ async function loadEvents() {
     }
   });
   state.invalidEvents = invalidEvents;
-  return validEvents;
+  return {
+    events: validEvents,
+    needsFastRetry
+  };
 }
 
 function updateFilterSets(events) {
@@ -476,6 +535,12 @@ function updateFilterSets(events) {
 
   if (state.selectedSources.size === 0) {
     state.selectedSources = new Set(state.sources);
+  } else {
+    state.sources.forEach((source) => {
+      if (!state.selectedSources.has(source)) {
+        state.selectedSources.add(source);
+      }
+    });
   }
 
   return !setsEqual(previousTypes, state.types) || !setsEqual(previousSources, state.sources);
@@ -593,8 +658,21 @@ function eventAgeMs(event, now = Date.now()) {
   return Math.max(0, now - eventTimestampMs(event));
 }
 
+function eventExpiresAtMs(event) {
+  const expiresAt = Number(event?.expires_at);
+  const localExpiresAt = eventTimestampMs(event) + state.markerTtlMs;
+  if (Number.isFinite(expiresAt) && expiresAt > 0) {
+    return Math.min(expiresAt, localExpiresAt);
+  }
+  return localExpiresAt;
+}
+
+function eventTtlLeftMs(event, now = Date.now()) {
+  return Math.max(0, eventExpiresAtMs(event) - now);
+}
+
 function isEventAlive(event, now = Date.now()) {
-  return eventAgeMs(event, now) <= state.markerTtlMs;
+  return eventTtlLeftMs(event, now) > 0;
 }
 
 function freshnessState(event, now = Date.now()) {
@@ -703,6 +781,222 @@ function getHistoryTrack(event) {
     .map((point) => [point.lat, point.lng]);
 }
 
+// Timeline Mode Functions
+function rebuildTimelineData(stickToLatest = true) {
+  // Find the earliest and latest timestamps across all history
+  let minTs = Date.now();
+  let maxTs = Date.now() - HISTORY_WINDOW_MS;
+  
+  historyByKey.forEach((points) => {
+    if (points.length > 0) {
+      const earliest = Math.min(...points.map(p => p.ts));
+      const latest = Math.max(...points.map(p => p.ts));
+      minTs = Math.min(minTs, earliest);
+      maxTs = Math.max(maxTs, latest);
+    }
+  });
+  
+  if (minTs > maxTs) {
+    minTs = Date.now() - HISTORY_WINDOW_MS;
+    maxTs = Date.now();
+  }
+
+  state.timelineMinTs = minTs;
+  state.timelineMaxTs = maxTs;
+  state.timelineCurrentTs = stickToLatest
+    ? maxTs
+    : Math.min(Math.max(state.timelineCurrentTs ?? maxTs, minTs), maxTs);
+  
+  // Update the slider and display
+  if (timelineSlider) {
+    timelineSlider.max = 100;
+    const timeRange = maxTs - minTs;
+    const progress = timeRange > 0
+      ? ((state.timelineCurrentTs - minTs) / timeRange) * 100
+      : 100;
+    timelineSlider.value = String(Math.min(100, Math.max(0, progress)));
+  }
+  
+  updateTimelineDisplay();
+  if (state.timelineActive) {
+    renderTimelineMarkers();
+  }
+}
+
+function updateTimelineDisplay() {
+  if (!state.timelineMinTs || !state.timelineMaxTs) return;
+  
+  if (timelineStartTime) {
+    timelineStartTime.textContent = formatTime(state.timelineMinTs);
+  }
+  if (timelineEndTime) {
+    timelineEndTime.textContent = formatTime(state.timelineMaxTs);
+  }
+  if (timelineDisplayTime) {
+    timelineDisplayTime.textContent = formatTime(state.timelineCurrentTs);
+  }
+}
+
+function updateTimelinePosition(sliderValue) {
+  if (!state.timelineMinTs || !state.timelineMaxTs) return;
+  
+  // Convert slider value (0-100) to timestamp
+  const progress = sliderValue / 100;
+  const timeRange = state.timelineMaxTs - state.timelineMinTs;
+  state.timelineCurrentTs = state.timelineMinTs + (timeRange * progress);
+  
+  updateTimelineDisplay();
+  renderTimelineMarkers();
+}
+
+function renderTimelineMarkers() {
+  if (!state.timelineActive) return;
+  
+  markerLayer.clearLayers();
+  trajectoryLayer.clearLayers();
+  historyLayer.clearLayers();
+  markerById.clear();
+  trajectoryById.clear();
+  
+  const currentTs = state.timelineCurrentTs;
+  
+  // Get visible events
+  const filtered = getVisibleEvents();
+  
+  filtered.forEach((event) => {
+    const key = buildHistoryKey(event);
+    const points = historyByKey.get(key) || [];
+    
+    if (points.length === 0) return;
+    
+    // Sort points by timestamp
+    const sortedPoints = points.slice().sort((a, b) => a.ts - b.ts);
+    
+    // Find all points UP TO the current timeline position
+    const pathUpToCurrent = sortedPoints.filter(p => p.ts <= currentTs);
+    
+    if (pathUpToCurrent.length === 0) return;
+    
+    // Draw the full trajectory path up to current time
+    if (pathUpToCurrent.length > 1) {
+      const path = pathUpToCurrent.map(p => [p.lat, p.lng]);
+      const polyline = L.polyline(path, {
+        color: "rgba(53, 214, 255, 0.4)",
+        weight: 2,
+        opacity: 0.7,
+        dashArray: "none"
+      });
+      historyLayer.addLayer(polyline);
+    }
+    
+    // Find the closest point to the current timeline position to show the marker there
+    let closestPoint = pathUpToCurrent[pathUpToCurrent.length - 1];
+    let closestDistance = Math.abs(closestPoint.ts - currentTs);
+    
+    for (const point of pathUpToCurrent) {
+      const distance = Math.abs(point.ts - currentTs);
+      if (distance < closestDistance) {
+        closestPoint = point;
+        closestDistance = distance;
+      }
+    }
+    
+    // Create marker icon for the current position
+    const typeClass = state.types.has(event.type) ? event.type : "shahed";
+    const iconMap = {
+      shahed: "/ico/shahed.png",
+      "shahed-multi": "/ico/shahed-multi.png",
+      missile: "/ico/missle.png",
+      "missile-multi": "/ico/missle-multi.png",
+      kab: "/ico/kab.png",
+      airplane: "/ico/airplane.png",
+      recon: "/ico/bplaviewer.png",
+      other: "/ico/shahed.png"
+    };
+    const markerVariant = resolveMarkerVariant(event);
+    const iconKey = markerVariant && iconMap[markerVariant] ? markerVariant : typeClass;
+    const iconUrl = iconMap[iconKey] || iconMap.other;
+    
+    const html = `
+      <div class="marker-wrap">
+        <img
+          class="marker-icon-img ${typeClass} ${event.is_test ? "test" : "real"}"
+          src="${iconUrl}"
+          alt="${typeClass}"
+          style="transform: rotate(${directionOrDefault(event.direction, event.fallbackDirection) + iconRotationOffset}deg);"
+        />
+      </div>
+    `;
+    
+    const icon = L.divIcon({
+      className: "",
+      html,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22]
+    });
+    
+    // Show marker at the current position in timeline
+    const marker = L.marker([closestPoint.lat, closestPoint.lng], { icon });
+    
+    const popup = buildPopupCard(event);
+    marker.bindPopup(popup, { closeButton: true });
+    marker.addTo(markerLayer);
+    markerById.set(event.id, marker);
+    
+    // Draw future path (after current time) as a faded dashed line to show where it's going
+    const futurePoints = sortedPoints.filter(p => p.ts > currentTs);
+    if (futurePoints.length > 0 && pathUpToCurrent.length > 0) {
+      const lastCurrent = pathUpToCurrent[pathUpToCurrent.length - 1];
+      const futurePath = [[lastCurrent.lat, lastCurrent.lng], ...futurePoints.map(p => [p.lat, p.lng])];
+      const futurePolyline = L.polyline(futurePath, {
+        color: "rgba(53, 214, 255, 0.15)",
+        weight: 1,
+        opacity: 0.4,
+        dashArray: "4 4"
+      });
+      historyLayer.addLayer(futurePolyline);
+    }
+  });
+}
+
+function enterTimelineMode() {
+  if (!timelineSlider) return;
+  
+  state.timelineActive = true;
+  
+  // Hide regular markers and trails
+  markerLayer.clearLayers();
+  trajectoryLayer.clearLayers();
+  shahedTrailLayer.clearLayers();
+  trackLayer.clearLayers();
+  
+  rebuildTimelineData();
+  startTimelineSyncTicker();
+}
+
+function exitTimelineMode() {
+  if (!timelineSlider) return;
+  
+  state.timelineActive = false;
+  stopTimelineSyncTicker();
+  
+  // Switch back to Radar tab
+  const radarTab = Array.from(dockTabs).find(tab => tab.dataset.dock === "radar");
+  if (radarTab) {
+    radarTab.click();
+  }
+  
+  // Clear timeline layers
+  historyLayer.clearLayers();
+  markerLayer.clearLayers();
+  trajectoryLayer.clearLayers();
+  markerById.clear();
+  trajectoryById.clear();
+  
+  // Render current state with regular markers
+  renderMarkers();
+}
+
 function normalizeRegionName(value) {
   return String(value || "")
     .toLowerCase()
@@ -719,6 +1013,14 @@ function matchRegionId(name) {
     }
   }
   return null;
+}
+
+function parseNumericInput(value) {
+  if (value == null) return null;
+  const normalized = String(value).trim().replace(",", ".");
+  if (!normalized) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 async function ensureOblastLayer() {
@@ -883,6 +1185,10 @@ function startDrift() {
           item.baseLng + (distanceDegLat * Math.sin(rad)) / Math.cos((item.baseLat * Math.PI) / 180);
       }
       item.marker.setLatLng([lat, lng], { animate: true });
+      const event = eventById.get(item.id);
+      if (event) {
+        upsertTrajectoryForEvent(event, lat, lng);
+      }
       const el = item.marker.getElement();
       if (el) {
         const img = el.querySelector(".marker-icon-img");
@@ -897,10 +1203,9 @@ function startDrift() {
           if (item.track.length > 80) item.track.shift();
           if (activeTrackId === item.id && activeTrackLine) {
             activeTrackLine.setLatLngs(item.track);
-            const event = eventById.get(item.id);
             if (event) {
               const distanceKm = trackDistanceKm(item.track);
-              item.marker.setPopupContent(buildPopup(event, distanceKm));
+              item.marker.setPopupContent(buildPopupCard(event, distanceKm));
             }
           }
           if (item.trailLine) {
@@ -953,6 +1258,9 @@ function renderHistory(events) {
 }
 
 function renderMarkers() {
+  // Skip if in timeline mode - timeline has its own rendering
+  if (state.timelineActive) return;
+  
   resetDrift();
 
   if (state.maintenance) {
@@ -1000,6 +1308,12 @@ function renderMarkers() {
     if (!nextIds.has(id)) {
       markerLayer.removeLayer(marker);
       markerById.delete(id);
+      const trajectory = trajectoryById.get(id);
+      if (trajectory) {
+        trajectoryLayer.removeLayer(trajectory.line);
+        trajectoryLayer.removeLayer(trajectory.head);
+        trajectoryById.delete(id);
+      }
       markerIconSignatureById.delete(id);
       markerSpawnAt.delete(id);
       eventById.delete(id);
@@ -1007,12 +1321,12 @@ function renderMarkers() {
       if (drift?.trailLine) {
         shahedTrailLayer.removeLayer(drift.trailLine);
       }
-      driftById.delete(id);
+      // Keep driftById data so marker state is preserved when filter is re-enabled
     }
   });
 
   filtered.forEach((event) => {
-    const popup = buildPopup(event);
+    const popup = buildPopupCard(event);
 
     if (markerById.has(event.id)) {
       const existing = markerById.get(event.id);
@@ -1074,6 +1388,7 @@ function renderMarkers() {
           opacity: 0.7
         }).addTo(shahedTrailLayer);
       }
+      upsertTrajectoryForEvent(event, drift?.baseLat || event.lat, drift?.baseLng || event.lng);
       return;
     }
 
@@ -1086,29 +1401,49 @@ function renderMarkers() {
     markerIconSignatureById.set(event.id, markerIconSignature(event));
     markerSpawnAt.set(event.id, Date.now());
     eventById.set(event.id, event);
-    const drift = {
-      id: event.id,
-      marker,
-      baseLat: event.lat,
-      baseLng: event.lng,
-      direction: directionOrDefault(event.direction, event.fallbackDirection),
-      distanceKm: 0,
-      targetLat: Number.isFinite(event.target_lat) ? event.target_lat : null,
-      targetLng: Number.isFinite(event.target_lng) ? event.target_lng : null,
-      reachedTarget: false,
-      track: [[event.lat, event.lng]],
-      trailLine: null,
-      spawnUntil: Date.now() + SPAWN_ANIMATION_MS
-    };
-    if (event.type === "shahed") {
-      drift.trailLine = L.polyline(drift.track, {
-        color: "#f59e0b",
-        weight: 2,
-        opacity: 0.7
-      }).addTo(shahedTrailLayer);
+    
+    // If drift data already exists (marker was hidden and re-shown), update marker reference
+    // Otherwise, create new drift data
+    if (driftById.has(event.id)) {
+      const drift = driftById.get(event.id);
+      drift.marker = marker;  // Update marker reference to the new marker object
+      // Re-add trail line if it's a shahed and the trail was removed when marker was hidden
+      if (event.type === "shahed" && drift.track && drift.track.length > 0) {
+        if (!drift.trailLine || !shahedTrailLayer.hasLayer(drift.trailLine)) {
+          drift.trailLine = L.polyline(drift.track, {
+            color: "#f59e0b",
+            weight: 2,
+            opacity: 0.7
+          }).addTo(shahedTrailLayer);
+        }
+      }
+    } else {
+      const drift = {
+        id: event.id,
+        marker,
+        baseLat: event.lat,
+        baseLng: event.lng,
+        direction: directionOrDefault(event.direction, event.fallbackDirection),
+        distanceKm: 0,
+        targetLat: Number.isFinite(event.target_lat) ? event.target_lat : null,
+        targetLng: Number.isFinite(event.target_lng) ? event.target_lng : null,
+        reachedTarget: false,
+        track: [[event.lat, event.lng]],
+        trailLine: null,
+        spawnUntil: Date.now() + SPAWN_ANIMATION_MS
+      };
+      if (event.type === "shahed") {
+        drift.trailLine = L.polyline(drift.track, {
+          color: "#f59e0b",
+          weight: 2,
+          opacity: 0.7
+        }).addTo(shahedTrailLayer);
+      }
+      driftById.set(event.id, drift);
     }
-    driftById.set(event.id, drift);
+    upsertTrajectoryForEvent(event, event.lat, event.lng);
   });
+  
   renderHistory(filtered);
   startDrift();
 }
@@ -1116,7 +1451,7 @@ function buildPopup(event, distanceKm) {
   const now = Date.now();
   const ageMs = eventAgeMs(event, now);
   const freshness = freshnessState(event, now);
-  const ttlLeftMs = Math.max(0, state.markerTtlMs - ageMs);
+  const ttlLeftMs = eventTtlLeftMs(event, now);
   const historyTrack = getHistoryTrack(event);
   const distanceLine = Number.isFinite(distanceKm)
     ? `<br /><span class="popup-meta">Пройдена відстань: ${distanceKm.toFixed(1)} км</span>`
@@ -1173,6 +1508,89 @@ function buildPopup(event, distanceKm) {
     `;
 }
 
+function buildPopupCard(event, distanceKm) {
+  const now = Date.now();
+  const ageMs = eventAgeMs(event, now);
+  const freshness = freshnessState(event, now);
+  const ttlLeftMs = eventTtlLeftMs(event, now);
+  const historyTrack = getHistoryTrack(event);
+  const trajectory = trajectorySummary(event);
+  const userDistanceKm = distanceToUserKm(event);
+  const eta = etaRangeForDistance(userDistanceKm);
+  const evidenceCount = Number.isFinite(event.evidence_count) ? Math.max(1, event.evidence_count) : 1;
+  const groupCount = Math.max(Number(event.group_count_min ?? 0), Number(event.group_count_max ?? 0));
+  const pinnedLabel = state.pinnedIds.has(event.id) ? "Відкріпити" : "Закріпити";
+  const typeLabel = typeLabels[event.type] || event.type.toUpperCase();
+  const statItems = [
+    { label: "Час", value: formatTime(event.timestamp) },
+    { label: "Вік", value: formatAge(ageMs) },
+    { label: "TTL", value: formatAge(ttlLeftMs) },
+    { label: "Історія", value: `${historyTrack.length} т.` },
+    { label: "Джерело", value: event.source },
+    { label: "Підтв.", value: String(evidenceCount) }
+  ];
+  if (Number.isFinite(event.confidence)) statItems.push({ label: "Точність", value: `${Math.round(event.confidence * 100)}%` });
+  if (groupCount >= 2) statItems.push({ label: "Група", value: String(groupCount) });
+  if (Number.isFinite(distanceKm)) statItems.push({ label: "Трек", value: `${distanceKm.toFixed(1)} км` });
+  if (Number.isFinite(userDistanceKm)) statItems.push({ label: "До вас", value: `${userDistanceKm.toFixed(1)} км` });
+
+  const intelItems = [];
+  if (event.target_label) {
+    intelItems.push({
+      label: Number.isFinite(event.target_lat) && Number.isFinite(event.target_lng) ? "Ціль" : "Напрямок",
+      value: event.target_label
+    });
+  }
+  if (trajectory) {
+    intelItems.push({
+      label: trajectory.hasExactTarget ? "Траєкторія" : "Прогноз",
+      value: `${trajectory.direction} · ${trajectory.distanceKm.toFixed(0)} км`
+    });
+  }
+  if (eta) {
+    intelItems.push({ label: "Підліт", value: `${eta.fast} - ${eta.slow} (${eta.fastAt} - ${eta.slowAt})` });
+  }
+  if (Array.isArray(event.evidence_sources) && event.evidence_sources.length > 0) {
+    intelItems.push({ label: "Сигнали", value: event.evidence_sources.join(", ") });
+  }
+
+  return `
+    <div class="popup popup-modern" data-event-id="${event.id}">
+      <div class="popup-shell">
+        <div class="popup-head">
+          <div>
+            <strong class="popup-title">${typeLabel}</strong>
+            <div class="popup-subtitle">${event.marker_label || event.comment || "Оперативна мітка"}</div>
+          </div>
+          <span class="popup-status ${freshness.popupClass}">${freshness.label}</span>
+        </div>
+        <div class="popup-grid popup-grid-modern">
+          ${statItems.map((item) => `
+            <div class="popup-stat">
+              <span class="popup-stat-label">${item.label}</span>
+              <strong class="popup-stat-value">${item.value}</strong>
+            </div>
+          `).join("")}
+        </div>
+        ${intelItems.length ? `
+          <div class="popup-section">
+            ${intelItems.map((item) => `
+              <div class="popup-line">
+                <span class="popup-line-label">${item.label}</span>
+                <span class="popup-line-value">${item.value}</span>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+        ${event.comment ? `<div class="popup-note">${event.comment}</div>` : ""}
+        <div class="popup-actions">
+          <button class="ghost-btn" data-pin="${event.id}" type="button">${pinnedLabel}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function haversineKm(a, b) {
   const toRad = (deg) => (deg * Math.PI) / 180;
   const R = 6371;
@@ -1208,6 +1626,94 @@ function trackDistanceKm(track) {
   return sum;
 }
 
+function projectPoint([lat, lng], bearingDeg, distanceKm) {
+  const R = 6371;
+  const bearing = (bearingDeg * Math.PI) / 180;
+  const lat1 = (lat * Math.PI) / 180;
+  const lng1 = (lng * Math.PI) / 180;
+  const angular = distanceKm / R;
+  const lat2 = Math.asin(
+    Math.sin(lat1) * Math.cos(angular) +
+    Math.cos(lat1) * Math.sin(angular) * Math.cos(bearing)
+  );
+  const lng2 = lng1 + Math.atan2(
+    Math.sin(bearing) * Math.sin(angular) * Math.cos(lat1),
+    Math.cos(angular) - Math.sin(lat1) * Math.sin(lat2)
+  );
+  return [
+    (lat2 * 180) / Math.PI,
+    ((((lng2 * 180) / Math.PI) + 540) % 360) - 180
+  ];
+}
+
+function estimatedTrajectoryEnd(event, baseLat = event.lat, baseLng = event.lng) {
+  if (Number.isFinite(event?.target_lat) && Number.isFinite(event?.target_lng)) {
+    return [event.target_lat, event.target_lng];
+  }
+  const direction = Number.isFinite(event?.direction) ? event.direction : event?.fallbackDirection;
+  if (!Number.isFinite(direction) || !Number.isFinite(baseLat) || !Number.isFinite(baseLng)) return null;
+  const distanceKm = event.type === "missile" ? 70 : event.type === "shahed" ? 42 : 28;
+  return projectPoint([baseLat, baseLng], direction, distanceKm);
+}
+
+function trajectorySummary(event) {
+  const end = estimatedTrajectoryEnd(event);
+  if (!end) return null;
+  const distanceKm = haversineKm([event.lat, event.lng], end);
+  const direction = Number.isFinite(event.direction) ? `${Math.round(event.direction)}°` : "≈";
+  return {
+    direction,
+    distanceKm,
+    hasExactTarget: Number.isFinite(event?.target_lat) && Number.isFinite(event?.target_lng)
+  };
+}
+
+function trajectoryCssAngle(bearingDeg) {
+  return normalizeAngle(Number(bearingDeg || 0) + 90);
+}
+
+function makeTrajectoryArrowIcon(angle) {
+  return L.divIcon({
+    className: "trajectory-arrow-icon",
+    html: `<div class="trajectory-arrow-head" style="transform: rotate(${trajectoryCssAngle(angle).toFixed(1)}deg);"></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+}
+
+function upsertTrajectoryForEvent(event, baseLat = event.lat, baseLng = event.lng) {
+  const end = estimatedTrajectoryEnd(event, baseLat, baseLng);
+  const existing = trajectoryById.get(event.id);
+  if (!state.showTrajectories || !end) {
+    if (existing) {
+      trajectoryLayer.removeLayer(existing.line);
+      trajectoryLayer.removeLayer(existing.head);
+      trajectoryById.delete(event.id);
+    }
+    return;
+  }
+  const lineLatLngs = [[baseLat, baseLng], end];
+  const angle = bearingBetween([baseLat, baseLng], end);
+  if (existing) {
+    existing.line.setLatLngs(lineLatLngs);
+    existing.head.setLatLng(end);
+    existing.head.setIcon(makeTrajectoryArrowIcon(angle));
+    return;
+  }
+  const line = L.polyline(lineLatLngs, {
+    color: "#58d5ff",
+    weight: 2,
+    opacity: 0.9,
+    dashArray: "8 8"
+  }).addTo(trajectoryLayer);
+  const head = L.marker(end, {
+    icon: makeTrajectoryArrowIcon(angle),
+    interactive: false,
+    keyboard: false
+  }).addTo(trajectoryLayer);
+  trajectoryById.set(event.id, { line, head });
+}
+
 function toggleTrackFor(eventId, marker) {
   if (activeTrackId === eventId) {
     trackLayer.clearLayers();
@@ -1231,7 +1737,7 @@ function toggleTrackFor(eventId, marker) {
   const event = eventById.get(eventId);
   if (event && marker) {
     const distanceKm = trackDistanceKm(drift.track);
-    marker.setPopupContent(buildPopup(event, distanceKm));
+    marker.setPopupContent(buildPopupCard(event, distanceKm));
   }
 }
 
@@ -1719,6 +2225,7 @@ async function renderAlarmMap() {
     return;
   }
   const active = new Set(state.alarms || []);
+  console.log("[ALARM DEBUG] state.alarms:", state.alarms, "state.districtAlarms:", state.districtAlarms);
   if (active.size === 0 && (!Array.isArray(state.districtAlarms) || state.districtAlarms.length === 0)) {
     districtAlarmLayer.clearLayers();
     if (oblastGeoReady && oblastGeoLayer) {
@@ -1959,12 +2466,28 @@ function deleteSavedView(id) {
 }
 
 async function refresh(force = false) {
+  if (refreshInFlight) return refreshInFlight;
+  if (state.refreshPaused && !force) return;
+
+  refreshInFlight = (async () => {
   try {
-    if (state.refreshPaused && !force) return;
     const previousIds = new Set(state.events.map((event) => event.id));
-    const events = await loadEvents();
+    const { events, needsFastRetry } = await loadEvents();
     ingestHistory(events);
-    state.events = events;
+    
+    // Merge new events with old alive events (incremental update, not full replacement)
+    const newEventsMap = new Map(events.map((e) => [e.id, e]));
+    const oldEventsMap = new Map(state.events.map((e) => [e.id, e]));
+    
+    // Start with new events from API (these are latest)
+    state.events = events.slice();
+    
+    // Keep old events that are still alive but not in the new list
+    oldEventsMap.forEach((oldEvent, eventId) => {
+      if (!newEventsMap.has(eventId) && isEventAlive(oldEvent)) {
+        state.events.push(oldEvent);
+      }
+    });
     const filtersChanged = updateFilterSets(events);
     if (filtersChanged) {
       renderFilterControls();
@@ -1991,12 +2514,22 @@ async function refresh(force = false) {
     }
     const hasNew = events.some((event) => !previousIds.has(event.id));
     if (hasNew) playPing();
+    if (needsFastRetry) {
+      scheduleFastRetry();
+    } else {
+      clearFastRetryTimer();
+    }
     if (lastUpdated) {
       lastUpdated.textContent = `Оновлення: ${formatTime(new Date().toISOString())}`;
     }
   } catch (error) {
     console.error("Failed to refresh", error);
+  } finally {
+    refreshInFlight = null;
   }
+  })();
+
+  return refreshInFlight;
 }
 
 if (toggleTests) {
@@ -2255,6 +2788,83 @@ async function scheduleMaintenance(payload) {
     : "—";
   renderMarkers();
 }
+function resetReportForm() {
+  if (!reportForm) return;
+  reportForm.reset();
+  if (reportType) reportType.value = "shahed";
+  if (reportCount) reportCount.value = "1";
+  if (reportSeenAt) {
+    const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+    reportSeenAt.value = now.toISOString().slice(0, 16);
+  }
+  if (reportStatus) {
+    reportStatus.textContent = "Після підтвердження адміністратором мітка з'явиться на карті.";
+    reportStatus.classList.remove("error", "success");
+  }
+}
+
+function openReportModal() {
+  if (!reportModal) return;
+  resetReportForm();
+  reportModal.classList.add("active");
+}
+
+function closeReportModal() {
+  if (!reportModal) return;
+  reportModal.classList.remove("active");
+}
+
+async function submitUserReport() {
+  const payload = {
+    type: reportType?.value || "shahed",
+    count: Number(reportCount?.value || 1) || 1,
+    location: reportLocation?.value?.trim() || "",
+    target: reportTarget?.value?.trim() || "",
+    seen_at: reportSeenAt?.value ? new Date(reportSeenAt.value).toISOString() : new Date().toISOString(),
+    note: reportNote?.value?.trim() || "",
+    contact_name: reportContactName?.value?.trim() || "",
+    contact_link: reportContactLink?.value?.trim() || ""
+  };
+
+  if (!payload.location) {
+    if (reportStatus) {
+      reportStatus.textContent = "Вкажіть, де зараз помічена ціль.";
+      reportStatus.classList.add("error");
+    }
+    return;
+  }
+
+  if (reportStatus) {
+    reportStatus.textContent = "Відправляю заявку в Telegram-бот...";
+    reportStatus.classList.remove("error", "success");
+  }
+
+  const response = await fetch("/api/reports", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data?.ok) {
+    if (reportStatus) {
+      reportStatus.textContent = data?.error === "unable_to_parse_location"
+        ? "Не вдалося розпізнати локацію. Уточніть населений пункт або район."
+        : "Не вдалося відправити заявку. Спробуйте ще раз.";
+      reportStatus.classList.add("error");
+    }
+    return;
+  }
+
+  if (reportStatus) {
+    reportStatus.textContent = data.reviewer_registered
+      ? "Заявку відправлено модератору в Telegram-бот. Після підтвердження мітка з'явиться на карті."
+      : "Заявку збережено. Щоб отримувати її в Telegram, відкрийте другого бота і надішліть йому /start.";
+    reportStatus.classList.add("success");
+  }
+
+  setTimeout(() => closeReportModal(), 1200);
+}
+
 if (adminOpen) {
   adminOpen.addEventListener("click", () => {
     openAdminModal();
@@ -2381,11 +2991,11 @@ if (adminLocationSave) {
       location_type: adminLocationType?.value || "city",
       parent_location_id: adminLocationType?.value === "district" ? (adminLocationParent?.value || "") : "",
       keys: adminLocationKeys?.value.trim() || "",
-      lat: adminLocationLat?.value ? Number(adminLocationLat.value) : null,
-      lng: adminLocationLng?.value ? Number(adminLocationLng.value) : null,
+      lat: parseNumericInput(adminLocationLat?.value),
+      lng: parseNumericInput(adminLocationLng?.value),
       region_id: adminLocationRegion?.value.trim() || "",
-      point_lat: adminPointLat?.value ? Number(adminPointLat.value) : null,
-      point_lng: adminPointLng?.value ? Number(adminPointLng.value) : null,
+      point_lat: parseNumericInput(adminPointLat?.value),
+      point_lng: parseNumericInput(adminPointLng?.value),
       point_types: adminPointTypes?.value.trim() || ""
     };
     const response = await fetch("/api/admin/locations", {
@@ -2475,14 +3085,29 @@ if (dockTabs) {
         radarList?.classList.remove("hidden");
         alarmList?.classList.add("hidden");
         watchlistList?.classList.add("hidden");
+        document.getElementById("timeline-content")?.classList.add("hidden");
       } else if (target === "alarms") {
         radarList?.classList.add("hidden");
         alarmList?.classList.remove("hidden");
         watchlistList?.classList.add("hidden");
-      } else {
+        document.getElementById("timeline-content")?.classList.add("hidden");
+      } else if (target === "watchlist") {
         radarList?.classList.add("hidden");
         alarmList?.classList.add("hidden");
         watchlistList?.classList.remove("hidden");
+        document.getElementById("timeline-content")?.classList.add("hidden");
+      } else if (target === "timeline") {
+        radarList?.classList.add("hidden");
+        alarmList?.classList.add("hidden");
+        watchlistList?.classList.add("hidden");
+        const timelineContent = document.getElementById("timeline-content");
+        if (timelineContent) {
+          timelineContent.classList.remove("hidden");
+          // Initialize timeline when opening
+          if (!state.timelineActive) {
+            enterTimelineMode();
+          }
+        }
       }
     });
   });
@@ -2687,6 +3312,20 @@ function restartRefreshTimer() {
   }, state.refreshIntervalMs);
 }
 
+function clearFastRetryTimer() {
+  if (!fastRetryTimer) return;
+  clearTimeout(fastRetryTimer);
+  fastRetryTimer = null;
+}
+
+function scheduleFastRetry() {
+  if (state.refreshPaused || fastRetryTimer) return;
+  fastRetryTimer = setTimeout(() => {
+    fastRetryTimer = null;
+    refresh();
+  }, FAST_RETRY_REFRESH_MS);
+}
+
 function saveSnapshotStore() {
   try {
     localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify({
@@ -2724,7 +3363,7 @@ function loadSnapshotStore() {
 
 function applyRefreshInterval(value, persist = true) {
   const parsed = Number(value);
-  const next = Number.isFinite(parsed) && parsed >= 250 ? parsed : 5000;
+  const next = Number.isFinite(parsed) && parsed >= 250 ? parsed : DEFAULT_REFRESH_INTERVAL_MS;
   state.refreshIntervalMs = next;
   if (refreshModeSelect) {
     refreshModeSelect.value = String(next);
@@ -2740,6 +3379,34 @@ function startMarkerAgingTicker() {
     if (state.maintenance) return;
     renderMarkers();
   }, MARKER_AGING_TICK_MS);
+}
+
+function applyTrajectoryLayerVisibility() {
+  if (!trajectoryLayer) return;
+  if (state.showTrajectories) {
+    if (!map.hasLayer(trajectoryLayer)) {
+      trajectoryLayer.addTo(map);
+    }
+  } else if (map.hasLayer(trajectoryLayer)) {
+    map.removeLayer(trajectoryLayer);
+  }
+}
+
+function startTimelineSyncTicker() {
+  if (timelineSyncTimer) return;
+  timelineSyncTimer = setInterval(() => {
+    if (!state.timelineActive) return;
+    refresh(true).finally(() => {
+      if (!state.timelineActive) return;
+      rebuildTimelineData(true);
+    });
+  }, TIMELINE_SYNC_TICK_MS);
+}
+
+function stopTimelineSyncTicker() {
+  if (!timelineSyncTimer) return;
+  clearInterval(timelineSyncTimer);
+  timelineSyncTimer = null;
 }
 
 if (toolSettings && settingsModal && settingsClose) {
@@ -2775,6 +3442,50 @@ if (radarOpen && radarModal && radarClose) {
   });
   radarModal.addEventListener("click", (event) => {
     if (event.target === radarModal) radarModal.classList.remove("active");
+  });
+}
+
+if (reportOpen && reportModal && reportClose) {
+  reportOpen.addEventListener("click", () => {
+    openReportModal();
+  });
+  reportClose.addEventListener("click", () => {
+    closeReportModal();
+  });
+  reportModal.addEventListener("click", (event) => {
+    if (event.target === reportModal) closeReportModal();
+  });
+}
+
+if (reportCancel) {
+  reportCancel.addEventListener("click", () => {
+    closeReportModal();
+  });
+}
+
+if (reportForm) {
+  reportForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await submitUserReport();
+  });
+}
+
+if (timelineExit) {
+  timelineExit.addEventListener("click", () => {
+    exitTimelineMode();
+  });
+}
+
+if (timelineRebuild) {
+  timelineRebuild.addEventListener("click", () => {
+    rebuildTimelineData();
+  });
+}
+
+if (timelineSlider) {
+  timelineSlider.addEventListener("input", (event) => {
+    const sliderValue = Number(event.target.value);
+    updateTimelinePosition(sliderValue);
   });
 }
 
@@ -2870,6 +3581,15 @@ if (toggleHistory) {
   toggleHistory.addEventListener("change", (event) => {
     state.showHistory = event.target.checked;
     localStorage.setItem("sw_show_history", state.showHistory ? "1" : "0");
+    renderMarkers();
+  });
+}
+
+if (toggleTrajectories) {
+  toggleTrajectories.addEventListener("change", (event) => {
+    state.showTrajectories = event.target.checked;
+    localStorage.setItem(TRAJECTORY_VISIBILITY_KEY, state.showTrajectories ? "1" : "0");
+    applyTrajectoryLayerVisibility();
     renderMarkers();
   });
 }
@@ -3026,7 +3746,9 @@ window.addEventListener("resize", () => {
 });
 state.adminBypassMaintenance = localStorage.getItem("sw_admin_bypass") === "1";
 loadHistoryStore();
-const hasSnapshot = loadSnapshotStore();
+// Clear stale snapshot cache to force fresh API fetch
+localStorage.removeItem(SNAPSHOT_STORAGE_KEY);
+const hasSnapshot = false;
 
 const savedTheme = localStorage.getItem("sw_theme") || "dark";
 const savedCustom = localStorage.getItem("sw_theme_custom");
@@ -3062,9 +3784,14 @@ if (toggleHistory) {
   toggleHistory.checked = state.showHistory;
 }
 
-const savedRefreshInterval = localStorage.getItem("sw_refresh_interval") || "12000";
+const savedRefreshInterval = localStorage.getItem("sw_refresh_interval") || String(DEFAULT_REFRESH_INTERVAL_MS);
 applyRefreshInterval(savedRefreshInterval, false);
 restartRefreshTimer();
+state.showTrajectories = localStorage.getItem(TRAJECTORY_VISIBILITY_KEY) !== "0";
+if (toggleTrajectories) {
+  toggleTrajectories.checked = state.showTrajectories;
+}
+applyTrajectoryLayerVisibility();
 
 state.dangerRadiusKm = Number(dangerRadiusSelect?.value || 25) || 25;
 if (dangerRadiusSelect) dangerRadiusSelect.value = String(state.dangerRadiusKm);
@@ -3117,6 +3844,7 @@ renderSavedViews();
 if (opsNotes) {
   opsNotes.value = localStorage.getItem(OPS_NOTES_KEY) || "";
 }
+resetReportForm();
 
 if (hasSnapshot) {
   updateFilterSets(state.events);
