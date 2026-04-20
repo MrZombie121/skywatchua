@@ -131,16 +131,18 @@ app.use(compression({
 
 // Better cache control headers
 const oneYear = 31536000; // 1 year in seconds
+const oneHour = 3600;
 
-// Cache static versioned assets for 1 year
+// Cache static assets conservatively to avoid stale HTML/CSS mismatches after deploys.
 app.use((req, res, next) => {
   if (req.path.match(/\.(js|css|woff2|woff|ttf|eot|svg|png|jpg|jpeg|gif|ico)$/i)) {
-    // Check if file has hash/version in name
-    if (req.path.match(/\.[a-f0-9]{8}\.(js|css)$/i) || req.path.includes('-')) {
+    if (req.path.match(/\.[a-f0-9]{8,}\.(js|css)$/i)) {
       res.set('Cache-Control', `public, max-age=${oneYear}, immutable`);
     } else {
-      res.set('Cache-Control', `public, max-age=3600, must-revalidate`);
+      res.set('Cache-Control', `public, max-age=${oneHour}, must-revalidate`);
     }
+  } else if (req.path === "/" || req.path.endsWith(".html") || !path.extname(req.path)) {
+    res.set("Cache-Control", "no-cache, no-store, must-revalidate");
   }
   next();
 });
@@ -1648,7 +1650,12 @@ app.get("/embed/map", (_req, res) => {
   res.sendFile(path.join(publicPath, "embed.html"));
 });
 
-app.get("*", (_req, res) => {
+app.get("*", (req, res) => {
+  // Never answer missing asset URLs with index.html, or stale HTML will break the UI
+  // by loading HTML as CSS/JS after a deploy.
+  if (path.extname(req.path)) {
+    return res.status(404).type("text/plain").send("Not found");
+  }
   res.sendFile(hasDistBuild ? distIndexPath : rootIndexPath);
 });
 

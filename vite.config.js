@@ -24,14 +24,14 @@ export default defineConfig({
     // Rollup options for better bundling
     rollupOptions: {
       output: {
-        // Asset naming with hashes for cache busting
-        entryFileNames: 'js/[name]-[hash].js',
-        chunkFileNames: 'js/[name]-[hash].js',
+        // Keep primary assets on stable URLs to avoid stale HTML pointing to deleted files after deploy.
+        entryFileNames: "js/app.js",
+        chunkFileNames: "js/chunk-[name].js",
         assetFileNames: (assetInfo) => {
           if (assetInfo.name.endsWith('.css')) {
-            return 'css/[name]-[hash][extname]';
+            return "css/app[extname]";
           }
-          return 'assets/[name]-[hash][extname]';
+          return "assets/[name][extname]";
         }
       }
     }

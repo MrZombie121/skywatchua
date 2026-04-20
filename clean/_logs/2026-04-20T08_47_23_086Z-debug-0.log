@@ -7,8 +7,8 @@
 6 silly config load:file:C:\Users\User\AppData\Roaming\npm\etc\npmrc
 7 verbose title npm run build
 8 verbose argv "run" "build"
-9 verbose logfile logs-max:10 dir:H:\skywatchuaair\1.0\clean\_logs\2026-04-19T20_01_27_592Z-
-10 verbose logfile H:\skywatchuaair\1.0\clean\_logs\2026-04-19T20_01_27_592Z-debug-0.log
+9 verbose logfile logs-max:10 dir:H:\skywatchuaair\1.0\clean\_logs\2026-04-20T08_47_23_086Z-
+10 verbose logfile H:\skywatchuaair\1.0\clean\_logs\2026-04-20T08_47_23_086Z-debug-0.log
 11 silly logfile start cleaning logs, removing 1 files
 12 silly logfile done cleaning log files
 13 verbose cwd H:\skywatchuaair\1.0
