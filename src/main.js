@@ -1,9 +1,8 @@
-
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import './styles.css';
 import { sources } from "./data/sources.js";
 import { oblasts } from "./data/oblasts.js";
-
-const L = window.L;
 
 const map = L.map("map", {
   zoomControl: true,
